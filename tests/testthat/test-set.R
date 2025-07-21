@@ -1,12 +1,14 @@
 
 test_that(
 
-  desc = "Set dictionary values", code = {
+  desc = "Set using correct inputs", code = {
 
     dd_set_label <- dd %>%
       set_label(number = "A double value",
                 integer = "An integer value") %>%
       set_description(factor = "A factor variable with one level") %>%
+      set_category_label(character = c("a" = "A")) %>%
+      set_category_order(character = "b") %>%
       set_divby_modeling(number = 10)
 
     # access new values in dictionary
@@ -38,7 +40,7 @@ test_that(
 
 test_that(
 
-  desc = "incorrect inputs", code = {
+  desc = "Set using incorrect inputs", code = {
 
 
     expect_error(set_unit(dd, factor = 'ohno'),
@@ -51,7 +53,7 @@ test_that(
                                     character = c("a" = "A"),
                                     c("b" = "B"),
                                     integer = c('ohno'='ohnooo')),
-                 regexp = 'must be named')
+                 regexp = 'must be name-value pairs')
 
     expect_error(set_category_label(dd,
                                     character = c("a" = "A",
@@ -59,8 +61,7 @@ test_that(
                                     integer = c('ohno'='ohnooo')),
                  regexp = 'Invalid specification')
 
-    expect_error(set_category_label(dd,
-                                    character = c("a" = "A", "B")),
+    expect_error(set_category_label(dd, character = c("a" = "A", "B")),
                  regexp = 'MISSING_NAME = B')
 
 

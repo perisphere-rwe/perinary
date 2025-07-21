@@ -127,11 +127,9 @@ set_category_label <- function(dictionary, ..., modify_order = FALSE){
   input_frame %<>% dplyr::mutate(
     choices = purrr::map(
       name,
-      ~dictionary$variables[[.x]]$get_category_level()
+      ~dictionary$variables[[.x]]$get_category_levels()
     )
   )
-
-
 
   # check with a for-loop so we don't
   # trigger purrr-specific error message
@@ -146,6 +144,8 @@ set_category_label <- function(dictionary, ..., modify_order = FALSE){
     )
 
   }
+
+  # if we got here, the loop below is safe
 
   for(i in names(.dots)){
 
@@ -200,16 +200,23 @@ set_category_order <- function(dictionary, ...){
 
   if(is_empty(.dots)) return(dictionary)
 
-  missing_names <- which(names(.dots) == "")
+  input_frame <- tibble::enframe(.dots) %>%
+    dplyr::mutate(inputs = purrr::map(value, names))
 
-  if(!is_empty(missing_names)){
+  missing_variable_names <- which(input_frame$name == "")
+
+  if(!is_empty(missing_variable_names)){
+
+    problems <- .dots[missing_variable_names] %>%
+      .paste_named_vec() %>%
+      purrr::set_names(nm = "x")
+
     rlang::abort(
       message = c(
-        "Inputs to `...` in `set_category_label()` must be named vectors",
-        "i" = "Changing category label from \"old\" to \"new\" for a variable named `x`:",
-        "v" = " correct input format: `x = c(old = \"new\")`",
-        "x" = " incorrect input format: `x = c(\"new\")`",
-        "i" = "Did you mean to use `set_category_order`?"
+        "*" = "Inputs in `...` must be name-value pairs",
+        "*" = "problematic inputs are:",
+        problems,
+        "v" = "replace MISSING_NAME to fix"
       ),
       call = NULL
     )
@@ -217,15 +224,12 @@ set_category_order <- function(dictionary, ...){
 
   dictionary$check_modify_call(.dots, field = "category_label")
 
-  input_frame <- tibble::enframe(.dots) %>%
-    dplyr::mutate(
-      inputs = purrr::map(value, names),
-      choices = purrr::map(
-        name,
-        ~dictionary$variables[[.x]] %$%
-          get_category_levels()
-      )
+  input_frame %<>% dplyr::mutate(
+    choices = purrr::map(
+      name,
+      ~dictionary$variables[[.x]]$get_category_levels()
     )
+  )
 
   # check with a for-loop so we don't
   # trigger purrr-specific error message
@@ -243,40 +247,10 @@ set_category_order <- function(dictionary, ...){
 
   for(i in names(.dots)){
 
-    # expects input of the form: name = c(level = label).
-    checkmate::assert_character(i, .var.name = i, null.ok = FALSE)
-
-    # Here, i is the name, so it should match an existing name in dictionary
-    checkmate::assert_choice(i,
-                             .var.name = i,
-                             choices = dictionary$get_variable_names())
-
-    # factors/characters only
-    if(dictionary$variables[[i]]$type == "Numeric"){
-      stop("only nominal variables can have factor levels modified:",
-           " '", i, "' is a numeric variable", call. = FALSE)
-    }
-
-    if(!is.null(names(.dots[[i]]))){
-      stop("Vector inputs to `set_category_order` must not be named.\n",
-           " - x = c(\"new_first\", \"new_second\") works\n",
-           " - x = c(a = \"new_first\", b = \"new_second\") does not work.\n",
-           "See ?set_factors to re-order levels and modify labels simultaneously",
-           call. = FALSE)
-    }
-
     # create input lists for eventual call to modify_dictionary
     inputs <- purrr::set_names(list(as.character(.dots[[i]])), i)
 
     current_lvls <- dictionary$variables[[i]]$get_category_levels()
-
-    # user inputs must be character valued and match existing
-    # levels in the dictionary for this variable
-    for(j in inputs[[1]]){
-      checkmate::assert_character(j, .var.name = j, null.ok = FALSE)
-      checkmate::assert_choice(j, .var.name = j, choices = current_lvls)
-    }
-
     unused_lvls <- setdiff(current_lvls, inputs[[1]])
 
     inputs[[1]] %<>% append(unused_lvls)
@@ -286,33 +260,6 @@ set_category_order <- function(dictionary, ...){
     if(!is.null(dictionary$variables[[i]]$category_labels)){
 
       current_labs <- dictionary$variables[[i]]$get_category_labels() %>%
-        purrr::set_names(current_lvls)
-
-      input_labs <- inputs
-      input_labs[[1]] <- as.character(current_labs[inputs[[1]]])
-      dictionary$modify_dictionary(input_labs, field = 'category_labels')
-
-    }
-
-  }
-
-  for(i in names(.dots)){
-
-    # create input lists for eventual call to modify_dictionary
-    inputs <- purrr::set_names(list(as.character(.dots[[i]])), i)
-
-    current_lvls <- dictionary$variables[[i]]$get_category_levels()
-
-    unused_lvls <- setdiff(current_lvls, inputs[[1]])
-
-    inputs[[1]] %<>% append(unused_lvls)
-
-    dictionary$modify_dictionary(inputs, field = 'category_levels')
-
-    if(!is.null(dictionary$variables[[i]]$category_labels)){
-
-      current_labs <- dictionary$variables[[i]] %$%
-        get_category_labels() %>%
         purrr::set_names(current_lvls)
 
       input_labs <- inputs
