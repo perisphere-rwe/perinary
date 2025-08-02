@@ -5,6 +5,9 @@
 
 <!-- badges: start -->
 
+[![R-CMD-check](https://github.com/bcjaeger/perinary/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/bcjaeger/perinary/actions/workflows/R-CMD-check.yaml)
+[![Codecov test
+coverage](https://codecov.io/gh/bcjaeger/perinary/graph/badge.svg)](https://app.codecov.io/gh/bcjaeger/perinary)
 <!-- badges: end -->
 
 A grammar for data dictionaries with three primary verbs:
