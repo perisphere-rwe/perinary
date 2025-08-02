@@ -17,7 +17,7 @@ Useful links:
 
 }
 \author{
-\strong{Maintainer}: Byron Jaeger \email{bjaeger@wakehealth.edu} (\href{https://orcid.org/0000-0001-7399-2299}{ORCID})
+\strong{Maintainer}: Byron Jaeger \email{bcjaeger@perisphere-rwe.com} (\href{https://orcid.org/0000-0001-7399-2299}{ORCID})
 
 }
 \keyword{internal}

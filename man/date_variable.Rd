@@ -35,6 +35,7 @@ visit_date
 \seealso{
 Other variable_constructors: 
 \code{\link{identifier_variable}()},
+\code{\link{logical_variable}()},
 \code{\link{nominal_variable}()},
 \code{\link{numeric_variable}()}
 }

@@ -48,6 +48,7 @@ DataVariable <- R6Class(
       checkmate::assert_choice(type, choices = c("Data",
                                                  "Numeric",
                                                  "Nominal",
+                                                 "Logical",
                                                  "Identifier",
                                                  "Date"))
     },
@@ -351,6 +352,59 @@ NominalVariable <- R6Class(
   )
 )
 
+# LogicalVariable ----
+
+LogicalVariable <- R6::R6Class(
+  "LogicalVariable",
+  inherit = DataVariable,
+
+  public = list(
+
+    # Validation specific to logical variables
+    check_category_levels = function(value) {
+      if (!is.null(value)) {
+        checkmate::assert_logical(value, any.missing = FALSE, len = 2, unique = TRUE)
+      }
+    },
+
+    check_category_labels = function(value) {
+      if (!is.null(value)) {
+        checkmate::assert_character(value, len = 2, any.missing = FALSE)
+      }
+    },
+
+    # Constructor
+    initialize = function(name,
+                          label = NULL,
+                          description = NULL,
+                          category_labels = c("FALSE", "TRUE")) {
+
+      # Call parent initialize with type = "Logical"
+      super$initialize(
+        name = name,
+        type = "Logical",
+        label = label,
+        description = description
+      )
+
+      # Logical variables always have TRUE/FALSE levels
+      self$category_levels <- c(FALSE, TRUE)
+
+      # Set and validate labels
+      self$check_category_labels(category_labels)
+      self$category_labels <- category_labels %||% as.character(self$category_levels)
+    },
+
+    # Print method (mirroring NominalVariable)
+    print = function(...) {
+      super$print(...)
+      cat("  Category Levels    :", self$fmt_category_levels(), "\n")
+      cat("  Category Labels    :", self$fmt_category_labels(), "\n")
+    }
+  )
+)
+
+
 # DateVariable ----
 
 DateVariable <- R6Class(
@@ -439,8 +493,11 @@ DataDictionary <- R6Class(
     # data frame summary
     dictionary = NULL,
 
+    # manage modification by reference
+    copy_on_modify = NULL,
+
     # Constructor
-    initialize = function(vars) {
+    initialize = function(vars, copy_on_modify = TRUE) {
 
       # Validate that all are instances of DataVariable or its children
       if (length(vars) == 0) {
@@ -461,6 +518,8 @@ DataDictionary <- R6Class(
       # Extract data for the tibble
       self$dictionary <- self$create_dictionary(vars)
 
+      self$copy_on_modify <- copy_on_modify
+
     },
 
     get_label = function(name, units = 'none'){
@@ -471,6 +530,32 @@ DataDictionary <- R6Class(
         'descriptive' = self$variables[[name]]$get_label_and_unit(),
         'model'       = self$variables[[name]]$get_label_divby()
       )
+
+    },
+
+    get_category_levels = function(name, concatenate = TRUE){
+
+      res <- purrr::map(
+        .x = name,
+        .f = ~ self$variables[[.x]]$fetch_category_levels()
+      )
+
+      if(!concatenate) return(res)
+
+      purrr::reduce(res, .f = base::c)
+
+    },
+
+    get_category_labels = function(name, concatenate = TRUE){
+
+      res <- purrr::map(
+        .x = name,
+        .f = ~ self$variables[[.x]]$fetch_category_labels()
+      )
+
+      if(!concatenate) return(res)
+
+      purrr::reduce(res, .f = base::c)
 
     },
 
@@ -731,10 +816,11 @@ DataDictionary <- R6Class(
 
     modify_dictionary = function(key, field){
 
-
       for(i in names(key)){
+
         self$variables[[i]]$set_element(field = field,
                                         value = key[[i]])
+
       }
 
       self$dictionary <- self$create_dictionary(self$variables)
@@ -747,6 +833,16 @@ DataDictionary <- R6Class(
       cat("Data Dictionary:\n")
       print(self$dictionary, n = Inf)
 
+    }
+  ),
+
+  private = list(
+    deep_clone = function(name, value){
+      if(name == 'variables'){
+        purrr::map(value, .f = ~.x$clone(deep=TRUE))
+      } else {
+        value
+      }
     }
   )
 
@@ -840,6 +936,15 @@ as_data_dictionary <- function(x){
             name = .y,
             label = attr(.x, 'label'),
             category_levels = levels(.x) %||% unique(stats::na.omit(.x))
+          )
+        )
+      }
+
+      if(inherits(.x, c('logical'))){
+        return(
+          LogicalVariable$new(
+            name = .y,
+            label = attr(.x, 'label')
           )
         )
       }

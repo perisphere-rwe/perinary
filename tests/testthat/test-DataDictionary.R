@@ -1,5 +1,5 @@
 
-# testing objects ----
+# Exported constructors ----
 
 age_years <- numeric_variable(
   name = "age_years",
@@ -22,6 +22,22 @@ date_recorded <- date_variable(
   description = "The calendar date when the observation was recorded"
 )
 
+test_that(
+
+  desc = 'dictionary from base classes', code = {
+
+    dd_from_vars <- data_dictionary(age_years, age_group, date_recorded)
+
+    expect_s3_class(dd_from_vars, "DataDictionary")
+    expect_s3_class(dd_from_vars, "R6")
+    expect_s3_class(dd_from_vars$dictionary, "data.frame")
+    expect_equal(dd_from_vars$variables$age_years, age_years)
+    expect_equal(dd_from_vars$variables$age_group, age_group)
+    expect_equal(dd_from_vars$variables$date_recorded, date_recorded)
+
+  }
+
+)
 
 test_that(
   desc = "construction works from list or ..., not both",
@@ -40,87 +56,7 @@ test_that(
   }
 )
 
-# required inputs ----
-
-test_that(
-
-  desc = "name required", code = {
-
-    expect_error(numeric_variable(), 'name')
-
-  }
-
-)
-
-# inheritance ----
-
-test_that(
-
-  desc = "Class structure", code = {
-
-    expect_s3_class(age_years, "NumericVariable")
-    expect_s3_class(age_years, "DataVariable")
-    expect_s3_class(age_years, "R6")
-
-    expect_s3_class(age_group, "NominalVariable")
-    expect_s3_class(age_group, "DataVariable")
-    expect_s3_class(age_group, "R6")
-
-    expect_s3_class(date_recorded, "DateVariable")
-    expect_s3_class(date_recorded, "DataVariable")
-    expect_s3_class(date_recorded, "R6")
-
-  }
-
-)
-
-test_that(
-
-  desc = 'dictionary from base classes', code = {
-
-    dd_from_vars <- data_dictionary(age_years, age_group, date_recorded)
-
-    expect_s3_class(dd_from_vars, "DataDictionary")
-    expect_s3_class(dd_from_vars, "R6")
-    expect_s3_class(dd_from_vars$dictionary, "data.frame")
-    expect_equal(dd_from_vars$variables$age_years, age_years)
-    expect_equal(dd_from_vars$variables$age_group, age_group)
-    expect_equal(dd_from_vars$variables$date_recorded, date_recorded)
-
-  }
-
-)
-
-# dictionary from data ----
-
-test_that(
-
-  desc = 'empty dictionary', code = {
-
-    expect_true(all(dd$dictionary$label == 'none'))
-    expect_true(all(dd$dictionary$description == 'none'))
-    expect_true(all(dd$dictionary$units == 'none'))
-    expect_true(all(dd$dictionary$divby_modeling == 'none'))
-
-  }
-
-)
-
-test_that(
-
-  desc = "labels initialized as levels for nominal variables",
-
-  code = {
-
-    expect_equal(dd$variables$character$category_labels,
-                 dd$variables$character$category_levels)
-
-    expect_equal(dd$variables$factor$category_labels,
-                 dd$variables$factor$category_levels)
-
-  }
-
-)
+# public get/set variable methods ----
 
 test_that(
 
@@ -166,12 +102,105 @@ test_that(
 
 )
 
+# Assertion on required inputs ----
+
 test_that(
-  desc = "constructor is safe",
+
+  desc = "name required", code = {
+
+    expect_error(numeric_variable(), 'name')
+
+  }
+
+)
+
+# inheritance ----
+
+test_that(
+
+  desc = "Class structure", code = {
+
+    expect_s3_class(age_years, "NumericVariable")
+    expect_s3_class(age_years, "DataVariable")
+    expect_s3_class(age_years, "R6")
+
+    expect_s3_class(age_group, "NominalVariable")
+    expect_s3_class(age_group, "DataVariable")
+    expect_s3_class(age_group, "R6")
+
+    expect_s3_class(date_recorded, "DateVariable")
+    expect_s3_class(date_recorded, "DataVariable")
+    expect_s3_class(date_recorded, "R6")
+
+  }
+
+)
+
+
+# dictionary from data ----
+
+test_that(
+
+  desc = 'empty dictionary', code = {
+
+    expect_true(all(dd$dictionary$label == 'none'))
+    expect_true(all(dd$dictionary$description == 'none'))
+    expect_true(all(dd$dictionary$units == 'none'))
+    expect_true(all(dd$dictionary$divby_modeling == 'none'))
+
+  }
+
+)
+
+test_that(
+
+  desc = "labels initialized as levels for nominal variables",
+
+  code = {
+
+    expect_equal(dd$variables$character$category_labels,
+                 dd$variables$character$category_levels)
+
+    expect_equal(dd$variables$factor$category_labels,
+                 dd$variables$factor$category_levels)
+
+  }
+
+)
+
+test_that(
+  desc = "dictionary constructor is safe",
 
   code = {
     expect_error(DataDictionary$new(vars = list()), 'At least one variable')
     expect_error(DataDictionary$new(vars = list(1)), 'inherit from')
   }
+)
+
+# cloning ----
+
+test_that(
+  desc = "Clones extend to all fields",
+
+  code = {
+
+    dd_clone <- dd$clone(deep=TRUE) %>%
+      set_labels(number = "Cloned label") %>%
+      set_category_labels(character = c("a" = "A"))
+
+    expect_equal(dd_clone$dictionary$label[dd_clone$dictionary$name=='number'],
+                 c("number" = "Cloned label"))
+
+    expect_equal(dd$dictionary$label[dd$dictionary$name=='number'],
+                 c("number" = "none"))
+
+    expect_equal(dd_clone$variables$number$get_label(), "Cloned label")
+    expect_null(dd$variables$number$get_label())
+
+    expect_equal(dd_clone$variables$character$get_category_labels()[1], "A")
+    expect_equal(dd$variables$character$get_category_labels()[1], "a")
+
+  }
+
 )
 

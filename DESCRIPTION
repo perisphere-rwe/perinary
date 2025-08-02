@@ -2,7 +2,7 @@ Package: perinary
 Title: Grammar of Data Dictionaries
 Version: 0.0.0.9000
 Authors@R: 
-    person("Byron", "Jaeger", , "bjaeger@wakehealth.edu", role = c("aut", "cre"),
+    person("Byron", "Jaeger", , "bcjaeger@perisphere-rwe.com", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0001-7399-2299"))
 Description: Keeps labels and other relevant information about variables
   in a lightweight class that can be applied to datasets in various ways,

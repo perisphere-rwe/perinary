@@ -18,37 +18,195 @@ knitr::opts_chunk$set(
 <!-- badges: start -->
 <!-- badges: end -->
 
-The goal of perinary is to ...
+A grammar for data dictionaries with three primary verbs:
+
+1. `set`: initialize or modify meta data
+2. `get`: retrieve meta data
+3. `infuse`: apply meta data
+
+Dictionaries are often developed outside of a computing session and stored as static files, making it inconvenient to apply meta data from the dictionary to your data. `perinary` aims to bring the magic of a dictionary to your R session, providing dynamic and intuitive methods to insert meta data into your results right when you need it.
 
 ## Installation
 
-You can install the development version of perinary like so:
+You can install the development version of `perinary` from [GitHub](https://github.com/) with:
 
 ``` r
-# FILL THIS IN! HOW CAN PEOPLE INSTALL YOUR DEV PACKAGE?
+# install.packages("pak")
+pak::pak("perisphere-rwe/perinary")
 ```
 
-## Example
+## Data dictionaries
 
-This is a basic example which shows you how to solve a common problem:
+Dictionaries help organize pertinent information about analytic variables, putting information about each variable into tables and figures using consistent labels and incorporating additional information when appropriate. 
 
-```{r example}
+There are two ways to initialize a dictionary. You can build them using `NumericVariable` and `NominalVariable` objects (not shown here, see vignette), but this can be tedious if you have a lot of variables. For most cases, you'll want to use the `as_data_dictionary()` to create a starter dictionary from a given dataset.
+
+```{r, message=FALSE}
+
 library(perinary)
-## basic example code
+library(tidyverse)
+library(palmerpenguins)
+
+data_peng <- penguins %>% 
+  select(species, sex, body_mass_g, bill_length_mm, bill_depth_mm)
+
+dd_peng <- as_data_dictionary(data_peng)
+
+dd_peng
+
 ```
 
-What is special about using `README.Rmd` instead of just `README.md`? You can include R chunks like so:
+### Tell me what I don't know
 
-```{r cars}
-summary(cars)
+Our dictionary is initialized, but it doesn't contain complete information yet. Where should we start? Use the function `get_unknowns()` to clarify what relevant information is missing. This function returns a `tibble` by default, but if you set `as_request = TRUE`, it provides a bullet point list that is easier to read. If you work with subject matter experts, you can also send this text to them and ask for help filling in the gaps.
+
+```{r}
+get_unknowns(dd_peng, as_request = TRUE)
 ```
 
-You'll still need to render `README.Rmd` regularly, to keep `README.md` up-to-date. `devtools::build_readme()` is handy for this.
+And if you want to get straight to filling these unknowns in using dictionary functions (described in the next section), `get_unknowns` gives you a full template to fill in when you specify `as_code = TRUE`:
 
-You can also embed plots, for example:
-
-```{r pressure, echo = FALSE}
-plot(pressure)
+```{r}
+get_unknowns(dd_peng, as_code = TRUE)
 ```
 
-In that case, don't forget to commit and push the resulting figure files, so they display on GitHub and CRAN.
+
+### Modify dictionary values
+
+Once we have this information ready to embed in the dictionary, we can use `perinary`'s family of `set` functions:
+
+```{r}
+
+dd_peng <- dd_peng %>% 
+  set_labels(species = "Species",
+             sex = "Sex",
+             bill_length_mm = "Bill length",
+             bill_depth_mm = "Bill depth") %>% 
+  set_units(bill_length_mm = "mm",
+            bill_depth_mm = "mm",
+            body_mass_g = "grams") %>% 
+  set_divby_modeling(bill_length_mm = 5,
+                     bill_depth_mm = 5)
+
+```
+
+#### Identifier variables
+
+An identifier variable uniquely defines sampling units in a data set. An identifier variable can cause disruption in a data dictionary if it is treated like a factor. For example, we don't want to supply labels for each level of an identifier, and we don't want to summarize data for each level of an identifier. To demonstrate the problem identifiers can pose, here's what would have happened in our call to `get_unknowns()` if we had an unmanaged identifier variable in the dictionary.
+
+```{r}
+
+data_peng %>% 
+  mutate(penguid_id = as.character(seq(n()))) %>% 
+  as_data_dictionary() %>% 
+  get_unknowns(as_request = TRUE)
+
+```
+
+The issue is that we don't want or need to supply category labels for `penguin_id`, so it isn't helpful for these to be included in our list of unknowns. The fix is to designate `penguin_id` (or generally any identifier variables) as an identifier variable, which should take care of all potential downstream issues.
+
+```{r}
+
+data_peng %>% 
+  mutate(penguin_id = as.character(seq(n()))) %>% 
+  as_data_dictionary() %>% 
+  set_identifiers(penguin_id) %>% 
+  get_unknowns(as_request = TRUE)
+
+```
+
+
+
+#### Modifying factors
+
+Modify factor labels, changing one or more labels in an existing variable, with `set_category_labels()`:
+
+```{r}
+
+dd_peng$variables$sex
+
+dd_peng <- dd_peng %>% 
+  set_category_labels(sex = c(female = "F", male = "M"))
+
+dd_peng$variables$sex
+
+```
+
+Modify factor order, moving one or more levels to the front, with `set_category_order()`:
+
+```{r}
+
+dd_peng <- dd_peng %>% 
+  set_category_order(sex = c("female"))
+
+dd_peng$variables$sex
+
+```
+
+### Apply dictionary information
+
+Data dictionaries have a method called `recode()`, which leverages the `dplyr::recode()` function in combination with information stored in the dictionary to provide a 'smart' recoder. The 'smart' part is that this recode function doesn't require you to provide recode values. Instead, it looks for appropriate recode values in the dictionary.
+
+```{r}
+
+# This function is embedded in the dictionary itself, so it's called by 
+# typing the name of the dictionary, followed by `$recode(x)`, where 
+# `x` is the vector you intend to recode. For example:
+
+data_peng %>% 
+  mutate(sex = dd_peng$recode(sex))
+
+```
+
+This works both for variable names and variable categories. For example, pivoting our data to a longer format will move several variable names into a new column called `name`, and this column can be recoded just like we did above.
+
+```{r}
+
+data_peng %>% 
+  pivot_longer(starts_with("bill_")) %>% 
+  mutate(name = dd_peng$recode(name))
+
+```
+
+If needed, there is a more direct way to get recode information for specific parts of the dictionary:
+
+```{r}
+
+# in case the smart dictionary recoder fails, you can fall back 
+# on the more reliable methods get_variable_recoder and 
+# get_level_recoder, which are also public methods for dictionaries
+
+recode_bills <- dd_peng$get_variable_recoder(name = c("bill_length_mm",
+                                                      "bill_depth_mm"))
+
+recode_sex <- dd_peng$get_level_recoder(name = 'sex')
+
+data_peng %>% 
+  pivot_longer(starts_with("bill_")) %>% 
+  mutate(name = recode(name, !!!recode_bills),
+         sex = recode(sex, !!!recode_sex))
+
+```
+
+### Attach all information at once
+
+`infuse_dictionary()` puts all the relevant information from a data dictionary into an existing dataset. This can smooth out your code when you use packages that automatically incorporate labels into their outputs, such as `gtsummary`. In the example below, we infuse our data with the dictionary we created and specify that we want to format continuous variables using their modeling units (e.g., bill length is modeled per 10 mm). Note that when you infuse data with dictionaries and specify `units = 'model'`, the corresponding variables will be divided by their designated `divby_model` value and new columns will be created. If you don't want new columns, you can specify `divby_suffix = NULL` when you infuse.
+
+```{r, eval = FALSE}
+
+library(gtsummary)
+
+data_infused <- data_peng %>% 
+  infuse_dictionary(dd_peng, units = 'model', divby_suffix = NULL)
+
+fit <- lm(formula = body_mass_g ~ ., data = data_infused)
+
+tbl_regression(fit)
+
+```
+
+```{r}
+knitr::include_graphics('img/screen-regression_table.png')
+```
+
+

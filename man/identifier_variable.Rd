@@ -31,6 +31,7 @@ patient_id
 \seealso{
 Other variable_constructors: 
 \code{\link{date_variable}()},
+\code{\link{logical_variable}()},
 \code{\link{nominal_variable}()},
 \code{\link{numeric_variable}()}
 }

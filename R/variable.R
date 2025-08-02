@@ -144,3 +144,35 @@ identifier_variable <- function(name,
     description = description
   )
 }
+
+#' Create a Logical (Binary) Variable
+#'
+#' Initializes a `LogicalVariable` object, typically used for binary indicators
+#' or flags that take values `TRUE` or `FALSE`.
+#'
+#' @inheritParams variable_constructors
+#' @param category_labels Character vector of length 2. Optional labels for the
+#'   two levels: `FALSE` and `TRUE`, respectively. Defaults to `c("FALSE", "TRUE")`.
+#'
+#' @return A `LogicalVariable` object.
+#' @export
+#' @family variable_constructors
+#'
+#' @examples
+#' smoker <- logical_variable(
+#'   name = "smoking_status",
+#'   label = "Current smoker",
+#'   category_labels = c("Non-smoker", "Smoker")
+#' )
+#' smoker
+logical_variable <- function(name,
+                             label = NULL,
+                             description = NULL,
+                             category_labels = c("FALSE", "TRUE")) {
+  LogicalVariable$new(
+    name = name,
+    label = label,
+    description = description,
+    category_labels = category_labels
+  )
+}

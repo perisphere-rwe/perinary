@@ -10,7 +10,7 @@
 #' @param ... Name-value pairs. The name gives the name of the variable
 #'   that will be modified. The value must be a:
 #'
-#'   - character value for `set_label()`, `set_units()`,
+#'   - character value for `set_labels()`, `set_units()`,
 #'     and `set_descriptions()`
 #'   - numeric value for `set_divby_modeling()`
 #'   - character vector for `set_category_levels()` and `set_category_labels()`
@@ -24,58 +24,63 @@
 #' @examples
 #'
 #' dd <- as_data_dictionary(data.frame(a = 1, b = "cat")) %>%
-#'  set_label(a = "numeric example", b = "categorical example") %>%
+#'  set_labels(a = "numeric example", b = "categorical example") %>%
 #'  set_unit(a = "years") %>%
 #'  set_divby_modeling(a = 10) %>%
-#'  set_description(a = "A variable used for examples") %>%
-#'  set_category_label(b = c("cat" = "A small lion"))
+#'  set_descriptions(a = "A variable used for examples") %>%
+#'  set_category_labels(b = c("cat" = "A small lion"))
 #'
 #' dd
 #'
 
-set_label <- function(dictionary, ...){
-  checkmate::assert_class(dictionary, "DataDictionary")
-  dictionary$check_modify_call(list(...), field = 'label')
+set_labels <- function(dictionary, ...){
+  if(is_empty(list(...))) return(dictionary)
+  dictionary <- dd_prep_set(dictionary, ..., field = 'label')
   dictionary$modify_dictionary(list(...), field = 'label')
   dictionary
 }
 
-#' @rdname set_label
+#' @rdname set_labels
 #' @export
-set_description <- function(dictionary, ...){
-  checkmate::assert_class(dictionary, "DataDictionary")
-  dictionary$check_modify_call(list(...), field = 'description')
+set_descriptions <- function(dictionary, ...){
+  if(is_empty(list(...))) return(dictionary)
+  dictionary <- dd_prep_set(dictionary, ..., field = 'description')
   dictionary$modify_dictionary(list(...), field = 'description')
   dictionary
 }
 
-#' @rdname set_label
+#' @rdname set_labels
 #' @export
-set_unit <- function(dictionary, ...){
-  checkmate::assert_class(dictionary, "DataDictionary")
-  dictionary$check_modify_call(list(...), field = 'units')
+set_units <- function(dictionary, ...){
+  if(is_empty(list(...))) return(dictionary)
+  dictionary <- dd_prep_set(dictionary, ..., field = 'units')
   dictionary$modify_dictionary(list(...), field = 'units')
   dictionary
 }
 
-#' @rdname set_label
+#' @rdname set_labels
 #' @export
 set_divby_modeling <- function(dictionary, ...){
-  checkmate::assert_class(dictionary, "DataDictionary")
-  dictionary$check_modify_call(list(...), field = 'divby_modeling')
+  if(is_empty(list(...))) return(dictionary)
+  dictionary <- dd_prep_set(dictionary, ..., field = 'divby_modeling')
   dictionary$modify_dictionary(list(...), field = 'divby_modeling')
   dictionary
 }
 
-#' @rdname set_label
-#' @export
-set_category_label <- function(dictionary, ..., modify_order = FALSE){
-
+dd_prep_set <- function(dictionary, ..., field){
   checkmate::assert_class(dictionary, "DataDictionary")
+  dictionary$check_modify_call(list(...), field = field)
+  dictionary$clone(deep = dictionary$copy_on_modify)
+}
+
+#' @rdname set_labels
+#' @export
+set_category_labels <- function(dictionary, ..., modify_order = FALSE){
+
 
   .dots <- list(...)
-
   if(is_empty(.dots)) return(dictionary)
+  checkmate::assert_class(dictionary, "DataDictionary")
 
   input_frame <- tibble::enframe(.dots) %>%
     dplyr::mutate(inputs = purrr::map(value, names))
@@ -99,7 +104,7 @@ set_category_label <- function(dictionary, ..., modify_order = FALSE){
     )
   }
 
-  dictionary$check_modify_call(.dots, field = "category_label")
+  dictionary <- dd_prep_set(dictionary, ..., field = 'category_label')
 
   missing_level_names <- input_frame$value %>%
     purrr::map_lgl(.f = ~ "" %in% names(.x)) %>%
@@ -190,7 +195,7 @@ set_category_label <- function(dictionary, ..., modify_order = FALSE){
 }
 
 
-#' @rdname set_label
+#' @rdname set_labels
 #' @export
 set_category_order <- function(dictionary, ...){
 
@@ -275,7 +280,6 @@ set_category_order <- function(dictionary, ...){
 }
 
 
-
 #' Set Identifier Variables
 #'
 #' @param dictionary `r roxy_describe_dd()`
@@ -284,7 +288,10 @@ set_category_order <- function(dictionary, ...){
 #' @returns a modified `dictionary`
 #' @export
 #'
-set_identifier <- function(dictionary, ...){
+set_identifiers <- function(dictionary, ...){
+
+  checkmate::assert_class(dictionary, "DataDictionary")
+  dictionary <- dictionary$clone(deep = dictionary$copy_on_modify)
 
   input_strings <- sapply(substitute(list(...)), deparse)[-1] %>%
     stringr::str_remove_all("\"")
