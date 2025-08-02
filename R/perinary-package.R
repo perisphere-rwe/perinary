@@ -6,11 +6,11 @@ on_load(local_use_cli())
 
 
 utils::globalVariables(
-  names = c("name", "variable", "type", ".data", ".group_level", ":=")
+  names = c("name", "variable", "value", "type",
+            "category_labels", "category_levels")
 )
 
 ## usethis namespace: start
-#' @importFrom dplyr .data
 #' @importFrom magrittr %<>% %$%
 #' @importFrom purrr is_empty
 #' @importFrom tibble tibble

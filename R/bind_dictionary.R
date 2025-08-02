@@ -7,11 +7,17 @@
 #'   information into each of those datasets.
 #'
 #' @param x,y `r roxy_describe_dd()`
+#'
 #' @param conflict_preference a character value indicating what to do
 #'   when `x` and `y` have overlapping variables. If "left", then
 #'   the definitions in the `x` dictionary are preferred because
 #'   `x` is on the left of `y` in the function arguments. If "right",
 #'   `y` definitions are preferred.
+#'
+#' @param keep_unmatched_y logical. If `TRUE`, variables in `y` that are
+#'   not in `x` will be retained in the output. If `FALSE` (default),
+#'   only variables from `x` and those in `y` that overlap with `x`
+#'   will be included, subject to `conflict_preference`.
 #'
 #' @returns `r roxy_describe_dd()`
 #'

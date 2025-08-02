@@ -4,10 +4,15 @@
 \alias{get_unknowns}
 \title{Get Unknown Fields in Dictionary}
 \usage{
-get_unknowns(x, as_request = FALSE, as_code = FALSE, show_optional = FALSE)
+get_unknowns(
+  dictionary,
+  as_request = FALSE,
+  as_code = FALSE,
+  show_optional = FALSE
+)
 }
 \arguments{
-\item{x}{A \link[=data_dictionary]{data dictionary} object.}
+\item{dictionary}{A \link[=data_dictionary]{data dictionary} object.}
 
 \item{as_request}{logical. If \code{TRUE}, text is returned in a readable
 format that can be pasted into other settings, e.g., an e-mail
@@ -17,6 +22,10 @@ unknowns are returned as a \code{tibble}.}
 \item{as_code}{logical. If \code{TRUE}, text is returned as code that can
 be copy/pasted into an R script. If \code{FALSE} (the default),
 unknowns are returned as a \code{tibble}.}
+
+\item{show_optional}{logical. If \code{TRUE}, unknowns will include all
+possible fields of the variables in \code{dictionary}. If \code{FALSE} (the
+default), only labels and units are presented.}
 }
 \value{
 If \code{as_request = FALSE} and \code{as_code = FALSE},
@@ -33,12 +42,16 @@ get_unknowns(data_dictionary(numeric_variable("a", units = 'years')))
 
 # label isn't returned in the output because it is specified (known)
 get_unknowns(data_dictionary(nominal_variable("b", label = 'example')))
-# as_request = TRUE returns this information in a shareable format
-as_data_dictionary(iris) \%>\%
+dd <- as_data_dictionary(iris) \%>\%
   set_labels(Sepal.Length = "Sepal length",
             Sepal.Width = "Sepal width",
             Species = "Flower species") \%>\%
   set_descriptions(Species = "The species are all subtypes of iris") \%>\%
-  set_units(Sepal.Length = "cm") \%>\%
-  get_unknowns(as_request = TRUE)
+  set_units(Sepal.Length = "cm")
+
+# as_request = TRUE returns this information in a shareable format
+get_unknowns(dd, as_request = TRUE)
+
+# as_code = TRUE gives a head start on filling in the missing info
+get_unknowns(dd, as_code = TRUE)
 }

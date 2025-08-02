@@ -19,7 +19,6 @@ Imports:
     R6,
     tibble,
     checkmate,
-    data.table,
     glue,
     rlang
 Suggests: 

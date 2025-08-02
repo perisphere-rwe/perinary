@@ -14,6 +14,11 @@ when \code{x} and \code{y} have overlapping variables. If "left", then
 the definitions in the \code{x} dictionary are preferred because
 \code{x} is on the left of \code{y} in the function arguments. If "right",
 \code{y} definitions are preferred.}
+
+\item{keep_unmatched_y}{logical. If \code{TRUE}, variables in \code{y} that are
+not in \code{x} will be retained in the output. If \code{FALSE} (default),
+only variables from \code{x} and those in \code{y} that overlap with \code{x}
+will be included, subject to \code{conflict_preference}.}
 }
 \value{
 A \link[=data_dictionary]{data dictionary} object.

@@ -23,9 +23,10 @@
 #'
 #' @examples
 #'
-#' dd <- as_data_dictionary(data.frame(a = 1, b = "cat")) %>%
+#' dd <- as_data_dictionary(data.frame(a = 1, b = "cat", id = 1)) %>%
+#'  set_identifiers(id) %>%
 #'  set_labels(a = "numeric example", b = "categorical example") %>%
-#'  set_unit(a = "years") %>%
+#'  set_units(a = "years") %>%
 #'  set_divby_modeling(a = 10) %>%
 #'  set_descriptions(a = "A variable used for examples") %>%
 #'  set_category_labels(b = c("cat" = "A small lion"))
@@ -75,7 +76,7 @@ dd_prep_set <- function(dictionary, ..., field){
 
 #' @rdname set_labels
 #' @export
-set_category_labels <- function(dictionary, ..., modify_order = FALSE){
+set_category_labels <- function(dictionary, ...){
 
 
   .dots <- list(...)
@@ -161,19 +162,23 @@ set_category_labels <- function(dictionary, ..., modify_order = FALSE){
     current_lvls <- dictionary$variables[[i]]$get_category_levels()
     current_labs <- dictionary$variables[[i]]$fetch_category_labels()
 
-    # modify both the labels and the order of the levels
-    if(modify_order){
-
-      unused_lvls <- setdiff(current_lvls, input_lvls[[1]])
-      unused_labs <- current_labs[current_lvls %in% unused_lvls]
-
-      input_lvls[[1]] %<>% append(unused_lvls)
-      input_labs[[1]] %<>% append(unused_labs)
-
-      dictionary$modify_dictionary(input_lvls, field = 'category_levels')
-      dictionary$modify_dictionary(input_labs, field = 'category_labels')
-
-    } else {
+    # I am taking this out b/c why have this feature when I already
+    # have a function for setting category order. It just confuses
+    # the user. That being said, keeping the commented code here
+    # in case people end up asking for this feature.
+    # # modify both the labels and the order of the levels
+    # if(modify_order){
+    #
+    #   unused_lvls <- setdiff(current_lvls, input_lvls[[1]])
+    #   unused_labs <- current_labs[current_lvls %in% unused_lvls]
+    #
+    #   input_lvls[[1]] %<>% append(unused_lvls)
+    #   input_labs[[1]] %<>% append(unused_labs)
+    #
+    #   dictionary$modify_dictionary(input_lvls, field = 'category_levels')
+    #   dictionary$modify_dictionary(input_labs, field = 'category_labels')
+    #
+    # } else {
 
       # put the inputs into the existing labels.
       input_key <- purrr::set_names(input_labs[[1]], input_lvls[[1]])
@@ -186,7 +191,7 @@ set_category_labels <- function(dictionary, ..., modify_order = FALSE){
 
       dictionary$modify_dictionary(input_labs, field = 'category_labels')
 
-    }
+    # }
 
   }
 
@@ -294,7 +299,8 @@ set_identifiers <- function(dictionary, ...){
   dictionary <- dictionary$clone(deep = dictionary$copy_on_modify)
 
   input_strings <- sapply(substitute(list(...)), deparse)[-1] %>%
-    stringr::str_remove_all("\"")
+    gsub("\"", "", .)
+
 
   for(i in input_strings){
 

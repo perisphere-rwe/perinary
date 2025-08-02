@@ -1,6 +1,6 @@
 #' Get Unknown Fields in Dictionary
 #'
-#' @param x `r roxy_describe_dd()`
+#' @param dictionary `r roxy_describe_dd()`
 #'
 #' @param as_request logical. If `TRUE`, text is returned in a readable
 #'   format that can be pasted into other settings, e.g., an e-mail
@@ -10,6 +10,10 @@
 #' @param as_code logical. If `TRUE`, text is returned as code that can
 #'   be copy/pasted into an R script. If `FALSE` (the default),
 #'   unknowns are returned as a `tibble`.
+#'
+#' @param show_optional logical. If `TRUE`, unknowns will include all
+#'   possible fields of the variables in `dictionary`. If `FALSE` (the
+#'   default), only labels and units are presented.
 #'
 #' @return If `as_request = FALSE` and `as_code = FALSE`,
 #'   a [tibble][tibble::tibble-package] is returned.
@@ -24,22 +28,27 @@
 #'
 #' # label isn't returned in the output because it is specified (known)
 #' get_unknowns(data_dictionary(nominal_variable("b", label = 'example')))
-#' # as_request = TRUE returns this information in a shareable format
-#' as_data_dictionary(iris) %>%
+#' dd <- as_data_dictionary(iris) %>%
 #'   set_labels(Sepal.Length = "Sepal length",
 #'             Sepal.Width = "Sepal width",
 #'             Species = "Flower species") %>%
 #'   set_descriptions(Species = "The species are all subtypes of iris") %>%
-#'   set_units(Sepal.Length = "cm") %>%
-#'   get_unknowns(as_request = TRUE)
+#'   set_units(Sepal.Length = "cm")
+#'
+#' # as_request = TRUE returns this information in a shareable format
+#' get_unknowns(dd, as_request = TRUE)
+#'
+#' # as_code = TRUE gives a head start on filling in the missing info
+#' get_unknowns(dd, as_code = TRUE)
 
-get_unknowns <- function(x,
+
+get_unknowns <- function(dictionary,
                          as_request = FALSE,
                          as_code = FALSE,
                          show_optional = FALSE){
 
-  if(!is_data_dictionary(x)) {
-    x <- as_data_dictionary(x)
+  if(!is_data_dictionary(dictionary)) {
+    dictionary <- as_data_dictionary(dictionary)
   }
 
   if(as_request && as_code){
@@ -47,8 +56,8 @@ get_unknowns <- function(x,
          call. = FALSE)
   }
 
-  data_unknowns <- x$dictionary %>%
-    dplyr::mutate(type = purrr::map_chr(x$variables, "type"), .after = 1) %>%
+  data_unknowns <- dictionary$dictionary %>%
+    dplyr::mutate(type = purrr::map_chr(dictionary$variables, "type"), .after = 1) %>%
     dplyr::rename(variable = name) %>%
     dplyr::mutate(
       category_labels = dplyr::if_else(category_labels==category_levels,
@@ -114,7 +123,7 @@ get_unknowns <- function(x,
             text_mid <- purrr::map_chr(
               .x = .x$variable,
               .f = function(..x){
-                paste(x$variables[[..x]]$category_levels,
+                paste(dictionary$variables[[..x]]$category_levels,
                       '= ?',
                       collapse = ";  ")
               }
@@ -149,7 +158,7 @@ get_unknowns <- function(x,
               description = "set_descriptions",
               units = "set_units",
               divby_modeling = "set_divby_modeling",
-              category_labels = "set_factor_labels"
+              category_labels = "set_category_labels"
             )
           )
 
@@ -178,7 +187,7 @@ get_unknowns <- function(x,
 
                 ..collapse <- paste(",\n", ..ws)
 
-                ..args <- paste(x$variables[[..x]]$category_levels,
+                ..args <- paste(dictionary$variables[[..x]]$category_levels,
                                 "= \"\"",
                                 collapse = ..collapse)
 
