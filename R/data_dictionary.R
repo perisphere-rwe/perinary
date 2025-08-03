@@ -8,15 +8,15 @@
 #' @param ... One or more objects inheriting from `r roxy_describe_numeric()`
 #'   or `r roxy_describe_nominal()`.
 #'
-#' @param variable_list A list of data variables. This argument allows
+#' @param .list A list of data variables. This argument allows
 #'  `data_dictionary` to be used programmatically and is optional. It is
 #'  intended to be used as an alternative to `...`.
 #'
 #' @return A `DataDictionary` object containing a tibble summary of all
 #'   variables.
 #'
-#' @details if both `...` and `variable_list` are specified, the dictionary
-#'   will only be created using `variable_list`.
+#' @details if both `...` and `.list` are specified, the dictionary
+#'   will only be created using `.list`.
 #'
 #' @export
 #'
@@ -38,22 +38,14 @@
 #' dd <- data_dictionary(age_years, gender)
 #' print(dd)
 #'
-data_dictionary <- function(..., variable_list = NULL){
+#' dd <- data_dictionary(.list = list(age_years, gender))
+#' print(dd)
+#'
+data_dictionary <- function(..., .list = NULL){
 
-  if(!is_empty(list(...)) && !is_empty(variable_list)){
-    rlang::abort(
-      message = c(
-        "`...` must be empty if `variable_list` is not `NULL`",
-        i = glue::glue("This constructor can work with either \\
-                       unquoted names or a list of variable names, \\
-                       but it is not intended to be used with both \\
-                       at once.")
-      )
-
-    )
-  }
-
-  DataDictionary$new(variable_list %||% list(...))
+  assert_valid_dotdot(..., .list = .list)
+  .dots <- infer_dotdot(..., .list = .list)
+  DataDictionary$new(.dots)
 
 }
 

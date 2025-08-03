@@ -15,7 +15,9 @@
 #'   - numeric value for `set_divby_modeling()`
 #'   - character vector for `set_category_levels()` and `set_category_labels()`
 #'
-#' See examples for examples of each.
+#' @param .list a list of name-value pairs. This argument is optional and
+#'   intended to be used in place of `...` for programmatic setting of
+#'   meta data.
 #'
 #' @return a modified `dictionary`
 #'
@@ -33,45 +35,51 @@
 #'
 #' dd
 #'
+#' # programmatic assignment
+#'
+#' label_list <- list(a = "Listed numeric example",
+#'                    b = "Listed categorical example")
+#' set_labels(dd, .list = label_list)
+#'
+#'
+#'
+#'
 
-set_labels <- function(dictionary, ...){
-  if(is_empty(list(...))) return(dictionary)
-  dictionary <- dd_prep_set(dictionary, ..., field = 'label')
-  dictionary$modify_dictionary(list(...), field = 'label')
-  dictionary
+set_labels <- function(dictionary, ..., .list = NULL){
+  dd_set(dictionary, ..., .list = .list, field = 'label')
 }
 
 #' @rdname set_labels
 #' @export
-set_descriptions <- function(dictionary, ...){
-  if(is_empty(list(...))) return(dictionary)
-  dictionary <- dd_prep_set(dictionary, ..., field = 'description')
-  dictionary$modify_dictionary(list(...), field = 'description')
-  dictionary
+set_descriptions <- function(dictionary, ..., .list = NULL){
+  dd_set(dictionary, ..., .list = .list, field = 'description')
 }
 
 #' @rdname set_labels
 #' @export
-set_units <- function(dictionary, ...){
-  if(is_empty(list(...))) return(dictionary)
-  dictionary <- dd_prep_set(dictionary, ..., field = 'units')
-  dictionary$modify_dictionary(list(...), field = 'units')
-  dictionary
+set_units <- function(dictionary, ..., .list = NULL){
+  dd_set(dictionary, ..., .list = .list, field = 'units')
 }
 
 #' @rdname set_labels
 #' @export
-set_divby_modeling <- function(dictionary, ...){
-  if(is_empty(list(...))) return(dictionary)
-  dictionary <- dd_prep_set(dictionary, ..., field = 'divby_modeling')
-  dictionary$modify_dictionary(list(...), field = 'divby_modeling')
-  dictionary
+set_divby_modeling <- function(dictionary, ..., .list = NULL){
+  dd_set(dictionary, ..., .list = .list, field = 'divby_modeling')
 }
 
-dd_prep_set <- function(dictionary, ..., field){
+dd_set_prep <- function(dictionary, .dots, field){
   checkmate::assert_class(dictionary, "DataDictionary")
-  dictionary$check_modify_call(list(...), field = field)
+  dictionary$check_modify_call(.dots, field = field)
   dictionary$clone(deep = dictionary$copy_on_modify)
+}
+
+dd_set <- function(dictionary, ..., .list, field){
+  assert_valid_dotdot(..., .list = .list)
+  .dots <- infer_dotdot(..., .list = .list)
+  if(is_empty(.dots)) return(dictionary)
+  dictionary <- dd_set_prep(dictionary, .dots, field = field)
+  dictionary$modify_dictionary(.dots, field = field)
+  dictionary
 }
 
 #' @rdname set_labels
@@ -105,7 +113,7 @@ set_category_labels <- function(dictionary, ...){
     )
   }
 
-  dictionary <- dd_prep_set(dictionary, ..., field = 'category_label')
+  dictionary <- dd_set_prep(dictionary, list(...), field = 'category_label')
 
   missing_level_names <- input_frame$value %>%
     purrr::map_lgl(.f = ~ "" %in% names(.x)) %>%

@@ -9,13 +9,13 @@
 \alias{set_category_order}
 \title{Modify Data Dictionary Elements}
 \usage{
-set_labels(dictionary, ...)
+set_labels(dictionary, ..., .list = NULL)
 
-set_descriptions(dictionary, ...)
+set_descriptions(dictionary, ..., .list = NULL)
 
-set_units(dictionary, ...)
+set_units(dictionary, ..., .list = NULL)
 
-set_divby_modeling(dictionary, ...)
+set_divby_modeling(dictionary, ..., .list = NULL)
 
 set_category_labels(dictionary, ...)
 
@@ -31,9 +31,11 @@ that will be modified. The value must be a:
 and \code{set_descriptions()}
 \item numeric value for \code{set_divby_modeling()}
 \item character vector for \code{set_category_levels()} and \code{set_category_labels()}
-}
+}}
 
-See examples for examples of each.}
+\item{.list}{a list of name-value pairs. This argument is optional and
+intended to be used in place of \code{...} for programmatic setting of
+meta data.}
 }
 \value{
 a modified \code{dictionary}
@@ -52,5 +54,14 @@ dd <- as_data_dictionary(data.frame(a = 1, b = "cat", id = 1)) \%>\%
  set_category_labels(b = c("cat" = "A small lion"))
 
 dd
+
+# programmatic assignment
+
+label_list <- list(a = "Listed numeric example",
+                   b = "Listed categorical example")
+set_labels(dd, .list = label_list)
+
+
+
 
 }

@@ -44,14 +44,14 @@ test_that(
   code = {
 
     dd_1 <-
-      data_dictionary(variable_list = list(age_years, age_group))
+      data_dictionary(.list = list(age_years, age_group))
 
     dd_2 <-
       data_dictionary(age_years, age_group)
 
     expect_equal(dd_1, dd_2)
 
-    expect_error(data_dictionary(age_years, variable_list = list(age_group)))
+    expect_error(data_dictionary(age_years, .list = list(age_group)))
 
   }
 )

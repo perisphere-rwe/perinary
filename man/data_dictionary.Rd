@@ -4,13 +4,13 @@
 \alias{data_dictionary}
 \title{Create Data Dictionary from Variable Definitions}
 \usage{
-data_dictionary(..., variable_list = NULL)
+data_dictionary(..., .list = NULL)
 }
 \arguments{
 \item{...}{One or more objects inheriting from A \link[=numeric_variable]{numeric variable}
 or A \link[=nominal_variable]{nominal variable}.}
 
-\item{variable_list}{A list of data variables. This argument allows
+\item{.list}{A list of data variables. This argument allows
 \code{data_dictionary} to be used programmatically and is optional. It is
 intended to be used as an alternative to \code{...}.}
 }
@@ -24,8 +24,8 @@ Variables should be made using \code{\link[=numeric_variable]{numeric_variable()
 and passed directly as arguments.
 }
 \details{
-if both \code{...} and \code{variable_list} are specified, the dictionary
-will only be created using \code{variable_list}.
+if both \code{...} and \code{.list} are specified, the dictionary
+will only be created using \code{.list}.
 }
 \examples{
 
@@ -43,6 +43,9 @@ gender <- nominal_variable(
 )
 
 dd <- data_dictionary(age_years, gender)
+print(dd)
+
+dd <- data_dictionary(.list = list(age_years, gender))
 print(dd)
 
 }

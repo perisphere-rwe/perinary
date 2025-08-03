@@ -45,3 +45,24 @@ assert_in_set <- function(values, choices,
 
 }
 
+assert_valid_dotdot <- function(..., .list){
+  if(!is_empty(list(...)) && !is_empty(.list)){
+    rlang::abort(
+      message = c(
+        "`...` must be empty if `.list` is not `NULL`",
+        i = glue::glue("This function can work with either \\
+                       unquoted inputs or a list of inputs, \\
+                       but it is not intended to be used with both \\
+                       at once.")
+      )
+    )
+  }
+  if(is_empty(list(...)) && is_empty(.list)){
+    rlang::warn(
+      message = c(
+        i = glue::glue("`...` is empty and so is `.list`. No action can \\
+        be taken when both of these inputs are unspecified.")
+      )
+    )
+  }
+}

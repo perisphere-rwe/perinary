@@ -9,9 +9,23 @@ test_that(
       set_descriptions(factor = "A factor variable with one level") %>%
       set_category_labels(character = c("a" = "A")) %>%
       set_category_order(character = "b") %>%
-      set_divby_modeling(number = 10) %>%
-      # verify that empty calls to set_whatever won't affect the dictionary
-      set_labels()
+      set_divby_modeling(number = 10)
+
+
+    dd_set_labels_by_list <- dd %>%
+      set_labels(.list = list(number = "A double value",
+                              integer = "An integer value")) %>%
+      set_descriptions(
+        .list = list(factor = "A factor variable with one level")
+      ) %>%
+      set_category_labels(character = c("a" = "A")) %>%
+      set_category_order(character = "b") %>%
+      set_divby_modeling(.list = list(number = 10))
+
+    expect_equal(dd_set_labels, dd_set_labels_by_list)
+
+    # verify that empty calls to set_whatever won't affect the dictionary
+    expect_warning(set_labels(dd_set_labels))
 
     # access new values in dictionary
 
@@ -121,9 +135,9 @@ test_that(
       nominal_variable(
         name = "age_group",
         label = "Age group",
-        description = "Ages of 0 to < 50, 50 to < 60, and \u2265 60 years",
+        description = "Ages of 0 to < 50, 50 to < 60, and >=60 years",
         category_levels = c("age_lt_50", "age_gteq_50_lt_60", "age_gteq_60"),
-        category_labels = c("0 to < 50", "50 to < 60", "\u2265 60")
+        category_labels = c("0 to < 50", "50 to < 60", ">=60")
       )
 
     )
