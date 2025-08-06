@@ -10,17 +10,20 @@
 coverage](https://codecov.io/gh/bcjaeger/perinary/graph/badge.svg)](https://app.codecov.io/gh/bcjaeger/perinary)
 <!-- badges: end -->
 
-A grammar for data dictionaries with three primary verbs:
+A grammar for data dictionaries with four primary verbs:
 
-1.  `set`: initialize or modify meta data
-2.  `get`: retrieve meta data
-3.  `infuse`: apply meta data
+1.  `get`: retrieve meta data from a dictionary
+2.  `set`: modify meta data in a dictionary
+3.  `infuse`: put meta data from a dictionary into a data frame as an
+    attribute
+4.  `insert`: put meta data from a dictionary into a data frame as new
+    columns
 
 Dictionaries are often developed outside of a computing session and
 stored as static files, making it inconvenient to apply meta data from
 the dictionary to your data. `perinary` aims to bring the magic of a
-dictionary to your R session, providing dynamic and intuitive methods to
-insert meta data into your results right when you need it.
+dictionary to your R session, providing intuitive ways to put meta data
+into your results when you need it.
 
 ## Installation
 
@@ -68,11 +71,11 @@ dd_peng
 #> 5 bill_d… none  none        none  none           none            none
 ```
 
-### Tell me what I don’t know
+## Retrieve meta data with `get`
 
-Our dictionary is initialized, but it doesn’t contain complete
-information yet. Where should we start? Use the function
-`get_unknowns()` to clarify what relevant information is missing. This
+An often overlooked utility of data dictionaries is telling us what we
+don’t know. Our dictionary is initialized, so we’ll use the function
+`get_unknowns()` to tell us what relevant information is missing. This
 function returns a `tibble` by default, but if you set
 `as_request = TRUE`, it provides a bullet point list that is easier to
 read. If you work with subject matter experts, you can also send this
@@ -111,17 +114,52 @@ get_unknowns(dd_peng, as_code = TRUE)
 #>            body_mass_g  = "",
 #>            bill_length_mm  = "",
 #>            bill_depth_mm  = "") %>% 
-#> set_factor_labels(species = c(Adelie = "",
-#>                               Chinstrap = "",
-#>                               Gentoo = ""),
-#>                   sex = c(female = "",
-#>                           male = "")) %>% 
+#> set_category_labels(species = c(Adelie = "",
+#>                                 Chinstrap = "",
+#>                                 Gentoo = ""),
+#>                     sex = c(female = "",
+#>                             male = "")) %>% 
 #> set_units(body_mass_g  = "",
 #>           bill_length_mm  = "",
 #>           bill_depth_mm  = "")
 ```
 
-### Modify dictionary values
+Other `get` functions include
+
+- `get_term_key()`: returns a `tibble` that links nominal variable
+  categories to modeling terms. This is helpful when you want to
+  incorporate meta information into standard output from modeling
+  functions.
+
+  ``` r
+  get_term_key(dd_peng)
+  #> # A tibble: 5 × 6
+  #>   variable levels    labels    reference category_type term            
+  #>   <chr>    <chr>     <chr>     <lgl>     <chr>         <chr>           
+  #> 1 species  Adelie    Adelie    TRUE      levels        speciesAdelie   
+  #> 2 species  Chinstrap Chinstrap FALSE     levels        speciesChinstrap
+  #> 3 species  Gentoo    Gentoo    FALSE     levels        speciesGentoo   
+  #> 4 sex      female    female    TRUE      levels        sexfemale       
+  #> 5 sex      male      male      FALSE     levels        sexmale
+  ```
+
+- `get_dictionary()`: returns a `tibble` containing raw dictionary meta
+  data. This is helpful when you want to apply meta data in a
+  non-standard way.
+
+  ``` r
+  get_dictionary(dd_peng)
+  #> # A tibble: 5 × 7
+  #>   name    label description units divby_modeling category_levels category_labels
+  #>   <chr>   <chr> <chr>       <chr>          <dbl> <named list>    <named list>   
+  #> 1 species <NA>  <NA>        <NA>              NA <chr [3]>       <chr [3]>      
+  #> 2 sex     <NA>  <NA>        <NA>              NA <chr [2]>       <chr [2]>      
+  #> 3 body_m… <NA>  <NA>        <NA>              NA <NULL>          <NULL>         
+  #> 4 bill_l… <NA>  <NA>        <NA>              NA <NULL>          <NULL>         
+  #> 5 bill_d… <NA>  <NA>        <NA>              NA <NULL>          <NULL>
+  ```
+
+## Modify meta data with `set`
 
 Once we have this information ready to embed in the dictionary, we can
 use `perinary`’s family of `set` functions:
@@ -140,7 +178,7 @@ dd_peng <- dd_peng %>%
                      bill_depth_mm = 5)
 ```
 
-#### Identifier variables
+### Identifier variables
 
 An identifier variable uniquely defines sampling units in a data set. An
 identifier variable can cause disruption in a data dictionary if it is
@@ -212,7 +250,7 @@ data_peng %>%
 #>   - bill_depth_mm = ?
 ```
 
-#### Modifying factors
+### Modifying factors
 
 Modify factor labels, changing one or more labels in an existing
 variable, with `set_category_labels()`:
@@ -256,7 +294,7 @@ dd_peng$variables$sex
 #>   Category Labels    : F and M
 ```
 
-### Apply dictionary information
+## Apply meta data to attributes with `infuse`
 
 Data dictionaries have a method called `recode()`, which leverages the
 `dplyr::recode()` function in combination with information stored in the
@@ -348,7 +386,7 @@ data_peng %>%
 #> # ℹ 678 more rows
 ```
 
-### Attach all information at once
+### All at once
 
 `infuse_dictionary()` puts all the relevant information from a data
 dictionary into an existing dataset. This can smooth out your code when
@@ -379,3 +417,15 @@ knitr::include_graphics('img/screen-regression_table.png')
 ```
 
 <img src="img/screen-regression_table.png" width="100%" />
+
+### Just in time
+
+``` r
+# 
+# library(broom)
+# 
+# data <- tidy(fit)
+# dictionary <- dd_peng
+# 
+# insert_model_key(tidy_fit, dictionary = dd_peng)
+```

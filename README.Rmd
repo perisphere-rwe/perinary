@@ -20,13 +20,14 @@ knitr::opts_chunk$set(
 [![Codecov test coverage](https://codecov.io/gh/bcjaeger/perinary/graph/badge.svg)](https://app.codecov.io/gh/bcjaeger/perinary)
 <!-- badges: end -->
 
-A grammar for data dictionaries with three primary verbs:
+A grammar for data dictionaries with four primary verbs:
 
-1. `set`: initialize or modify meta data
-2. `get`: retrieve meta data
-3. `infuse`: apply meta data
+1. `get`: retrieve meta data from a dictionary
+1. `set`: modify meta data in a dictionary
+1. `infuse`: put meta data from a dictionary into a data frame as an attribute
+1. `insert`: put meta data from a dictionary into a data frame as new columns
 
-Dictionaries are often developed outside of a computing session and stored as static files, making it inconvenient to apply meta data from the dictionary to your data. `perinary` aims to bring the magic of a dictionary to your R session, providing dynamic and intuitive methods to insert meta data into your results right when you need it.
+Dictionaries are often developed outside of a computing session and stored as static files, making it inconvenient to apply meta data from the dictionary to your data. `perinary` aims to bring the magic of a dictionary to your R session, providing intuitive ways to put meta data into your results when you need it.
 
 ## Installation
 
@@ -58,9 +59,9 @@ dd_peng
 
 ```
 
-### Tell me what I don't know
+## Retrieve meta data with `get`
 
-Our dictionary is initialized, but it doesn't contain complete information yet. Where should we start? Use the function `get_unknowns()` to clarify what relevant information is missing. This function returns a `tibble` by default, but if you set `as_request = TRUE`, it provides a bullet point list that is easier to read. If you work with subject matter experts, you can also send this text to them and ask for help filling in the gaps.
+An often overlooked utility of data dictionaries is telling us what we don't know. Our dictionary is initialized, so we'll use the function `get_unknowns()` to tell us what relevant information is missing. This function returns a `tibble` by default, but if you set `as_request = TRUE`, it provides a bullet point list that is easier to read. If you work with subject matter experts, you can also send this text to them and ask for help filling in the gaps.
 
 ```{r}
 get_unknowns(dd_peng, as_request = TRUE)
@@ -72,10 +73,23 @@ And if you want to get straight to filling these unknowns in using dictionary fu
 get_unknowns(dd_peng, as_code = TRUE)
 ```
 
+Other `get` functions include 
 
-### Modify dictionary values
+- `get_term_key()`: returns a `tibble` that links nominal variable categories to modeling terms. This is helpful when you want to incorporate meta information into standard output from modeling functions.
 
-Once we have this information ready to embed in the dictionary, we can use `perinary`'s family of `set` functions:
+  ```{r}
+  get_term_key(dd_peng)
+  ```
+
+- `get_dictionary()`: returns a `tibble` containing raw dictionary meta data. This is helpful when you want to apply meta data in a non-standard way.
+
+  ```{r}
+  get_dictionary(dd_peng)
+  ```
+
+## Modify meta data with `set`
+
+`perinary`'s family of `set` functions provide the interface to modify a dictionary's meta data.
 
 ```{r}
 
@@ -92,7 +106,7 @@ dd_peng <- dd_peng %>%
 
 ```
 
-#### Identifier variables
+### Identifier variables
 
 An identifier variable uniquely defines sampling units in a data set. An identifier variable can cause disruption in a data dictionary if it is treated like a factor. For example, we don't want to supply labels for each level of an identifier, and we don't want to summarize data for each level of an identifier. To demonstrate the problem identifiers can pose, here's what would have happened in our call to `get_unknowns()` if we had an unmanaged identifier variable in the dictionary.
 
@@ -117,11 +131,9 @@ data_peng %>%
 
 ```
 
+### Nominal variables
 
-
-#### Modifying factors
-
-Modify factor labels, changing one or more labels in an existing variable, with `set_category_labels()`:
+Modify the category labels for nominal variables with `set_category_labels()`:
 
 ```{r}
 
@@ -134,9 +146,12 @@ dd_peng$variables$sex
 
 ```
 
-Modify factor order, moving one or more levels to the front, with `set_category_order()`:
+Modify category order for nominal variables with `set_category_order()`:
 
 ```{r}
+
+# moves the specified category or categories to the front, putting the 
+# remaining categories behind with the same relative order to each other
 
 dd_peng <- dd_peng %>% 
   set_category_order(sex = c("female"))
@@ -145,7 +160,7 @@ dd_peng$variables$sex
 
 ```
 
-### Apply dictionary information
+## Apply meta data to attributes with `infuse`
 
 Data dictionaries have a method called `recode()`, which leverages the `dplyr::recode()` function in combination with information stored in the dictionary to provide a 'smart' recoder. The 'smart' part is that this recode function doesn't require you to provide recode values. Instead, it looks for appropriate recode values in the dictionary.
 
@@ -190,7 +205,7 @@ data_peng %>%
 
 ```
 
-### Attach all information at once
+### All at once
 
 `infuse_dictionary()` puts all the relevant information from a data dictionary into an existing dataset. This can smooth out your code when you use packages that automatically incorporate labels into their outputs, such as `gtsummary`. In the example below, we infuse our data with the dictionary we created and specify that we want to format continuous variables using their modeling units (e.g., bill length is modeled per 10 mm). Note that when you infuse data with dictionaries and specify `units = 'model'`, the corresponding variables will be divided by their designated `divby_model` value and new columns will be created. If you don't want new columns, you can specify `divby_suffix = NULL` when you infuse.
 
@@ -210,5 +225,23 @@ tbl_regression(fit)
 ```{r}
 knitr::include_graphics('img/screen-regression_table.png')
 ```
+
+## Example: model fit to table
+
+```{r}
+
+library(broom)
+
+data_infused <- data_peng %>% 
+  infuse_dictionary(dd_peng, units = 'model', divby_suffix = NULL)
+
+fit_tidied <- tidy(lm(formula = body_mass_g ~ ., data = data_infused))
+
+insert_term_key(fit_tidied, dictionary = dd_peng)
+
+
+
+```
+
 
 

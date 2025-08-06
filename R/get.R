@@ -209,3 +209,151 @@ get_unknowns <- function(dictionary,
   cat(out, "\n")
 
 }
+
+
+
+#' Get Term Key for Nominal Variables
+#'
+#' Returns a tibble linking each level or label of a nominal variable
+#' to a modeling term, using a specified separator between the variable
+#' name and category value. This is especially useful for joining
+#' dictionary information to model output, such as coefficients or terms
+#' in regression tables.
+#'
+#' @param dictionary `r roxy_describe_dd()`
+#' @param adjust_to Optional. A tibble that includes a column with term names
+#'   (default: `'term'`). When supplied, the output is filtered to retain only
+#'   terms found in `adjust_to` and that match the reference level.
+#' @param term_separator A string used to separate the variable name and
+#'   category value in the output term column. Default is `""`.
+#' @param term_colname A character string giving the column name to use
+#'   for the terms column in the returned tibble. Default is `"term"`.
+#'
+#' @return A tibble with one row per variable-category combination and
+#'   columns for the variable, category type (`levels` or `labels`),
+#'   and term. If `adjust_to` is provided, the tibble is filtered
+#'   accordingly and includes the `category` column.
+#'
+#' @export
+#'
+#' @examples
+#' dd <- as_data_dictionary(iris)
+#' get_term_key(dd)
+#'
+get_term_key <- function(dictionary,
+                         adjust_to = NULL,
+                         term_separator = "",
+                         term_colname = 'term'){
+
+
+  out <- dictionary$category_key %>%
+    dplyr::mutate(
+      term_levels = paste(variable, levels, sep = term_separator),
+      term_labels = dplyr::if_else(
+        labels == levels,
+        true = NA_character_,
+        false = paste(variable, labels, sep = term_separator)
+      )
+    ) %>%
+    tidyr::pivot_longer(cols = dplyr::starts_with('term_'),
+                        values_to = 'term',
+                        names_to = 'category_type',
+                        names_prefix = 'term_') %>%
+    tidyr::drop_na(term) %>%
+    dplyr::rename_with(.fn = ~ term_colname, .cols = term)
+
+  if(is.null(adjust_to)) return(out)
+
+  term_order <- adjust_to[[term_colname]]
+
+  out %>%
+    dplyr::mutate(match = .data[[term_colname]] %in% term_order) %>%
+    dplyr::group_by(variable, category_type) %>%
+    dplyr::filter(sum(match + reference) == dplyr::n()) %>%
+    dplyr::ungroup() %>%
+    dplyr::select(-match) %>%
+    dplyr::mutate(
+      category = dplyr::if_else(category_type == 'levels', levels, labels),
+      .before = all_of(term_colname),
+      .keep = 'unused'
+    )
+
+}
+
+#' Extract Dictionary Meta Data as a Tibble
+#'
+#' Returns a tibble of the dictionary contents, optionally formatting
+#' missing values and nominal variable categories. This can be useful
+#' for custom workflows that require dictionary information in tabular form.
+#'
+#' @param dictionary `r roxy_describe_dd()`
+#' @param format_missing Logical. If `TRUE`, missing metadata fields (like
+#'   labels or units) are returned as stored in the dictionary. If `FALSE`
+#'   (default), missing values are replaced with `NA`.
+#' @param format_categories Logical. If `TRUE`, nominal category information
+#'   is returned exactly as stored in the dictionary. If `FALSE` (default),
+#'   category levels and labels are returned as list-columns extracted from
+#'   the variable objects.
+#'
+#' @return A tibble with one row per variable, containing meta data fields
+#'   such as `label`, `description`, `units`, `divby_modeling`,
+#'   `category_levels`, and `category_labels`.
+#'
+#' @export
+#'
+#' @examples
+#' dd <- as_data_dictionary(iris)
+#' get_dictionary(dd)
+#'
+get_dictionary <- function(dictionary,
+                           format_missing = FALSE,
+                           format_categories = FALSE){
+
+  if(format_missing && format_categories) return(dictionary$dictionary)
+
+  vars <- dictionary$variables
+
+  tbl_names <- tibble::tibble(
+    name = purrr::map_chr(vars, ~ .x$get_name()),
+  )
+
+  tbl_left <- dplyr::select(dictionary$dictionary,
+                            label,
+                            description,
+                            units,
+                            divby_modeling)
+
+  if(!format_missing){
+
+    tbl_left <- tibble::tibble(
+      label           = purrr::map_chr(vars, ~ .x$get_label() %||% NA_character_),
+      description     = purrr::map_chr(vars, ~ .x$get_description() %||% NA_character_),
+      units           = purrr::map_chr(vars, ~ .x$get_units() %||% NA_character_),
+      divby_modeling  = purrr::map_dbl(vars, ~ .x$get_divby_modeling() %||% NA_real_)
+    )
+
+  }
+
+  tbl_right <- dplyr::select(dictionary$dictionary,
+                             category_levels,
+                             category_labels)
+
+  if(!format_categories){
+
+    tbl_right <- tibble::tibble(
+      category_levels = purrr::map(vars, ~ .x$get_category_levels()),
+      category_labels = purrr::map(vars, ~ .x$get_category_labels())
+    )
+
+  }
+
+  dplyr::bind_cols(tbl_names, tbl_left, tbl_right)
+
+}
+
+
+
+
+
+
+

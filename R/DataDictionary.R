@@ -493,6 +493,8 @@ DataDictionary <- R6Class(
     # data frame summary
     dictionary = NULL,
 
+    category_key = NULL,
+
     # manage modification by reference
     copy_on_modify = NULL,
 
@@ -516,8 +518,8 @@ DataDictionary <- R6Class(
       self$variables <- purrr::set_names(vars, var_names)
 
       # Extract data for the tibble
-      self$dictionary <- self$create_dictionary(vars)
-
+      self$dictionary <- self$create_dictionary(self$variables)
+      self$category_key <- self$create_category_key(self$variables)
       self$copy_on_modify <- copy_on_modify
 
     },
@@ -645,6 +647,10 @@ DataDictionary <- R6Class(
 
     },
 
+    get_category_key = function(){
+      self$category_key
+    },
+
     recode = function(x, ..., units = 'none', warn_unmatched = TRUE){
 
       x_uni <- unique(stats::na.omit(x))
@@ -756,6 +762,21 @@ DataDictionary <- R6Class(
 
     },
 
+    create_category_key = function(vars){
+
+      tibble::enframe(vars, name = 'variable') %>%
+        dplyr::mutate(type = purrr::map_chr(value, "type")) %>%
+        dplyr::filter(type == "Nominal") %>%
+        dplyr::mutate(levels = purrr::map(value, ~.x$category_levels),
+                      labels = purrr::map(value, ~.x$category_labels)) %>%
+        dplyr::select(variable, levels, labels) %>%
+        tidyr::unnest(cols = c(levels, labels)) %>%
+        dplyr::group_by(variable) %>%
+        dplyr::mutate(reference = levels == dplyr::first(levels)) %>%
+        dplyr::ungroup()
+
+    },
+
     check_inputs_match = function(key){
 
       unmatched_inputs <- setdiff(names(key), self$dictionary$name)
@@ -824,6 +845,7 @@ DataDictionary <- R6Class(
       }
 
       self$dictionary <- self$create_dictionary(self$variables)
+      self$category_key <- self$create_category_key(self$variables)
 
     },
 
