@@ -42,14 +42,13 @@
 #' get_unknowns(dd, as_code = TRUE)
 
 
-get_unknowns <- function(dictionary,
+get_unknowns <- function(dictionary = NULL,
                          as_request = FALSE,
                          as_code = FALSE,
                          show_optional = FALSE){
 
-  if(!is_data_dictionary(dictionary)) {
-    dictionary <- as_data_dictionary(dictionary)
-  }
+
+  dictionary <- dictionary %||% .perinary_internal$.dictionary
 
   if(as_request && as_code){
     stop("Unknowns can be presented as request or code, but not both",
@@ -210,8 +209,6 @@ get_unknowns <- function(dictionary,
 
 }
 
-
-
 #' Get Term Key for Nominal Variables
 #'
 #' Returns a tibble linking each level or label of a nominal variable
@@ -245,14 +242,13 @@ get_term_key <- function(dictionary,
                          term_separator = "",
                          term_colname = 'term'){
 
-
   out <- dictionary$category_key %>%
     dplyr::mutate(
-      term_levels = paste(variable, levels, sep = term_separator),
+      term_levels = paste(name, level, sep = term_separator),
       term_labels = dplyr::if_else(
-        labels == levels,
+        label == level,
         true = NA_character_,
-        false = paste(variable, labels, sep = term_separator)
+        false = paste(name, label, sep = term_separator)
       )
     ) %>%
     tidyr::pivot_longer(cols = dplyr::starts_with('term_'),
@@ -264,19 +260,25 @@ get_term_key <- function(dictionary,
 
   if(is.null(adjust_to)) return(out)
 
-  term_order <- adjust_to[[term_colname]]
+  # it isn't quite as simple as a right join because we want
+  # to include reference categories whenever a term is part
+  # of the variable that has said reference category. So,
+  # we need to first keep only variables that are in the terms,
+  # then keep either the levels or the labels from term key,
+  # depending on which one is actually in the terms.
+
+  overlap <- dplyr::right_join(out,
+                               adjust_to,
+                               by = term_colname)
 
   out %>%
-    dplyr::mutate(match = .data[[term_colname]] %in% term_order) %>%
-    dplyr::group_by(variable, category_type) %>%
-    dplyr::filter(sum(match + reference) == dplyr::n()) %>%
-    dplyr::ungroup() %>%
-    dplyr::select(-match) %>%
-    dplyr::mutate(
-      category = dplyr::if_else(category_type == 'levels', levels, labels),
-      .before = all_of(term_colname),
-      .keep = 'unused'
-    )
+    dplyr::filter(name %in% overlap$name) %>%
+    # drop the labels or levels, depending on which is in terms
+    dplyr::filter(any(term %in% adjust_to[[term_colname]]),
+                  .by = c(name, category_type)) %>%
+    dplyr::select(-category_type) %>%
+    # drop any levels that aren't in terms and aren't references
+    dplyr::filter(reference | term %in% adjust_to[[term_colname]])
 
 }
 
@@ -350,10 +352,4 @@ get_dictionary <- function(dictionary,
   dplyr::bind_cols(tbl_names, tbl_left, tbl_right)
 
 }
-
-
-
-
-
-
 

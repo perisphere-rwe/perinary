@@ -12,7 +12,7 @@ get_term_key(
 )
 }
 \arguments{
-\item{dictionary}{A \link[=data_dictionary]{data dictionary} object.}
+\item{dictionary}{A \link[=data_dictionary]{data dictionary} object}
 
 \item{adjust_to}{Optional. A tibble that includes a column with term names
 (default: \code{'term'}). When supplied, the output is filtered to retain only

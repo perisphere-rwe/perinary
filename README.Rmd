@@ -20,14 +20,20 @@ knitr::opts_chunk$set(
 [![Codecov test coverage](https://codecov.io/gh/bcjaeger/perinary/graph/badge.svg)](https://app.codecov.io/gh/bcjaeger/perinary)
 <!-- badges: end -->
 
-A grammar for data dictionaries with four primary verbs:
+**Why make this?** Data dictionaries (referred to as "dictionaries" from here) are often developed outside of a computing session and stored as a static file. Dictionaries are helpful in large projects with many outputs, providing a central resource for consistent and accurate annotation of tables and figures. However, the process of making and using dictionaries is tedious, so `perinary` was developed to reduce friction. 
+
+To make dictionaries, there are two primary classes of functions:
 
 1. `get`: retrieve meta data from a dictionary
-1. `set`: modify meta data in a dictionary
-1. `infuse`: put meta data from a dictionary into a data frame as an attribute
-1. `insert`: put meta data from a dictionary into a data frame as new columns
+2. `set`: modify meta data in a dictionary
 
-Dictionaries are often developed outside of a computing session and stored as static files, making it inconvenient to apply meta data from the dictionary to your data. `perinary` aims to bring the magic of a dictionary to your R session, providing intuitive ways to put meta data into your results when you need it.
+To use the dictionary, there are three classes of functions:
+
+1. `translate`: modify names or category labels 
+2. `append`: add rows and/or columns to a data frame
+3. `index`: order the rows of a data frame
+
+While `get/set` functions are applied to a dictionary, the `translate` and `append` functions are members of the `DataDictionary` class, meaning they are called from the dictionary object.
 
 ## Installation
 
@@ -40,7 +46,7 @@ pak::pak("perisphere-rwe/perinary")
 
 ## Data dictionaries
 
-Dictionaries help organize pertinent information about analytic variables, putting information about each variable into tables and figures using consistent labels and incorporating additional information when appropriate. 
+Data dictionaries help organize meta data about variables, storing information relevant for tables and figures that is not easily stored in data frames. A data dictionary is most useful in complex projects with many variables and/or many expected outputs, particularly when consistency between outputs is a goal. 
 
 There are two ways to initialize a dictionary. You can build them using `NumericVariable` and `NominalVariable` objects (not shown here, see vignette), but this can be tedious if you have a lot of variables. For most cases, you'll want to use the `as_data_dictionary()` to create a starter dictionary from a given dataset.
 
@@ -61,13 +67,13 @@ dd_peng
 
 ## Retrieve meta data with `get`
 
-An often overlooked utility of data dictionaries is telling us what we don't know. Our dictionary is initialized, so we'll use the function `get_unknowns()` to tell us what relevant information is missing. This function returns a `tibble` by default, but if you set `as_request = TRUE`, it provides a bullet point list that is easier to read. If you work with subject matter experts, you can also send this text to them and ask for help filling in the gaps.
+Let's be honest, dictionaries are annoying to write. `perinary` aims to make it less annoying with `get_unknowns()`. This function tells us what relevant information is missing from a `dictionary`. If you set `as_request = TRUE`, a bullet point list is returned in the R console. This text is intended to help start a discussion about filling in the gaps.
 
 ```{r}
 get_unknowns(dd_peng, as_request = TRUE)
 ```
 
-And if you want to get straight to filling these unknowns in using dictionary functions (described in the next section), `get_unknowns` gives you a full template to fill in when you specify `as_code = TRUE`:
+If you want to get straight to filling in unknowns, specify `as_code = TRUE`:
 
 ```{r}
 get_unknowns(dd_peng, as_code = TRUE)
@@ -87,7 +93,9 @@ Other `get` functions include
   get_dictionary(dd_peng)
   ```
 
-## Modify meta data with `set`
+- general `get` functions that are exported from the `DataDictionary` class
+
+## Modify dictionaries with `set`
 
 `perinary`'s family of `set` functions provide the interface to modify a dictionary's meta data.
 
@@ -96,6 +104,7 @@ Other `get` functions include
 dd_peng <- dd_peng %>% 
   set_labels(species = "Species",
              sex = "Sex",
+             body_mass_g = "Body mass",
              bill_length_mm = "Bill length",
              bill_depth_mm = "Bill depth") %>% 
   set_units(bill_length_mm = "mm",
@@ -137,12 +146,11 @@ Modify the category labels for nominal variables with `set_category_labels()`:
 
 ```{r}
 
-dd_peng$variables$sex
-
 dd_peng <- dd_peng %>% 
-  set_category_labels(sex = c(female = "F", male = "M"))
+  set_category_labels(sex = c(female = "Female penguins", 
+                              male = "Male penguins"))
 
-dd_peng$variables$sex
+dd_peng
 
 ```
 
@@ -154,71 +162,80 @@ Modify category order for nominal variables with `set_category_order()`:
 # remaining categories behind with the same relative order to each other
 
 dd_peng <- dd_peng %>% 
-  set_category_order(sex = c("female"))
+  set_category_order(sex = c("male"),
+                     species = c("Chinstrap"))
 
-dd_peng$variables$sex
-
-```
-
-## Apply meta data to attributes with `infuse`
-
-Data dictionaries have a method called `recode()`, which leverages the `dplyr::recode()` function in combination with information stored in the dictionary to provide a 'smart' recoder. The 'smart' part is that this recode function doesn't require you to provide recode values. Instead, it looks for appropriate recode values in the dictionary.
-
-```{r}
-
-# This function is embedded in the dictionary itself, so it's called by 
-# typing the name of the dictionary, followed by `$recode(x)`, where 
-# `x` is the vector you intend to recode. For example:
-
-data_peng %>% 
-  mutate(sex = dd_peng$recode(sex))
+dd_peng
 
 ```
 
-This works both for variable names and variable categories. For example, pivoting our data to a longer format will move several variable names into a new column called `name`, and this column can be recoded just like we did above.
+
+## Modify objects using dictionaries
+
+The `translate` function family includes `translate_categories()`, `translate_names()`, and `translate_data()`. These functions are the bridge between your `dictionary` and your data. So, how do they work?
+
+- Instead of requiring name-value pairs in the function call, `translate` functions look up the relevant name value pairs in `dictionary`:
+
+  ```{r}
+  data_peng %>% 
+    mutate(sex = translate_categories(sex, dictionary = dd_peng))
+  ```
+
+- While `translate_categories()` replaces category levels with labels, `translate_names()` replaces variable names with labels. This is useful when variable names become column values, e.g., after using `pivot_longer` or `melt`:
+
+  ```{r}
+  
+  data_peng %>% 
+    pivot_longer(starts_with("bill_")) %>% 
+    mutate(name = translate_names(name, dictionary = dd_peng))
+  
+  ```
+
+- `translate_data()` is a general convenience tool that:
+
+    + sets variable labels as column attributes
+    
+    + recodes category levels to corresponding labels 
+    
+    + converts characters to factors (factors are required to apply the category order specified in the dictionary)
+    
+    + divide continuous variables by their corresponding modeling divisor if `units = 'model', and update labels accordingly
+
+  ```{r}
+  data_peng %>% 
+    translate_data(dictionary = dd_peng)
+  ```
+
+## Set your default
+
+Writing meta data in a `dictionary` *should* make it easier to put that information in outputs. However, supplying the `dictionary` as an input to every single `perinary` function gets unnecessarily tedious. For convenience, you can save any `dictionary` you make as the "default" dictionary for `perinary` functions during your current R session. The default dictionary will be used whenever a `perinary` function is called and a `dictionary` is not explicitly supplied by the user.
 
 ```{r}
+
+set_default_dictionary(dd_peng)
 
 data_peng %>% 
   pivot_longer(starts_with("bill_")) %>% 
-  mutate(name = dd_peng$recode(name))
+  mutate(name = translate_names(name),
+         sex = translate_categories(sex))
 
 ```
 
-If needed, there is a more direct way to get recode information for specific parts of the dictionary:
+**Note:** for the remainder of the `ReadMe`, we *could* omit `dictionary = dd_peng` in all `perinary` functions because we have set that as our default. However, we do not take this semantic shortcut because it may be confusing for readers who skip sections or who copy/paste example code.
 
-```{r}
+## Model output and dictionaries
 
-# in case the smart dictionary recoder fails, you can fall back 
-# on the more reliable methods get_variable_recoder and 
-# get_level_recoder, which are also public methods for dictionaries
-
-recode_bills <- dd_peng$get_variable_recoder(name = c("bill_length_mm",
-                                                      "bill_depth_mm"))
-
-recode_sex <- dd_peng$get_level_recoder(name = 'sex')
-
-data_peng %>% 
-  pivot_longer(starts_with("bill_")) %>% 
-  mutate(name = recode(name, !!!recode_bills),
-         sex = recode(sex, !!!recode_sex))
-
-```
-
-### All at once
-
-`infuse_dictionary()` puts all the relevant information from a data dictionary into an existing dataset. This can smooth out your code when you use packages that automatically incorporate labels into their outputs, such as `gtsummary`. In the example below, we infuse our data with the dictionary we created and specify that we want to format continuous variables using their modeling units (e.g., bill length is modeled per 10 mm). Note that when you infuse data with dictionaries and specify `units = 'model'`, the corresponding variables will be divided by their designated `divby_model` value and new columns will be created. If you don't want new columns, you can specify `divby_suffix = NULL` when you infuse.
+If you are using a package like `gtsummary`, which incorporates variable labels automatically, `translate()` is probably all you need from `perinary`. In the example below, we translate our data with `units` set to `"model"`, which additionally preps continuous variables by dividing them by their modeling unit and (e.g., bill length is modeled per 10 mm) and updates labels accordingly. 
 
 ```{r, eval = FALSE}
 
 library(gtsummary)
 
-data_infused <- data_peng %>% 
-  infuse_dictionary(dd_peng, units = 'model', divby_suffix = NULL)
-
-fit <- lm(formula = body_mass_g ~ ., data = data_infused)
-
-tbl_regression(fit)
+data_peng %>% 
+  translate_data(units = 'model', dictionary = dd_peng) %>% 
+  lm(formula = body_mass_g ~ sex + species + bill_length_mm + bill_depth_mm, 
+     data = .) %>% 
+  tbl_regression()
 
 ```
 
@@ -226,21 +243,85 @@ tbl_regression(fit)
 knitr::include_graphics('img/screen-regression_table.png')
 ```
 
-## Example: model fit to table
+In rare cases, `gtsummary` may not provide tools to tabulate our regression results. In those cases, we can use functions from the `append` and `index` class.
+
+Let's start with tidied model output from `broom`:
 
 ```{r}
 
 library(broom)
 
-data_infused <- data_peng %>% 
-  infuse_dictionary(dd_peng, units = 'model', divby_suffix = NULL)
+fit <- data_peng %>% 
+  translate_data(units = 'model', dictionary = dd_peng) %>% 
+  lm(formula = body_mass_g ~ sex + species + bill_length_mm + bill_depth_mm, 
+     data = .) %>% 
+  tidy(conf.int = TRUE)
 
-fit_tidied <- tidy(lm(formula = body_mass_g ~ ., data = data_infused))
+fit
 
-insert_term_key(fit_tidied, dictionary = dd_peng)
+```
 
+We use `append_term_key()` to add columns indicating variable name, category level, category label, and reference groups to the model output (a row is also added for each reference group).
 
+```{r}
 
+fit_appended <- append_term_key(fit, dictionary = dd_peng)
+
+fit_appended
+
+```
+
+Second, we use `index_terms` to re-order the rows of these data based on the order they appear in the dictionary. This is helpful when you want variables to be listed in consistent order throughout your report.
+
+```{r}
+
+fit_sorted <- index_terms(fit_appended, dictionary = dd_peng)
+
+```
+
+Third, we tabulate the results
+
+```{r}
+
+library(gt)
+library(table.glue)
+
+data_gt <- fit_sorted %>% 
+  filter(name != "(Intercept)") %>% 
+  # push labels for continuous bill variables into the label column
+  mutate(
+    label = coalesce(label, 
+                     translate_names(name, units = 'model', 
+                                     dictionary = dd_peng)
+    )
+  ) %>% 
+  # Add a custom group for the bill variables
+  add_count(name) %>% 
+  mutate(name = if_else(n==1, 
+                        "Bill dimensions", 
+                        translate_names(name))) %>% 
+  # drop unused columns and make final modifications
+  transmute(
+    name, 
+    label,
+    # format results with table.glue
+    estimate = if_else(
+      reference, 
+      true = "0 (reference)", 
+      false = table_glue("{estimate} ({conf.low}, {conf.high})")),
+    p.value = table_pvalue(p.value)
+  )
+
+gt(data_gt, groupname_col = 'name', rowname_col = 'label') %>% 
+  tab_style(
+    style = cell_text(indent = px(16)),           
+    locations = cells_stub()
+  ) %>% 
+  cols_align('center', columns = c(estimate, p.value)) %>% 
+  cols_label(estimate = md("Estimated body mass<br/>difference, grams (95% CI)"), 
+             p.value = "P-value") %>% 
+  tab_stubhead(label = md("**Characteristic**")) %>% 
+  tab_options(table.width = pct(80))
 ```
 
 

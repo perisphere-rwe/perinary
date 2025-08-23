@@ -1,67 +1,61 @@
 
 test_that(
 
-  desc = "Set using correct inputs", code = {
+  desc = "Set using ... and .list", code = {
 
-    dd_set_labels <- dd %>%
+    dd_set_dotdots <- dd_test %>%
       set_labels(number = "A double value",
-                integer = "An integer value") %>%
-      set_descriptions(factor = "A factor variable with one level") %>%
-      set_category_labels(character = c("a" = "A")) %>%
-      set_category_order(character = "b") %>%
-      set_divby_modeling(number = 10)
+                 integer = "An integer value",
+                 logical = "A logical value") %>%
+      set_descriptions(factor = "A factor variable with one level",
+                       date = "A date to remember") %>%
+      set_category_labels(character = c("a" = "A",
+                                        "b" = "BB",
+                                        "c" = "CCC"),
+                          factor = c(j = "JJ")) %>%
+      set_category_order(character = "b",
+                         factor = c("j", "g")) %>%
+      set_units(number = 'units',
+                integer = 'units') %>%
+      set_divby_modeling(number = 10,
+                         integer = 5)
 
-
-    dd_set_labels_by_list <- dd %>%
+    dd_set_dotlist <- dd_test %>%
       set_labels(.list = list(number = "A double value",
-                              integer = "An integer value")) %>%
-      set_descriptions(
-        .list = list(factor = "A factor variable with one level")
-      ) %>%
-      set_category_labels(character = c("a" = "A")) %>%
-      set_category_order(character = "b") %>%
-      set_divby_modeling(.list = list(number = 10))
+                              integer = "An integer value",
+                              logical = "A logical value")) %>%
+      set_descriptions(.list = list(factor = "A factor variable with one level",
+                                    date = "A date to remember")) %>%
+      set_category_labels(.list = list(character = c("a" = "A",
+                                                     "b" = "BB",
+                                                     "c" = "CCC"),
+                                       factor = c(j = "JJ"))) %>%
+      set_category_order(.list = list(character = "b",
+                                      factor = c("j", "g"))) %>%
+      set_units(.list = list(number = 'units',
+                             integer = 'units')) %>%
+      set_divby_modeling(.list = list(number = 10,
+                                      integer = 5))
 
-    expect_equal(dd_set_labels, dd_set_labels_by_list)
+    expect_equal(dd_set_dotdots, dd_set_dotlist)
 
     # verify that empty calls to set_whatever won't affect the dictionary
-    expect_warning(set_labels(dd_set_labels))
+    expect_warning(set_labels(dd_set_dotdots))
 
-    # access new values in dictionary
 
-    expect_true(
-      dd_set_labels$variables$number$get_label() != dd$variables$number$fmt_label()
-    )
-
-    expect_equal(dd_set_labels$dictionary$label[1],
+    # verify that the dictionary table is modified by set functions
+    expect_equal(dd_set_dotdots$dictionary$label[1],
                  c(number = "A double value"))
 
-    expect_equal(dd_set_labels$variables$integer$get_label(),
+    # verify that dictionary variables are modified by set functions
+    expect_equal(dd_set_dotdots$variables$integer$get_label(),
                  "An integer value")
 
-    expect_equal(dd_set_labels$variables$factor$get_description(),
+    expect_equal(dd_set_dotdots$variables$factor$get_description(),
                  "A factor variable with one level")
 
-    expect_equal(dd_set_labels$variables$number$get_divby_modeling(), 10)
+    expect_equal(dd_set_dotdots$variables$number$get_divby_modeling(), 10)
 
-    # access new values in variables
-
-    expect_equal(dd_set_labels$variables$number$get_label(),
-                 "A double value")
-
-    expect_equal(dd_set_labels$variables$integer$get_label(),
-                 "An integer value")
-
-    dd <- dd %>%
-      set_category_labels(character = c("a"="A"),
-                         factor = c("j" = "jj"))
-
-    # modifications show up in both variables and dictionary
-    expect_equal(dd$variables$factor$get_category_labels(),
-                 c("f", "g", "h", "i", "jj"))
-
-    expect_equal(dd$dictionary$category_labels[['character']],
-                 .paste_collapse(c("A", "b", "c", "d", "e")))
 
   }
 
@@ -74,37 +68,44 @@ test_that(
   desc = "Set using incorrect inputs", code = {
 
 
-    expect_error(set_units(dd, factor = 'ohno'),
+    expect_error(set_units(dd_test, factor = 'ohno'),
                  regexp = 'cannot be specified for Nominal variables')
 
-    expect_error(set_divby_modeling(dd, factor = 'ohno'),
+    expect_error(set_divby_modeling(dd_test, factor = 'ohno'),
                  regexp = 'cannot be specified for Nominal variables')
 
-    expect_error(set_category_labels(dd,
-                                    character = c("a" = "A"),
-                                    c("b" = "B"),
-                                    integer = c('ohno'='ohnooo')),
-                 regexp = 'must be name-value pairs')
+    expect_error(set_category_labels(dd_test,
+                                     character = c("a" = "A"),
+                                     c("b" = "B"),
+                                     integer = c('ohno'='ohnooo')),
+                 regexp = 'must be named')
 
-    expect_error(set_category_labels(dd,
-                                    character = c("a" = "A",
-                                                  "b" = "B"),
-                                    integer = c('ohno'='ohnooo')),
+    expect_error(set_category_labels(dd_test,
+                                     character = c("a" = "A",
+                                                   "b" = "B"),
+                                     integer = c('ohno'='ohnooo')),
                  regexp = 'Invalid specification')
 
-    expect_error(set_category_labels(dd, character = c("a" = "A", "B")),
-                 regexp = 'MISSING_NAME = B')
+    expect_error(set_category_labels(dd_test,
+                                     factor = c("ohno", "j" = "J"),
+                                     character = c("a" = "A", "B")),
+                 regexp = 'values must also be named vectors')
 
-
-    expect_error(set_category_labels(dd,
-                                    character = c("a" = "A",
-                                                  "x" = "B"),
-                                    factor = c("j" = "jj")),
+    expect_error(set_category_labels(dd_test,
+                                     character = c("a" = "A",
+                                                   "x" = "B"),
+                                     factor = c("j" = "jj")),
                  regexp = 'Invalid category levels')
+
+    expect_error(set_category_labels(dd_test,
+                                     character = c("a" = "B", "b" = "B",
+                                                   "c" = "C", "d" = "C")),
+                 regexp = "must be unique within variables")
+
 
     # no modification should have happened yet since we have been
     # getting errors in the past attempts.
-    expect_equal(dd$variables$character$get_category_levels(),
+    expect_equal(dd_test$variables$character$get_category_levels(),
                  letters[1:5])
 
   }
@@ -157,12 +158,25 @@ test_that(
 
 )
 
+test_that(
+
+  desc = "you can't sneak in a duplicate a label", code = {
+
+    expect_error(
+      set_category_labels(dd_test, character = c(a="ok")) %>%
+        set_category_labels(character = c(b="ok")),
+      regexp = 'must be unique within variables'
+    )
+
+  }
+
+)
 
 test_that(
   desc = "order is preserved when you set factor labels out of order",
   code = {
 
-    dd_wonk <- set_category_labels(dd, character = c("e" = "E", "b" = "B"))
+    dd_wonk <- set_category_labels(dd_test, character = c("e" = "E", "b" = "B"))
 
     expect_equal(dd_wonk$variables$character$category_labels,
                  c("a", "B", "c", "d", "E"))
@@ -171,17 +185,27 @@ test_that(
 )
 
 test_that(
+  desc = "missing names are reported",
+  code = {
+
+    expect_error(set_category_order(dd_test, "b"),
+                 "must be named")
+
+  }
+)
+
+test_that(
   desc = "tell me what variable is out of place",
   code = {
 
-    expect_error(set_labels(dd,
-                           not_in_there = "tell me",
-                           number = "correct",
-                           another_miss = "tell me too"),
+    expect_error(set_labels(dd_test,
+                            not_in_there = "tell me",
+                            number = "correct",
+                            another_miss = "tell me too"),
                  regexp = "not_in_there")
 
     # the dictionary is not modified in place when errors occur.
-    expect_null(dd$get_label('number'))
+    expect_null(dd_test$get_label('number'))
 
   }
 )
@@ -190,10 +214,10 @@ test_that(
   desc = "identifiers can be bare or quoted",
   code = {
 
-    dd_1 <- dd %>%
+    dd_1 <- dd_test %>%
       set_identifiers("factor", character)
 
-    dd_2 <- dd %>%
+    dd_2 <- dd_test %>%
       set_identifiers(character, factor)
 
     expect_equal(dd_1, dd_2)
@@ -207,10 +231,11 @@ test_that(
   code = {
 
     expect_snapshot(
-      set_identifiers(dd, character, factor) %>%
+      set_identifiers(dd_test, character, factor) %>%
         get_unknowns(as_request = TRUE)
     )
 
 
   }
 )
+

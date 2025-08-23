@@ -84,36 +84,45 @@ dd_set <- function(dictionary, ..., .list, field){
 
 #' @rdname set_labels
 #' @export
-set_category_labels <- function(dictionary, ...){
+set_category_labels <- function(dictionary, ..., .list = NULL){
 
+  assert_valid_dotdot(..., .list = .list)
+  .dots <- infer_dotdot(..., .list = .list)
 
-  .dots <- list(...)
   if(is_empty(.dots)) return(dictionary)
+
   checkmate::assert_class(dictionary, "DataDictionary")
 
   input_frame <- tibble::enframe(.dots) %>%
     dplyr::mutate(inputs = purrr::map(value, names))
 
-  missing_variable_names <- which(input_frame$name == "")
+  dictionary <- dd_set_prep(dictionary, .dots, field = 'category_label')
 
-  if(!is_empty(missing_variable_names)){
+  for(i in names(.dots)){
 
-    problems <- .dots[missing_variable_names] %>%
-      .paste_named_vec() %>%
-      purrr::set_names(nm = "x")
+    levels_to_modify <- names(.dots[[i]])
 
-    rlang::abort(
-      message = c(
-        "*" = "Inputs in `...` must be name-value pairs",
-        "*" = "problematic inputs are:",
-        problems,
-        "v" = "replace MISSING_NAME to fix"
-      ),
-      call = NULL
-    )
+    current_cats <- dictionary$get_category_translater(i) %>%
+      .[-which(names(.) %in% levels_to_modify)]
+
+    if(any(.dots[[i]] %in% current_cats)){
+
+      highlight <- names(current_cats[match(.dots[[i]], current_cats)])
+
+      rlang::abort(
+        message = c(
+          glue("Invalid assignment of label \'{.dots[[i]]}\' to \\
+               category \'{levels_to_modify}\' of variable `{i}`"),
+          i = glue("This label is already assigned to category \\
+                   \'{highlight}\' of variable `{i}`"),
+          i = "category labels must be unique within variables"
+        ),
+        call = NULL
+      )
+
+    }
   }
 
-  dictionary <- dd_set_prep(dictionary, list(...), field = 'category_label')
 
   missing_level_names <- input_frame$value %>%
     purrr::map_lgl(.f = ~ "" %in% names(.x)) %>%
@@ -122,21 +131,22 @@ set_category_labels <- function(dictionary, ...){
   if(!is_empty(missing_level_names)){
 
     problems <- .dots[missing_level_names] %>%
-      .paste_named_vec() %>%
+      paste_named_vec() %>%
       purrr::set_names(nm = "x")
 
     rlang::abort(
       message = c(
-        "*" = "Inputs in `...` must be name-value pairs",
-        "*" = "values must also be named vectors",
-        "*" = "problematic inputs are:",
+        "Inputs in `...` must be name-value pairs",
+        "i" = "for `set_category_labels()`, values must also be named vectors",
+        ">" = "problematic inputs are:",
         problems,
-        "v" = "replace MISSING_NAME to fix"
+        "v" = "To fix: replace MISSING_NAME with an existing level in the given variable"
       ),
       call = NULL
     )
 
   }
+
 
   input_frame %<>% dplyr::mutate(
     choices = purrr::map(
@@ -158,6 +168,7 @@ set_category_labels <- function(dictionary, ...){
     )
 
   }
+
 
   # if we got here, the loop below is safe
 
@@ -210,44 +221,28 @@ set_category_labels <- function(dictionary, ...){
 
 #' @rdname set_labels
 #' @export
-set_category_order <- function(dictionary, ...){
+set_category_order <- function(dictionary, ..., .list = NULL){
+
+
+  assert_valid_dotdot(..., .list = .list)
+  .dots <- infer_dotdot(..., .list = .list)
 
   checkmate::assert_class(dictionary, "DataDictionary")
-
-  .dots <- list(...)
 
   if(is_empty(.dots)) return(dictionary)
 
   input_frame <- tibble::enframe(.dots) %>%
-    dplyr::mutate(inputs = purrr::map(value, names))
-
-  missing_variable_names <- which(input_frame$name == "")
-
-  if(!is_empty(missing_variable_names)){
-
-    problems <- .dots[missing_variable_names] %>%
-      .paste_named_vec() %>%
-      purrr::set_names(nm = "x")
-
-    rlang::abort(
-      message = c(
-        "*" = "Inputs in `...` must be name-value pairs",
-        "*" = "problematic inputs are:",
-        problems,
-        "v" = "replace MISSING_NAME to fix"
-      ),
-      call = NULL
+    dplyr::mutate(
+      inputs = purrr::map(value, names),
+      choices = purrr::map(name, ~dictionary$get_category_levels(name = .x))
     )
-  }
 
-  dictionary$check_modify_call(.dots, field = "category_label")
+  .check <- input_frame %>%
+    dplyr::mutate(value = purrr::map2(value, choices, union)) %>%
+    dplyr::select(name, value) %>%
+    tibble::deframe()
 
-  input_frame %<>% dplyr::mutate(
-    choices = purrr::map(
-      name,
-      ~dictionary$variables[[.x]]$get_category_levels()
-    )
-  )
+  dictionary$check_modify_call(.check, field = "category_label")
 
   # check with a for-loop so we don't
   # trigger purrr-specific error message
@@ -303,33 +298,31 @@ set_category_order <- function(dictionary, ...){
 #'
 set_identifiers <- function(dictionary, ...){
 
+  # TODO: this fails b/c ... can be bare
+  # assert_valid_dotdot(..., .list = .list, names_required = FALSE)
+  # .dots <- infer_dotdot(..., .list = .list)
+
   checkmate::assert_class(dictionary, "DataDictionary")
+
   dictionary <- dictionary$clone(deep = dictionary$copy_on_modify)
 
   input_strings <- sapply(substitute(list(...)), deparse)[-1] %>%
     gsub("\"", "", .)
 
-
-  for(i in input_strings){
-
-    dictionary$variables[[i]] <-
-      identifier_variable(name = i,
-                          label = dictionary$variables[[i]]$label,
-                          description = dictionary$variables[[i]]$description)
-
-  }
-
-  dictionary$create_dictionary(dictionary$variables)
+  dictionary$set_identifiers(input_strings)
 
   dictionary
 
 }
 
 
-
-
-
-
+#' Set the default dictionary used by `perinary` functions
+#' @param dictionary `r roxy_describe_dd()`
+#' @export
+set_default_dictionary <- function(dictionary) {
+  .perinary_internal$dictionary <- dictionary
+  invisible(dictionary)
+}
 
 
 

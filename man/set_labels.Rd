@@ -17,12 +17,12 @@ set_units(dictionary, ..., .list = NULL)
 
 set_divby_modeling(dictionary, ..., .list = NULL)
 
-set_category_labels(dictionary, ...)
+set_category_labels(dictionary, ..., .list = NULL)
 
-set_category_order(dictionary, ...)
+set_category_order(dictionary, ..., .list = NULL)
 }
 \arguments{
-\item{dictionary}{A \link[=data_dictionary]{data dictionary} object.}
+\item{dictionary}{A \link[=data_dictionary]{data dictionary} object}
 
 \item{...}{Name-value pairs. The name gives the name of the variable
 that will be modified. The value must be a:

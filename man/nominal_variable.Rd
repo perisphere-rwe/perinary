@@ -22,8 +22,8 @@ nominal_variable(
 
 \item{category_levels}{Character vector. The set of unique category codes.}
 
-\item{category_labels}{Character vector. Human-readable labels for the
-categories. If not provided, defaults to \code{category_levels}.}
+\item{category_labels}{Character vector. Labels for the categories.
+If not provided, defaults to \code{category_levels}.}
 }
 \value{
 A \code{NominalVariable} object.

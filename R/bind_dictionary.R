@@ -6,7 +6,12 @@
 #'   exist in multiple datasets and you don't want to re-write their meta
 #'   information into each of those datasets.
 #'
-#' @param x,y `r roxy_describe_dd()`
+#' @param ... `r roxy_describe_dd(plural=TRUE)` to combine.
+#'
+#' @param .list `r roxy_dotlist(fun = "bind_dictionary")`. Specifically,
+#'   instead of `bind_dictionary(x, y)`, you can use
+#'   `bind_dictionary(.list = list(x, y))`. This is helpful when you
+#'   have a lot of dictionaries and want to bind them programmatically.
 #'
 #' @param conflict_preference a character value indicating what to do
 #'   when `x` and `y` have overlapping variables. If "left", then
@@ -18,6 +23,7 @@
 #'   not in `x` will be retained in the output. If `FALSE` (default),
 #'   only variables from `x` and those in `y` that overlap with `x`
 #'   will be included, subject to `conflict_preference`.
+#'
 #'
 #' @returns `r roxy_describe_dd()`
 #'
@@ -46,12 +52,44 @@
 #'
 #' bind_dictionary(dd_age_years, dd_age_group)
 
-bind_dictionary <- function(x, y,
-                            conflict_preference = NULL,
+bind_dictionary <- function(..., .list = NULL,
+                            conflict_preference = 'left',
                             keep_unmatched_y = FALSE) {
 
-  stopifnot(inherits(x, "DataDictionary"))
-  stopifnot(inherits(y, "DataDictionary"))
+  assert_valid_dotdot(..., .list = .list, names_required = FALSE)
+  .dots <- infer_dotdot(..., .list = .list)
+
+  purrr::reduce(.dots,  .f = .bind_dictionary, .dir = 'forward',
+                conflict_preference = conflict_preference,
+                keep_unmatched_y = keep_unmatched_y)
+
+}
+
+#' @rdname bind_dictionary
+#' @export
+left_bind <- function(..., .list = NULL,
+                      keep_unmatched_y = FALSE) {
+
+  bind_dictionary(..., .list = .list,
+                  conflict_preference = 'left',
+                  keep_unmatched_y = keep_unmatched_y)
+
+}
+
+#' @rdname bind_dictionary
+#' @export
+right_bind <- function(..., .list = NULL,
+                      keep_unmatched_y = FALSE) {
+
+  bind_dictionary(..., .list = .list,
+                  conflict_preference = 'right',
+                  keep_unmatched_y = keep_unmatched_y)
+
+}
+
+.bind_dictionary <- function(x, y,
+                             conflict_preference = NULL,
+                             keep_unmatched_y){
 
   vars_x <- x$variables
   vars_y <- y$variables
@@ -77,10 +115,10 @@ bind_dictionary <- function(x, y,
   )
 
   # keep the order of the x dictionary
-  if(!keep_unmatched_y){ # drop unmatched y
-    combined_vars <- combined_vars[names(vars_x)]
-  } else { # retain unmatched y variables
+  if(keep_unmatched_y){
     combined_vars <- combined_vars[c(names(vars_x), vars_y_unmatched)]
+  } else {
+    combined_vars <- combined_vars[names(vars_x)]
   }
 
   DataDictionary$new(combined_vars)

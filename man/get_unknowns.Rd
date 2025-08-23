@@ -5,14 +5,14 @@
 \title{Get Unknown Fields in Dictionary}
 \usage{
 get_unknowns(
-  dictionary,
+  dictionary = NULL,
   as_request = FALSE,
   as_code = FALSE,
   show_optional = FALSE
 )
 }
 \arguments{
-\item{dictionary}{A \link[=data_dictionary]{data dictionary} object.}
+\item{dictionary}{A \link[=data_dictionary]{data dictionary} object}
 
 \item{as_request}{logical. If \code{TRUE}, text is returned in a readable
 format that can be pasted into other settings, e.g., an e-mail

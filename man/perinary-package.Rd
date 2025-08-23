@@ -4,7 +4,7 @@
 \name{perinary-package}
 \alias{perinary}
 \alias{perinary-package}
-\title{perinary: Grammar of Data Dictionaries}
+\title{perinary: Data Dictionaries}
 \description{
 Keeps labels and other relevant information about variables in a lightweight class that can be applied to datasets in various ways, aiming to eliminate redundancies and promote readable, maintainable code.
 }

@@ -14,7 +14,7 @@ dd_3 <- data_dictionary(
 test_that(
   desc = "Conflicts are warned about",
   code = {
-    expect_warning(bind_dictionary(dd_1, dd_2))
+    expect_warning(bind_dictionary(dd_1, dd_2, conflict_preference = NULL))
   }
 )
 

@@ -2,8 +2,15 @@
 % Please edit documentation in R/variable.R
 \name{logical_variable}
 \alias{logical_variable}
-\title{Create a Logical (Binary) Variable}
+\title{Create a Logical Variable}
 \usage{
+logical_variable(
+  name,
+  label = NULL,
+  description = NULL,
+  category_labels = c("FALSE", "TRUE")
+)
+
 logical_variable(
   name,
   label = NULL,
@@ -24,12 +31,26 @@ two levels: \code{FALSE} and \code{TRUE}, respectively. Defaults to \code{c("FAL
 }
 \value{
 A \code{LogicalVariable} object.
+
+A \code{LogicalVariable} object.
 }
 \description{
+Initializes a \code{LogicalVariable} object, typically used to represent
+categorical data.
+
 Initializes a \code{LogicalVariable} object, typically used for binary indicators
 or flags that take values \code{TRUE} or \code{FALSE}.
 }
 \examples{
+
+is_even <- logical_variable(
+  name = "is_even",
+  label = "Is the number even",
+  category_labels = c("no", "yes")
+)
+
+is_even
+
 smoker <- logical_variable(
   name = "smoking_status",
   label = "Current smoker",
@@ -38,6 +59,12 @@ smoker <- logical_variable(
 smoker
 }
 \seealso{
+Other variable_constructors: 
+\code{\link{date_variable}()},
+\code{\link{identifier_variable}()},
+\code{\link{nominal_variable}()},
+\code{\link{numeric_variable}()}
+
 Other variable_constructors: 
 \code{\link{date_variable}()},
 \code{\link{identifier_variable}()},

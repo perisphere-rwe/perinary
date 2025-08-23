@@ -1,10 +1,8 @@
-#' Insert Term Key into Modeling Output
+#' Append Model Output with Missing Terms
 #'
-#' Merges category-level metadata from a dictionary into a data frame
-#' containing modeling terms (e.g., from [broom::tidy()]).
-#' This function is most useful when you want to annotate model output
-#' (such as regression coefficients) with human-readable labels or
-#' structured metadata about nominal variables.
+#' Add columns indicating variable name, category level, category label, and
+#' reference groups to the model output (a row is also added for each reference
+#' group)
 #'
 #' The function uses the `term` column (or other specified column) in the
 #' input `data` to match with a term key derived from the dictionary.
@@ -13,10 +11,13 @@
 #'
 #' @param data A data frame or tibble containing model output, typically
 #'   from [broom::tidy()]. Must contain a column that identifies model terms.
-#' @param dictionary A data dictionary created with [as_data_dictionary()]
-#'   or related functions, containing meta data for nominal variables.
+#'
+#' @param dictionary `r roxy_describe_dd()`. `r roxy_default_dd()`.
+#'
 #' @param term_separator A string used to separate variable names and
-#'   category values when constructing or matching terms. Default is `""`.
+#'   category values when constructing or matching terms. Default is `""`
+#'   to match the default separator that most R modeling functions use.
+#'
 #' @param term_colname Name of the column in `data` that contains term
 #'   identifiers. Default is `"term"`.
 #'
@@ -29,19 +30,18 @@
 #'
 #' @examples
 #'
-#' library(perinary)
 #' library(broom)
-#' fit <- lm(Sepal.Length ~ ., data = iris)
 #'
-#' fit_tidy <- broom::tidy(fit)
+#' fit <- tidy(lm(Sepal.Length ~ ., data = iris))
 #'
-#' insert_term_key(fit_tidy, as_data_dictionary(iris))
+#' append_term_key(fit, as_data_dictionary(iris))
 
-insert_term_key <- function(data,
-                            dictionary,
+append_term_key <- function(data,
+                            dictionary = NULL,
                             term_separator = "",
                             term_colname = 'term'){
 
+  dictionary <- infer_meta(dictionary)
 
   key <- get_term_key(dictionary,
                       adjust_to = data,
@@ -49,6 +49,18 @@ insert_term_key <- function(data,
                       term_colname = term_colname)
 
   term_order <- data[[term_colname]]
+
+  refs <- key$term[key$reference]
+  refs_in_terms <- refs[which(refs %in% term_order)]
+
+  if (!is_empty(refs_in_terms)){
+    rlang::abort(
+      message = c("Reference category detected in model terms",
+                  purrr::set_names(refs_in_terms, "x"),
+                  "i" = "Use `translate_data()` on your data before modeling"),
+      call = NULL
+    )
+  }
 
   append_instructions <- key %>%
     dplyr::rename(term = !!term_colname) %>%
@@ -65,10 +77,16 @@ insert_term_key <- function(data,
   }
 
   key %>%
-    full_join(data, by = term_colname) %>%
-    mutate(variable = if_else(is.na(variable), term, variable)) %>%
-    mutate(term = factor(term, levels = term_order)) %>%
-    arrange(term) %>%
-    mutate(term = as.character(term))
+    dplyr::full_join(data, by = term_colname) %>%
+    dplyr::mutate(name = dplyr::if_else(is.na(name), term, name)) %>%
+    dplyr::mutate(term = factor(term, levels = term_order)) %>%
+    dplyr::arrange(term) %>%
+    dplyr::mutate(
+      term = as.character(term),
+      reference = dplyr::if_else(is.na(reference), FALSE, reference)
+    )
 
 }
+
+
+

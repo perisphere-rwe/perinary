@@ -33,16 +33,17 @@
         set_category_labels(b = c(cat = "A small lion"))
     Output
       Data Dictionary:
-      # A tibble: 2 x 7
-        name  label   description units divby_modeling category_levels category_labels
-        <chr> <chr>   <chr>       <chr> <chr>          <chr>           <chr>          
-      1 a     example A variable~ years none           none            none           
-      2 b     catego~ none        none  none           cat             A small lion   
+      # A tibble: 2 x 8
+        name  type    label           description units divby_modeling category_levels
+        <chr> <chr>   <chr>           <chr>       <chr> <chr>          <chr>          
+      1 a     Numeric example         A variable~ years none           none           
+      2 b     Nominal categorical ex~ none        none  none           cat            
+      # i 1 more variable: category_labels <chr>
 
 # identifiers won't blow up the screen
 
     Code
-      set_identifiers(dd, character, factor) %>% get_unknowns(as_request = TRUE)
+      set_identifiers(dd_test, character, factor) %>% get_unknowns(as_request = TRUE)
     Output
       A label to use for this variable in reports:
       

@@ -10,20 +10,28 @@
 coverage](https://codecov.io/gh/bcjaeger/perinary/graph/badge.svg)](https://app.codecov.io/gh/bcjaeger/perinary)
 <!-- badges: end -->
 
-A grammar for data dictionaries with four primary verbs:
+**Why make this?** Data dictionaries (referred to as “dictionaries” from
+here) are often developed outside of a computing session and stored as a
+static file. Dictionaries are helpful in large projects with many
+outputs, providing a central resource for consistent and accurate
+annotation of tables and figures. However, the process of making and
+using dictionaries is tedious, so `perinary` was developed to reduce
+friction.
+
+To make dictionaries, there are two primary classes of functions:
 
 1.  `get`: retrieve meta data from a dictionary
 2.  `set`: modify meta data in a dictionary
-3.  `infuse`: put meta data from a dictionary into a data frame as an
-    attribute
-4.  `insert`: put meta data from a dictionary into a data frame as new
-    columns
 
-Dictionaries are often developed outside of a computing session and
-stored as static files, making it inconvenient to apply meta data from
-the dictionary to your data. `perinary` aims to bring the magic of a
-dictionary to your R session, providing intuitive ways to put meta data
-into your results when you need it.
+To use the dictionary, there are three classes of functions:
+
+1.  `translate`: modify names or category labels
+2.  `append`: add rows and/or columns to a data frame
+3.  `index`: order the rows of a data frame
+
+While `get/set` functions are applied to a dictionary, the `translate`
+and `append` functions are members of the `DataDictionary` class,
+meaning they are called from the dictionary object.
 
 ## Installation
 
@@ -37,10 +45,11 @@ pak::pak("perisphere-rwe/perinary")
 
 ## Data dictionaries
 
-Dictionaries help organize pertinent information about analytic
-variables, putting information about each variable into tables and
-figures using consistent labels and incorporating additional information
-when appropriate.
+Data dictionaries help organize meta data about variables, storing
+information relevant for tables and figures that is not easily stored in
+data frames. A data dictionary is most useful in complex projects with
+many variables and/or many expected outputs, particularly when
+consistency between outputs is a goal.
 
 There are two ways to initialize a dictionary. You can build them using
 `NumericVariable` and `NominalVariable` objects (not shown here, see
@@ -61,25 +70,25 @@ dd_peng <- as_data_dictionary(data_peng)
 
 dd_peng
 #> Data Dictionary:
-#> # A tibble: 5 × 7
-#>   name    label description units divby_modeling category_levels category_labels
-#>   <chr>   <chr> <chr>       <chr> <chr>          <chr>           <chr>          
-#> 1 species none  none        none  none           Adelie, Chinst… Adelie, Chinst…
-#> 2 sex     none  none        none  none           female and male female and male
-#> 3 body_m… none  none        none  none           none            none           
-#> 4 bill_l… none  none        none  none           none            none           
-#> 5 bill_d… none  none        none  none           none            none
+#> # A tibble: 5 × 8
+#>   name           type    label description units divby_modeling category_levels 
+#>   <chr>          <chr>   <chr> <chr>       <chr> <chr>          <chr>           
+#> 1 species        Nominal none  none        none  none           Adelie, Chinstr…
+#> 2 sex            Nominal none  none        none  none           female and male 
+#> 3 body_mass_g    Numeric none  none        none  none           none            
+#> 4 bill_length_mm Numeric none  none        none  none           none            
+#> 5 bill_depth_mm  Numeric none  none        none  none           none            
+#> # ℹ 1 more variable: category_labels <chr>
 ```
 
 ## Retrieve meta data with `get`
 
-An often overlooked utility of data dictionaries is telling us what we
-don’t know. Our dictionary is initialized, so we’ll use the function
-`get_unknowns()` to tell us what relevant information is missing. This
-function returns a `tibble` by default, but if you set
-`as_request = TRUE`, it provides a bullet point list that is easier to
-read. If you work with subject matter experts, you can also send this
-text to them and ask for help filling in the gaps.
+Let’s be honest, dictionaries are annoying to write. `perinary` aims to
+make it less annoying with `get_unknowns()`. This function tells us what
+relevant information is missing from a `dictionary`. If you set
+`as_request = TRUE`, a bullet point list is returned in the R console.
+This text is intended to help start a discussion about filling in the
+gaps.
 
 ``` r
 get_unknowns(dd_peng, as_request = TRUE)
@@ -103,9 +112,8 @@ get_unknowns(dd_peng, as_request = TRUE)
 #>   - bill_depth_mm = ?
 ```
 
-And if you want to get straight to filling these unknowns in using
-dictionary functions (described in the next section), `get_unknowns`
-gives you a full template to fill in when you specify `as_code = TRUE`:
+If you want to get straight to filling in unknowns, specify
+`as_code = TRUE`:
 
 ``` r
 get_unknowns(dd_peng, as_code = TRUE)
@@ -134,13 +142,13 @@ Other `get` functions include
   ``` r
   get_term_key(dd_peng)
   #> # A tibble: 5 × 6
-  #>   variable levels    labels    reference category_type term            
-  #>   <chr>    <chr>     <chr>     <lgl>     <chr>         <chr>           
-  #> 1 species  Adelie    Adelie    TRUE      levels        speciesAdelie   
-  #> 2 species  Chinstrap Chinstrap FALSE     levels        speciesChinstrap
-  #> 3 species  Gentoo    Gentoo    FALSE     levels        speciesGentoo   
-  #> 4 sex      female    female    TRUE      levels        sexfemale       
-  #> 5 sex      male      male      FALSE     levels        sexmale
+  #>   name    level     label     reference category_type term            
+  #>   <chr>   <chr>     <chr>     <lgl>     <chr>         <chr>           
+  #> 1 species Adelie    Adelie    TRUE      levels        speciesAdelie   
+  #> 2 species Chinstrap Chinstrap FALSE     levels        speciesChinstrap
+  #> 3 species Gentoo    Gentoo    FALSE     levels        speciesGentoo   
+  #> 4 sex     female    female    TRUE      levels        sexfemale       
+  #> 5 sex     male      male      FALSE     levels        sexmale
   ```
 
 - `get_dictionary()`: returns a `tibble` containing raw dictionary meta
@@ -159,16 +167,20 @@ Other `get` functions include
   #> 5 bill_d… <NA>  <NA>        <NA>              NA <NULL>          <NULL>
   ```
 
-## Modify meta data with `set`
+- general `get` functions that are exported from the `DataDictionary`
+  class
 
-Once we have this information ready to embed in the dictionary, we can
-use `perinary`’s family of `set` functions:
+## Modify dictionaries with `set`
+
+`perinary`’s family of `set` functions provide the interface to modify a
+dictionary’s meta data.
 
 ``` r
 
 dd_peng <- dd_peng %>% 
   set_labels(species = "Species",
              sex = "Sex",
+             body_mass_g = "Body mass",
              bill_length_mm = "Bill length",
              bill_depth_mm = "Bill depth") %>% 
   set_units(bill_length_mm = "mm",
@@ -250,166 +262,198 @@ data_peng %>%
 #>   - bill_depth_mm = ?
 ```
 
-### Modifying factors
+### Nominal variables
 
-Modify factor labels, changing one or more labels in an existing
-variable, with `set_category_labels()`:
-
-``` r
-
-dd_peng$variables$sex
-#> Nominal Variable:
-#>   Name               : sex 
-#>   Label              : Sex 
-#>   Description        : none 
-#>   Category Levels    : female and male 
-#>   Category Labels    : female and male
-
-dd_peng <- dd_peng %>% 
-  set_category_labels(sex = c(female = "F", male = "M"))
-
-dd_peng$variables$sex
-#> Nominal Variable:
-#>   Name               : sex 
-#>   Label              : Sex 
-#>   Description        : none 
-#>   Category Levels    : female and male 
-#>   Category Labels    : F and M
-```
-
-Modify factor order, moving one or more levels to the front, with
-`set_category_order()`:
+Modify the category labels for nominal variables with
+`set_category_labels()`:
 
 ``` r
 
 dd_peng <- dd_peng %>% 
-  set_category_order(sex = c("female"))
+  set_category_labels(sex = c(female = "Female penguins", 
+                              male = "Male penguins"))
 
-dd_peng$variables$sex
-#> Nominal Variable:
-#>   Name               : sex 
-#>   Label              : Sex 
-#>   Description        : none 
-#>   Category Levels    : female and male 
-#>   Category Labels    : F and M
+dd_peng
+#> Data Dictionary:
+#> # A tibble: 5 × 8
+#>   name           type    label  description units divby_modeling category_levels
+#>   <chr>          <chr>   <chr>  <chr>       <chr> <chr>          <chr>          
+#> 1 species        Nominal Speci… none        none  none           Adelie, Chinst…
+#> 2 sex            Nominal Sex    none        none  none           female and male
+#> 3 body_mass_g    Numeric Body … none        grams none           none           
+#> 4 bill_length_mm Numeric Bill … none        mm    5              none           
+#> 5 bill_depth_mm  Numeric Bill … none        mm    5              none           
+#> # ℹ 1 more variable: category_labels <chr>
 ```
 
-## Apply meta data to attributes with `infuse`
-
-Data dictionaries have a method called `recode()`, which leverages the
-`dplyr::recode()` function in combination with information stored in the
-dictionary to provide a ‘smart’ recoder. The ‘smart’ part is that this
-recode function doesn’t require you to provide recode values. Instead,
-it looks for appropriate recode values in the dictionary.
+Modify category order for nominal variables with `set_category_order()`:
 
 ``` r
 
-# This function is embedded in the dictionary itself, so it's called by 
-# typing the name of the dictionary, followed by `$recode(x)`, where 
-# `x` is the vector you intend to recode. For example:
+# moves the specified category or categories to the front, putting the 
+# remaining categories behind with the same relative order to each other
 
-data_peng %>% 
-  mutate(sex = dd_peng$recode(sex))
-#> # A tibble: 344 × 5
-#>    species sex   body_mass_g bill_length_mm bill_depth_mm
-#>    <fct>   <fct>       <int>          <dbl>         <dbl>
-#>  1 Adelie  M            3750           39.1          18.7
-#>  2 Adelie  F            3800           39.5          17.4
-#>  3 Adelie  F            3250           40.3          18  
-#>  4 Adelie  <NA>           NA           NA            NA  
-#>  5 Adelie  F            3450           36.7          19.3
-#>  6 Adelie  M            3650           39.3          20.6
-#>  7 Adelie  F            3625           38.9          17.8
-#>  8 Adelie  M            4675           39.2          19.6
-#>  9 Adelie  <NA>         3475           34.1          18.1
-#> 10 Adelie  <NA>         4250           42            20.2
-#> # ℹ 334 more rows
+dd_peng <- dd_peng %>% 
+  set_category_order(sex = c("male"),
+                     species = c("Chinstrap"))
+
+dd_peng
+#> Data Dictionary:
+#> # A tibble: 5 × 8
+#>   name           type    label  description units divby_modeling category_levels
+#>   <chr>          <chr>   <chr>  <chr>       <chr> <chr>          <chr>          
+#> 1 species        Nominal Speci… none        none  none           Chinstrap, Ade…
+#> 2 sex            Nominal Sex    none        none  none           male and female
+#> 3 body_mass_g    Numeric Body … none        grams none           none           
+#> 4 bill_length_mm Numeric Bill … none        mm    5              none           
+#> 5 bill_depth_mm  Numeric Bill … none        mm    5              none           
+#> # ℹ 1 more variable: category_labels <chr>
 ```
 
-This works both for variable names and variable categories. For example,
-pivoting our data to a longer format will move several variable names
-into a new column called `name`, and this column can be recoded just
-like we did above.
+## Modify objects using dictionaries
+
+The `translate` function family includes `translate_categories()`,
+`translate_names()`, and `translate_data()`. These functions are the
+bridge between your `dictionary` and your data. So, how do they work?
+
+- Instead of requiring name-value pairs in the function call,
+  `translate` functions look up the relevant name value pairs in
+  `dictionary`:
+
+  ``` r
+  data_peng %>% 
+    mutate(sex = translate_categories(sex, dictionary = dd_peng))
+  #> # A tibble: 344 × 5
+  #>    species sex             body_mass_g bill_length_mm bill_depth_mm
+  #>    <fct>   <chr>                 <int>          <dbl>         <dbl>
+  #>  1 Adelie  Male penguins          3750           39.1          18.7
+  #>  2 Adelie  Female penguins        3800           39.5          17.4
+  #>  3 Adelie  Female penguins        3250           40.3          18  
+  #>  4 Adelie  <NA>                     NA           NA            NA  
+  #>  5 Adelie  Female penguins        3450           36.7          19.3
+  #>  6 Adelie  Male penguins          3650           39.3          20.6
+  #>  7 Adelie  Female penguins        3625           38.9          17.8
+  #>  8 Adelie  Male penguins          4675           39.2          19.6
+  #>  9 Adelie  <NA>                   3475           34.1          18.1
+  #> 10 Adelie  <NA>                   4250           42            20.2
+  #> # ℹ 334 more rows
+  ```
+
+- While `translate_categories()` replaces category levels with labels,
+  `translate_names()` replaces variable names with labels. This is
+  useful when variable names become column values, e.g., after using
+  `pivot_longer` or `melt`:
+
+  ``` r
+
+  data_peng %>% 
+    pivot_longer(starts_with("bill_")) %>% 
+    mutate(name = translate_names(name, dictionary = dd_peng))
+  #> # A tibble: 688 × 5
+  #>    species sex    body_mass_g name        value
+  #>    <fct>   <fct>        <int> <chr>       <dbl>
+  #>  1 Adelie  male          3750 Bill length  39.1
+  #>  2 Adelie  male          3750 Bill depth   18.7
+  #>  3 Adelie  female        3800 Bill length  39.5
+  #>  4 Adelie  female        3800 Bill depth   17.4
+  #>  5 Adelie  female        3250 Bill length  40.3
+  #>  6 Adelie  female        3250 Bill depth   18  
+  #>  7 Adelie  <NA>            NA Bill length  NA  
+  #>  8 Adelie  <NA>            NA Bill depth   NA  
+  #>  9 Adelie  female        3450 Bill length  36.7
+  #> 10 Adelie  female        3450 Bill depth   19.3
+  #> # ℹ 678 more rows
+  ```
+
+- `translate_data()` is a general convenience tool that:
+
+  - sets variable labels as column attributes
+
+  - recodes category levels to corresponding labels
+
+  - converts characters to factors (factors are required to apply the
+    category order specified in the dictionary)
+
+  - divide continuous variables by their corresponding modeling divisor
+    if \`units = ‘model’, and update labels accordingly
+
+  ``` r
+  data_peng %>% 
+    translate_data(dictionary = dd_peng)
+  #> # A tibble: 344 × 5
+  #>    species sex             body_mass_g bill_length_mm bill_depth_mm
+  #>    <fct>   <fct>                 <int>          <dbl>         <dbl>
+  #>  1 Adelie  Male penguins          3750           39.1          18.7
+  #>  2 Adelie  Female penguins        3800           39.5          17.4
+  #>  3 Adelie  Female penguins        3250           40.3          18  
+  #>  4 Adelie  <NA>                     NA           NA            NA  
+  #>  5 Adelie  Female penguins        3450           36.7          19.3
+  #>  6 Adelie  Male penguins          3650           39.3          20.6
+  #>  7 Adelie  Female penguins        3625           38.9          17.8
+  #>  8 Adelie  Male penguins          4675           39.2          19.6
+  #>  9 Adelie  <NA>                   3475           34.1          18.1
+  #> 10 Adelie  <NA>                   4250           42            20.2
+  #> # ℹ 334 more rows
+  ```
+
+## Set your default
+
+Writing meta data in a `dictionary` *should* make it easier to put that
+information in outputs. However, supplying the `dictionary` as an input
+to every single `perinary` function gets unnecessarily tedious. For
+convenience, you can save any `dictionary` you make as the “default”
+dictionary for `perinary` functions during your current R session. The
+default dictionary will be used whenever a `perinary` function is called
+and a `dictionary` is not explicitly supplied by the user.
 
 ``` r
+
+set_default_dictionary(dd_peng)
 
 data_peng %>% 
   pivot_longer(starts_with("bill_")) %>% 
-  mutate(name = dd_peng$recode(name))
+  mutate(name = translate_names(name),
+         sex = translate_categories(sex))
 #> # A tibble: 688 × 5
-#>    species sex    body_mass_g name        value
-#>    <fct>   <fct>        <int> <chr>       <dbl>
-#>  1 Adelie  male          3750 Bill length  39.1
-#>  2 Adelie  male          3750 Bill depth   18.7
-#>  3 Adelie  female        3800 Bill length  39.5
-#>  4 Adelie  female        3800 Bill depth   17.4
-#>  5 Adelie  female        3250 Bill length  40.3
-#>  6 Adelie  female        3250 Bill depth   18  
-#>  7 Adelie  <NA>            NA Bill length  NA  
-#>  8 Adelie  <NA>            NA Bill depth   NA  
-#>  9 Adelie  female        3450 Bill length  36.7
-#> 10 Adelie  female        3450 Bill depth   19.3
+#>    species sex             body_mass_g name        value
+#>    <fct>   <chr>                 <int> <chr>       <dbl>
+#>  1 Adelie  Male penguins          3750 Bill length  39.1
+#>  2 Adelie  Male penguins          3750 Bill depth   18.7
+#>  3 Adelie  Female penguins        3800 Bill length  39.5
+#>  4 Adelie  Female penguins        3800 Bill depth   17.4
+#>  5 Adelie  Female penguins        3250 Bill length  40.3
+#>  6 Adelie  Female penguins        3250 Bill depth   18  
+#>  7 Adelie  <NA>                     NA Bill length  NA  
+#>  8 Adelie  <NA>                     NA Bill depth   NA  
+#>  9 Adelie  Female penguins        3450 Bill length  36.7
+#> 10 Adelie  Female penguins        3450 Bill depth   19.3
 #> # ℹ 678 more rows
 ```
 
-If needed, there is a more direct way to get recode information for
-specific parts of the dictionary:
+**Note:** for the remainder of the `ReadMe`, we *could* omit
+`dictionary = dd_peng` in all `perinary` functions because we have set
+that as our default. However, we do not take this semantic shortcut
+because it may be confusing for readers who skip sections or who
+copy/paste example code.
 
-``` r
+## Model output and dictionaries
 
-# in case the smart dictionary recoder fails, you can fall back 
-# on the more reliable methods get_variable_recoder and 
-# get_level_recoder, which are also public methods for dictionaries
-
-recode_bills <- dd_peng$get_variable_recoder(name = c("bill_length_mm",
-                                                      "bill_depth_mm"))
-
-recode_sex <- dd_peng$get_level_recoder(name = 'sex')
-
-data_peng %>% 
-  pivot_longer(starts_with("bill_")) %>% 
-  mutate(name = recode(name, !!!recode_bills),
-         sex = recode(sex, !!!recode_sex))
-#> # A tibble: 688 × 5
-#>    species sex   body_mass_g name        value
-#>    <fct>   <fct>       <int> <chr>       <dbl>
-#>  1 Adelie  M            3750 Bill length  39.1
-#>  2 Adelie  M            3750 Bill depth   18.7
-#>  3 Adelie  F            3800 Bill length  39.5
-#>  4 Adelie  F            3800 Bill depth   17.4
-#>  5 Adelie  F            3250 Bill length  40.3
-#>  6 Adelie  F            3250 Bill depth   18  
-#>  7 Adelie  <NA>           NA Bill length  NA  
-#>  8 Adelie  <NA>           NA Bill depth   NA  
-#>  9 Adelie  F            3450 Bill length  36.7
-#> 10 Adelie  F            3450 Bill depth   19.3
-#> # ℹ 678 more rows
-```
-
-### All at once
-
-`infuse_dictionary()` puts all the relevant information from a data
-dictionary into an existing dataset. This can smooth out your code when
-you use packages that automatically incorporate labels into their
-outputs, such as `gtsummary`. In the example below, we infuse our data
-with the dictionary we created and specify that we want to format
-continuous variables using their modeling units (e.g., bill length is
-modeled per 10 mm). Note that when you infuse data with dictionaries and
-specify `units = 'model'`, the corresponding variables will be divided
-by their designated `divby_model` value and new columns will be created.
-If you don’t want new columns, you can specify `divby_suffix = NULL`
-when you infuse.
+If you are using a package like `gtsummary`, which incorporates variable
+labels automatically, `translate()` is probably all you need from
+`perinary`. In the example below, we translate our data with `units` set
+to `"model"`, which additionally preps continuous variables by dividing
+them by their modeling unit and (e.g., bill length is modeled per 10 mm)
+and updates labels accordingly.
 
 ``` r
 
 library(gtsummary)
 
-data_infused <- data_peng %>% 
-  infuse_dictionary(dd_peng, units = 'model', divby_suffix = NULL)
-
-fit <- lm(formula = body_mass_g ~ ., data = data_infused)
-
-tbl_regression(fit)
+data_peng %>% 
+  translate_data(units = 'model', dictionary = dd_peng) %>% 
+  lm(formula = body_mass_g ~ sex + species + bill_length_mm + bill_depth_mm, 
+     data = .) %>% 
+  tbl_regression()
 ```
 
 ``` r
@@ -418,14 +462,547 @@ knitr::include_graphics('img/screen-regression_table.png')
 
 <img src="img/screen-regression_table.png" width="100%" />
 
-### Just in time
+In rare cases, `gtsummary` may not provide tools to tabulate our
+regression results. In those cases, we can use functions from the
+`append` and `index` class.
+
+Let’s start with tidied model output from `broom`:
 
 ``` r
-# 
-# library(broom)
-# 
-# data <- tidy(fit)
-# dictionary <- dd_peng
-# 
-# insert_model_key(tidy_fit, dictionary = dd_peng)
+
+library(broom)
+
+fit <- data_peng %>% 
+  translate_data(units = 'model', dictionary = dd_peng) %>% 
+  lm(formula = body_mass_g ~ sex + species + bill_length_mm + bill_depth_mm, 
+     data = .) %>% 
+  tidy(conf.int = TRUE)
+
+fit
+#> # A tibble: 6 × 7
+#>   term               estimate std.error statistic  p.value conf.low conf.high
+#>   <chr>                 <dbl>     <dbl>     <dbl>    <dbl>    <dbl>     <dbl>
+#> 1 (Intercept)           1036.     482.       2.15 3.24e- 2     87.6     1984.
+#> 2 sexFemale penguins    -437.      49.1     -8.90 3.84e-17   -534.      -341.
+#> 3 speciesAdelie          245.      84.6      2.90 4.01e- 3     78.7      412.
+#> 4 speciesGentoo         1689.      82.2     20.5  8.99e-61   1527.      1850.
+#> 5 bill_length_mm         133.      36.2      3.66 2.90e- 4     61.4      204.
+#> 6 bill_depth_mm          440.     101.       4.35 1.83e- 5    241.       639.
 ```
+
+We use `append_term_key()` to add columns indicating variable name,
+category level, category label, and reference groups to the model output
+(a row is also added for each reference group).
+
+``` r
+
+fit_appended <- append_term_key(fit, dictionary = dd_peng)
+
+fit_appended
+#> # A tibble: 8 × 11
+#>   name        level label reference term  estimate std.error statistic   p.value
+#>   <chr>       <chr> <chr> <lgl>     <chr>    <dbl>     <dbl>     <dbl>     <dbl>
+#> 1 (Intercept) <NA>  <NA>  FALSE     (Int…    1036.     482.       2.15  3.24e- 2
+#> 2 sex         male  Male… TRUE      sexM…      NA       NA       NA    NA       
+#> 3 sex         fema… Fema… FALSE     sexF…    -437.      49.1     -8.90  3.84e-17
+#> 4 species     Chin… Chin… TRUE      spec…      NA       NA       NA    NA       
+#> 5 species     Adel… Adel… FALSE     spec…     245.      84.6      2.90  4.01e- 3
+#> 6 species     Gent… Gent… FALSE     spec…    1689.      82.2     20.5   8.99e-61
+#> 7 bill_lengt… <NA>  <NA>  FALSE     bill…     133.      36.2      3.66  2.90e- 4
+#> 8 bill_depth… <NA>  <NA>  FALSE     bill…     440.     101.       4.35  1.83e- 5
+#> # ℹ 2 more variables: conf.low <dbl>, conf.high <dbl>
+```
+
+Second, we use `index_terms` to re-order the rows of these data based on
+the order they appear in the dictionary. This is helpful when you want
+variables to be listed in consistent order throughout your report.
+
+``` r
+
+fit_sorted <- index_terms(fit_appended, dictionary = dd_peng)
+```
+
+Third, we tabulate the results
+
+``` r
+
+library(gt)
+library(table.glue)
+
+data_gt <- fit_sorted %>% 
+  filter(name != "(Intercept)") %>% 
+  # push labels for continuous bill variables into the label column
+  mutate(
+    label = coalesce(label, 
+                     translate_names(name, units = 'model', 
+                                     dictionary = dd_peng)
+    )
+  ) %>% 
+  # Add a custom group for the bill variables
+  add_count(name) %>% 
+  mutate(name = if_else(n==1, 
+                        "Bill dimensions", 
+                        translate_names(name))) %>% 
+  # drop unused columns and make final modifications
+  transmute(
+    name, 
+    label,
+    # format results with table.glue
+    estimate = if_else(
+      reference, 
+      true = "0 (reference)", 
+      false = table_glue("{estimate} ({conf.low}, {conf.high})")),
+    p.value = table_pvalue(p.value)
+  )
+
+gt(data_gt, groupname_col = 'name', rowname_col = 'label') %>% 
+  tab_style(
+    style = cell_text(indent = px(16)),           
+    locations = cells_stub()
+  ) %>% 
+  cols_align('center', columns = c(estimate, p.value)) %>% 
+  cols_label(estimate = md("Estimated body mass<br/>difference, grams (95% CI)"), 
+             p.value = "P-value") %>% 
+  tab_stubhead(label = md("**Characteristic**")) %>% 
+  tab_options(table.width = pct(80))
+```
+
+<div id="pxjoqicejv" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
+<style>#pxjoqicejv table {
+  font-family: system-ui, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+&#10;#pxjoqicejv thead, #pxjoqicejv tbody, #pxjoqicejv tfoot, #pxjoqicejv tr, #pxjoqicejv td, #pxjoqicejv th {
+  border-style: none;
+}
+&#10;#pxjoqicejv p {
+  margin: 0;
+  padding: 0;
+}
+&#10;#pxjoqicejv .gt_table {
+  display: table;
+  border-collapse: collapse;
+  line-height: normal;
+  margin-left: auto;
+  margin-right: auto;
+  color: #333333;
+  font-size: 16px;
+  font-weight: normal;
+  font-style: normal;
+  background-color: #FFFFFF;
+  width: 80%;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #A8A8A8;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #A8A8A8;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+}
+&#10;#pxjoqicejv .gt_caption {
+  padding-top: 4px;
+  padding-bottom: 4px;
+}
+&#10;#pxjoqicejv .gt_title {
+  color: #333333;
+  font-size: 125%;
+  font-weight: initial;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-color: #FFFFFF;
+  border-bottom-width: 0;
+}
+&#10;#pxjoqicejv .gt_subtitle {
+  color: #333333;
+  font-size: 85%;
+  font-weight: initial;
+  padding-top: 3px;
+  padding-bottom: 5px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-top-color: #FFFFFF;
+  border-top-width: 0;
+}
+&#10;#pxjoqicejv .gt_heading {
+  background-color: #FFFFFF;
+  text-align: center;
+  border-bottom-color: #FFFFFF;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+}
+&#10;#pxjoqicejv .gt_bottom_border {
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+&#10;#pxjoqicejv .gt_col_headings {
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+}
+&#10;#pxjoqicejv .gt_col_heading {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: normal;
+  text-transform: inherit;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: bottom;
+  padding-top: 5px;
+  padding-bottom: 6px;
+  padding-left: 5px;
+  padding-right: 5px;
+  overflow-x: hidden;
+}
+&#10;#pxjoqicejv .gt_column_spanner_outer {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: normal;
+  text-transform: inherit;
+  padding-top: 0;
+  padding-bottom: 0;
+  padding-left: 4px;
+  padding-right: 4px;
+}
+&#10;#pxjoqicejv .gt_column_spanner_outer:first-child {
+  padding-left: 0;
+}
+&#10;#pxjoqicejv .gt_column_spanner_outer:last-child {
+  padding-right: 0;
+}
+&#10;#pxjoqicejv .gt_column_spanner {
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  vertical-align: bottom;
+  padding-top: 5px;
+  padding-bottom: 5px;
+  overflow-x: hidden;
+  display: inline-block;
+  width: 100%;
+}
+&#10;#pxjoqicejv .gt_spanner_row {
+  border-bottom-style: hidden;
+}
+&#10;#pxjoqicejv .gt_group_heading {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: middle;
+  text-align: left;
+}
+&#10;#pxjoqicejv .gt_empty_group_heading {
+  padding: 0.5px;
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  vertical-align: middle;
+}
+&#10;#pxjoqicejv .gt_from_md > :first-child {
+  margin-top: 0;
+}
+&#10;#pxjoqicejv .gt_from_md > :last-child {
+  margin-bottom: 0;
+}
+&#10;#pxjoqicejv .gt_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  margin: 10px;
+  border-top-style: solid;
+  border-top-width: 1px;
+  border-top-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: middle;
+  overflow-x: hidden;
+}
+&#10;#pxjoqicejv .gt_stub {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-right-style: solid;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+&#10;#pxjoqicejv .gt_stub_row_group {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-right-style: solid;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  padding-left: 5px;
+  padding-right: 5px;
+  vertical-align: top;
+}
+&#10;#pxjoqicejv .gt_row_group_first td {
+  border-top-width: 2px;
+}
+&#10;#pxjoqicejv .gt_row_group_first th {
+  border-top-width: 2px;
+}
+&#10;#pxjoqicejv .gt_summary_row {
+  color: #333333;
+  background-color: #FFFFFF;
+  text-transform: inherit;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+&#10;#pxjoqicejv .gt_first_summary_row {
+  border-top-style: solid;
+  border-top-color: #D3D3D3;
+}
+&#10;#pxjoqicejv .gt_first_summary_row.thick {
+  border-top-width: 2px;
+}
+&#10;#pxjoqicejv .gt_last_summary_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+&#10;#pxjoqicejv .gt_grand_summary_row {
+  color: #333333;
+  background-color: #FFFFFF;
+  text-transform: inherit;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+&#10;#pxjoqicejv .gt_first_grand_summary_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-top-style: double;
+  border-top-width: 6px;
+  border-top-color: #D3D3D3;
+}
+&#10;#pxjoqicejv .gt_last_grand_summary_row_top {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-style: double;
+  border-bottom-width: 6px;
+  border-bottom-color: #D3D3D3;
+}
+&#10;#pxjoqicejv .gt_striped {
+  background-color: rgba(128, 128, 128, 0.05);
+}
+&#10;#pxjoqicejv .gt_table_body {
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+&#10;#pxjoqicejv .gt_footnotes {
+  color: #333333;
+  background-color: #FFFFFF;
+  border-bottom-style: none;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+}
+&#10;#pxjoqicejv .gt_footnote {
+  margin: 0px;
+  font-size: 90%;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+&#10;#pxjoqicejv .gt_sourcenotes {
+  color: #333333;
+  background-color: #FFFFFF;
+  border-bottom-style: none;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+}
+&#10;#pxjoqicejv .gt_sourcenote {
+  font-size: 90%;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+&#10;#pxjoqicejv .gt_left {
+  text-align: left;
+}
+&#10;#pxjoqicejv .gt_center {
+  text-align: center;
+}
+&#10;#pxjoqicejv .gt_right {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+&#10;#pxjoqicejv .gt_font_normal {
+  font-weight: normal;
+}
+&#10;#pxjoqicejv .gt_font_bold {
+  font-weight: bold;
+}
+&#10;#pxjoqicejv .gt_font_italic {
+  font-style: italic;
+}
+&#10;#pxjoqicejv .gt_super {
+  font-size: 65%;
+}
+&#10;#pxjoqicejv .gt_footnote_marks {
+  font-size: 75%;
+  vertical-align: 0.4em;
+  position: initial;
+}
+&#10;#pxjoqicejv .gt_asterisk {
+  font-size: 100%;
+  vertical-align: 0;
+}
+&#10;#pxjoqicejv .gt_indent_1 {
+  text-indent: 5px;
+}
+&#10;#pxjoqicejv .gt_indent_2 {
+  text-indent: 10px;
+}
+&#10;#pxjoqicejv .gt_indent_3 {
+  text-indent: 15px;
+}
+&#10;#pxjoqicejv .gt_indent_4 {
+  text-indent: 20px;
+}
+&#10;#pxjoqicejv .gt_indent_5 {
+  text-indent: 25px;
+}
+&#10;#pxjoqicejv .katex-display {
+  display: inline-flex !important;
+  margin-bottom: 0.75em !important;
+}
+&#10;#pxjoqicejv div.Reactable > div.rt-table > div.rt-thead > div.rt-tr.rt-tr-group-header > div.rt-th-group:after {
+  height: 0px !important;
+}
+</style>
+<table class="gt_table" data-quarto-disable-processing="false" data-quarto-bootstrap="false">
+  <thead>
+    <tr class="gt_col_headings">
+      <th class="gt_col_heading gt_columns_bottom_border gt_left" rowspan="1" colspan="1" scope="col" id="a::stub"><span class='gt_from_md'><strong>Characteristic</strong></span></th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_center" rowspan="1" colspan="1" scope="col" id="estimate"><span class='gt_from_md'>Estimated body mass<br/>difference, grams (95% CI)</span></th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_center" rowspan="1" colspan="1" scope="col" id="p.value">P-value</th>
+    </tr>
+  </thead>
+  <tbody class="gt_table_body">
+    <tr class="gt_group_heading_row">
+      <th colspan="3" class="gt_group_heading" scope="colgroup" id="Species">Species</th>
+    </tr>
+    <tr class="gt_row_group_first"><th id="stub_1_1" scope="row" class="gt_row gt_left gt_stub" style="text-indent: 16px;">Chinstrap</th>
+<td headers="Species stub_1_1 estimate" class="gt_row gt_center">0 (reference)</td>
+<td headers="Species stub_1_1 p.value" class="gt_row gt_center">--</td></tr>
+    <tr><th id="stub_1_2" scope="row" class="gt_row gt_left gt_stub" style="text-indent: 16px;">Adelie</th>
+<td headers="Species stub_1_2 estimate" class="gt_row gt_center">245 (79, 412)</td>
+<td headers="Species stub_1_2 p.value" class="gt_row gt_center">.004</td></tr>
+    <tr><th id="stub_1_3" scope="row" class="gt_row gt_left gt_stub" style="text-indent: 16px;">Gentoo</th>
+<td headers="Species stub_1_3 estimate" class="gt_row gt_center">1,689 (1,527, 1,850)</td>
+<td headers="Species stub_1_3 p.value" class="gt_row gt_center">&lt;.001</td></tr>
+    <tr class="gt_group_heading_row">
+      <th colspan="3" class="gt_group_heading" scope="colgroup" id="Sex">Sex</th>
+    </tr>
+    <tr class="gt_row_group_first"><th id="stub_1_4" scope="row" class="gt_row gt_left gt_stub" style="text-indent: 16px;">Male penguins</th>
+<td headers="Sex stub_1_4 estimate" class="gt_row gt_center">0 (reference)</td>
+<td headers="Sex stub_1_4 p.value" class="gt_row gt_center">--</td></tr>
+    <tr><th id="stub_1_5" scope="row" class="gt_row gt_left gt_stub" style="text-indent: 16px;">Female penguins</th>
+<td headers="Sex stub_1_5 estimate" class="gt_row gt_center">-437 (-534, -341)</td>
+<td headers="Sex stub_1_5 p.value" class="gt_row gt_center">&lt;.001</td></tr>
+    <tr class="gt_group_heading_row">
+      <th colspan="3" class="gt_group_heading" scope="colgroup" id="Bill dimensions">Bill dimensions</th>
+    </tr>
+    <tr class="gt_row_group_first"><th id="stub_1_6" scope="row" class="gt_row gt_left gt_stub" style="text-indent: 16px;">Bill length, per 5 mm</th>
+<td headers="Bill dimensions stub_1_6 estimate" class="gt_row gt_center">133 (61, 204)</td>
+<td headers="Bill dimensions stub_1_6 p.value" class="gt_row gt_center">&lt;.001</td></tr>
+    <tr><th id="stub_1_7" scope="row" class="gt_row gt_left gt_stub" style="text-indent: 16px;">Bill depth, per 5 mm</th>
+<td headers="Bill dimensions stub_1_7 estimate" class="gt_row gt_center">440 (241, 639)</td>
+<td headers="Bill dimensions stub_1_7 p.value" class="gt_row gt_center">&lt;.001</td></tr>
+  </tbody>
+  &#10;  
+</table>
+</div>

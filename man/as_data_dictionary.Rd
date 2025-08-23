@@ -4,18 +4,28 @@
 \alias{as_data_dictionary}
 \title{Create Data Dictionary from Existing Data}
 \usage{
-as_data_dictionary(x)
+as_data_dictionary(x, copy_on_modify = TRUE)
 }
 \arguments{
 \item{x}{a data frame}
+
+\item{copy_on_modify}{a logical value indicating whether \code{set} functions
+should modify the dictionary in place or copy it then modify. The
+default is \code{TRUE} because dictionaries are almost always small
+and trivial to copy.}
 }
 \value{
-A \link[=data_dictionary]{data dictionary} object.
+A \link[=data_dictionary]{data dictionary} object
 }
 \description{
 Create Data Dictionary from Existing Data
 }
+\details{
+variable labels stored in the 'label' attribute are incorporated in the
+resulting dictionary.
+}
 \examples{
+
 
 attr(iris$Species, 'label') <- "Flower species"
 

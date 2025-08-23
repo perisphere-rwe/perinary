@@ -7,7 +7,7 @@
 set_identifiers(dictionary, ...)
 }
 \arguments{
-\item{dictionary}{A \link[=data_dictionary]{data dictionary} object.}
+\item{dictionary}{A \link[=data_dictionary]{data dictionary} object}
 
 \item{...}{quoted or unquoted names of identifier variables}
 }

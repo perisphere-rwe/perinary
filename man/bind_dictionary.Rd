@@ -2,12 +2,28 @@
 % Please edit documentation in R/bind_dictionary.R
 \name{bind_dictionary}
 \alias{bind_dictionary}
+\alias{left_bind}
+\alias{right_bind}
 \title{Bind Dictionaries Together}
 \usage{
-bind_dictionary(x, y, conflict_preference = NULL, keep_unmatched_y = FALSE)
+bind_dictionary(
+  ...,
+  .list = NULL,
+  conflict_preference = "left",
+  keep_unmatched_y = FALSE
+)
+
+left_bind(..., .list = NULL, keep_unmatched_y = FALSE)
+
+right_bind(..., .list = NULL, keep_unmatched_y = FALSE)
 }
 \arguments{
-\item{x, y}{A \link[=data_dictionary]{data dictionary} object.}
+\item{...}{\link[=data_dictionary]{Data dictionary} objects to combine.}
+
+\item{.list}{This argument allows \code{bind_dictionary} to be used programmatically and is optional. It is intended to be used as an alternative to \code{...}.. Specifically,
+instead of \code{bind_dictionary(x, y)}, you can use
+\code{bind_dictionary(.list = list(x, y))}. This is helpful when you
+have a lot of dictionaries and want to bind them programmatically.}
 
 \item{conflict_preference}{a character value indicating what to do
 when \code{x} and \code{y} have overlapping variables. If "left", then
@@ -21,7 +37,7 @@ only variables from \code{x} and those in \code{y} that overlap with \code{x}
 will be included, subject to \code{conflict_preference}.}
 }
 \value{
-A \link[=data_dictionary]{data dictionary} object.
+A \link[=data_dictionary]{data dictionary} object
 }
 \description{
 Binding dictionaries together can be useful when you have variables that

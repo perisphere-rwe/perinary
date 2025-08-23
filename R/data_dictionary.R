@@ -8,15 +8,16 @@
 #' @param ... One or more objects inheriting from `r roxy_describe_numeric()`
 #'   or `r roxy_describe_nominal()`.
 #'
-#' @param .list A list of data variables. This argument allows
-#'  `data_dictionary` to be used programmatically and is optional. It is
-#'  intended to be used as an alternative to `...`.
+#' @param .list A list of data variables. `r roxy_dotlist("data_dictionary")`
 #'
-#' @return A `DataDictionary` object containing a tibble summary of all
-#'   variables.
+#' @param copy_on_modify a logical value indicating whether `set` functions
+#'   should modify the dictionary in place or copy it then modify. The
+#'   default is `TRUE` because dictionaries are almost always small
+#'   and trivial to copy.
 #'
-#' @details if both `...` and `.list` are specified, the dictionary
-#'   will only be created using `.list`.
+#' @return `r roxy_describe_dd()`
+#'
+#' @details Only one of  `...` and `.list` should be specified.
 #'
 #' @export
 #'
@@ -41,11 +42,11 @@
 #' dd <- data_dictionary(.list = list(age_years, gender))
 #' print(dd)
 #'
-data_dictionary <- function(..., .list = NULL){
+data_dictionary <- function(..., .list = NULL, copy_on_modify = TRUE){
 
-  assert_valid_dotdot(..., .list = .list)
+  assert_valid_dotdot(..., .list = .list, names_required = FALSE)
   .dots <- infer_dotdot(..., .list = .list)
-  DataDictionary$new(.dots)
+  DataDictionary$new(.dots, copy_on_modify = copy_on_modify)
 
 }
 
@@ -54,23 +55,29 @@ data_dictionary <- function(..., .list = NULL){
 #'
 #' @param x a data frame
 #'
+#' @inheritParams data_dictionary
+#'
 #' @return `r roxy_describe_dd()`
+#'
+#' @details
+#'  variable labels stored in the 'label' attribute are incorporated in the
+#'  resulting dictionary.
 #'
 #' @export
 #'
 #' @examples
 #'
+#'
 #' attr(iris$Species, 'label') <- "Flower species"
 #'
 #' as_data_dictionary(iris)
 #'
-as_data_dictionary <- function(x){
+as_data_dictionary <- function(x, copy_on_modify = TRUE){
 
-  stopifnot(is.data.frame(x))
+  checkmate::assert_data_frame(x)
 
-  vars <- purrr::map2(
+  vars <- purrr::imap(
     .x = x,
-    .y = names(x),
     .f = ~ {
 
       if(inherits(.x, c('factor', 'character'))){
@@ -118,6 +125,17 @@ as_data_dictionary <- function(x){
   )
 
   keep <- which(purrr::map_lgl(vars, ~!is.null(.x)))
+
+  leftovers <- setdiff(vars, vars[keep])
+
+  if(!is_empty(leftovers)){
+    rlang::warn(
+      message = c(
+        "Could not map the following variables to a specific type:",
+        i = paste_collapse(leftovers)
+      )
+    )
+  }
 
   DataDictionary$new(vars[keep])
 

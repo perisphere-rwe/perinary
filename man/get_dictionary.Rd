@@ -7,7 +7,7 @@
 get_dictionary(dictionary, format_missing = FALSE, format_categories = FALSE)
 }
 \arguments{
-\item{dictionary}{A \link[=data_dictionary]{data dictionary} object.}
+\item{dictionary}{A \link[=data_dictionary]{data dictionary} object}
 
 \item{format_missing}{Logical. If \code{TRUE}, missing metadata fields (like
 labels or units) are returned as stored in the dictionary. If \code{FALSE}

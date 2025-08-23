@@ -4,19 +4,21 @@
 \alias{data_dictionary}
 \title{Create Data Dictionary from Variable Definitions}
 \usage{
-data_dictionary(..., .list = NULL)
+data_dictionary(..., .list = NULL, copy_on_modify = TRUE)
 }
 \arguments{
 \item{...}{One or more objects inheriting from A \link[=numeric_variable]{numeric variable}
 or A \link[=nominal_variable]{nominal variable}.}
 
-\item{.list}{A list of data variables. This argument allows
-\code{data_dictionary} to be used programmatically and is optional. It is
-intended to be used as an alternative to \code{...}.}
+\item{.list}{A list of data variables. This argument allows \code{data_dictionary} to be used programmatically and is optional. It is intended to be used as an alternative to \code{...}.}
+
+\item{copy_on_modify}{a logical value indicating whether \code{set} functions
+should modify the dictionary in place or copy it then modify. The
+default is \code{TRUE} because dictionaries are almost always small
+and trivial to copy.}
 }
 \value{
-A \code{DataDictionary} object containing a tibble summary of all
-variables.
+A \link[=data_dictionary]{data dictionary} object
 }
 \description{
 Initializes a \code{DataDictionary} object from a set of variables.
@@ -24,8 +26,7 @@ Variables should be made using \code{\link[=numeric_variable]{numeric_variable()
 and passed directly as arguments.
 }
 \details{
-if both \code{...} and \code{.list} are specified, the dictionary
-will only be created using \code{.list}.
+Only one of  \code{...} and \code{.list} should be specified.
 }
 \examples{
 

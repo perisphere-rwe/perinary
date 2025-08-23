@@ -57,8 +57,8 @@ numeric_variable <- function(name,
 #'
 #' @inheritParams variable_constructors
 #' @param category_levels Character vector. The set of unique category codes.
-#' @param category_labels Character vector. Human-readable labels for the
-#'   categories. If not provided, defaults to `category_levels`.
+#' @param category_labels Character vector. Labels for the categories.
+#'   If not provided, defaults to `category_levels`.
 #'
 #' @return A `NominalVariable` object.
 #' @export
@@ -82,6 +82,42 @@ nominal_variable <- function(name,
     label = label,
     description = description,
     category_levels = category_levels,
+    category_labels = category_labels
+  )
+}
+
+
+#' Create a Logical Variable
+#'
+#' Initializes a `LogicalVariable` object, typically used to represent
+#' categorical data.
+#'
+#' @inheritParams variable_constructors
+#' @param category_labels Character vector. Labels for the categories.
+#'   If not provided, defaults to `category_levels`.
+#'
+#' @return A `LogicalVariable` object.
+#' @export
+#' @family variable_constructors
+#'
+#' @examples
+#'
+#' is_even <- logical_variable(
+#'   name = "is_even",
+#'   label = "Is the number even",
+#'   category_labels = c("no", "yes")
+#' )
+#'
+#' is_even
+#'
+logical_variable <- function(name,
+                             label = NULL,
+                             description = NULL,
+                             category_labels = NULL) {
+  LogicalVariable$new(
+    name = name,
+    label = label,
+    description = description,
     category_labels = category_labels
   )
 }

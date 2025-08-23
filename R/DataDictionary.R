@@ -94,11 +94,15 @@ DataVariable <- R6Class(
     },
 
     check_divby_modeling = function(value) {
-      if (!is.null(value))
+      if (!is.null(value)){
+
         assert_valid_field(self$name,
                            self$type,
                            field = "divby_modeling",
                            suggest = "Numeric")
+
+      }
+
     },
 
     # Retrievers
@@ -107,7 +111,7 @@ DataVariable <- R6Class(
     },
 
     fmt_element = function(x){
-      .paste_collapse(self$get_element(x))
+      paste_collapse(self$get_element(x))
     },
 
     chk_element = function(field, value){
@@ -119,7 +123,7 @@ DataVariable <- R6Class(
       invisible(self)
     },
 
-    # modify in place
+    # modify
     set_name = function(value) self$set_element("name", value),
     set_type = function(value) self$set_element("type", value),
     set_label = function(value) self$set_element("label", value),
@@ -233,30 +237,40 @@ NumericVariable <- R6Class(
                                   null.ok = TRUE)
     },
 
+
     check_divby_modeling = function(value) {
+
+      if(is.null(self$units) && !is.null(value)){
+        rlang::abort(
+          message = c(
+            "x" = "Cannot set `divby_modeling` if units are unknown",
+            "i" = glue("Use `set_units()` to specify units for `{self$name}`")
+          ),
+          call = NULL
+        )
+      }
+
       divby_modeling <- value
+
       checkmate::assert_numeric(divby_modeling,
                                 len = 1,
                                 lower = 1,
                                 any.missing = FALSE,
                                 null.ok = TRUE)
+
     },
 
     get_label_and_unit = function(sep = ', '){
 
-      # present units if they are there
-      if(!is.null(self$fetch_units)){
-        return(paste(self$fetch_label(),
-                     self$fetch_units(),
-                     sep = sep))
-      }
+      if(is.null(self$units)) return(self$fetch_label())
 
-      self$fetch_label()
+      # present units if they are there
+      paste(self$fetch_label(), self$fetch_units(), sep = sep)
 
     },
 
-    get_label_divby = function(){
-      paste0(self$fetch_label(), ", per ",
+    get_label_divby = function(sep = ", per "){
+      paste0(self$fetch_label(), sep,
              self$fetch_divby_modeling(), " ",
              self$fetch_units() %||% "units")
     },
@@ -276,12 +290,13 @@ NumericVariable <- R6Class(
         description = description
       )
 
-      self$check_units(units)
-      self$check_divby_modeling(divby_modeling)
-
       # Set numeric fields
-      self$units          <- units
+      self$check_units(units)
+      self$units <- units
+
+      self$check_divby_modeling(divby_modeling)
       self$divby_modeling <- divby_modeling
+
 
     },
 
@@ -306,14 +321,50 @@ NominalVariable <- R6Class(
       category_levels <- value
       checkmate::assert_character(category_levels,
                                   any.missing = FALSE,
-                                  null.ok = TRUE)
+                                  null.ok = TRUE,
+                                  unique = TRUE)
     },
 
     check_category_labels = function(value) {
+
+
       category_labels <- value
       checkmate::assert_character(category_labels,
                                   any.missing = FALSE,
                                   null.ok = TRUE)
+
+      if(!is.null(value)){
+        # only you can prevent label duplication
+        if(any(duplicated(value))){
+
+          value_tbl <- table(value)
+
+          dups <- value_tbl[value_tbl > 1]
+
+          dups_explained <- dups %>%
+            purrr::imap_chr(
+              ~ names(value)[value==.y] %>%
+                paste_quotes() %>%
+                paste_collapse() %>%
+                paste("you are assigning levels", ., "to the label",
+                      paste_quotes(.y))
+            ) %>%
+            purrr::set_names(nm = "x")
+
+          cli::cli_abort(
+            message = c(
+              "!" = paste("Invalid duplication of {length(dups)} label{?s}",
+                          "for variable", paste_ticks(self$name)),
+              dups_explained,
+              "i" = "category labels must be unique within variables"
+            ),
+            call = NULL
+          )
+
+        }
+      }
+
+
     },
 
 
@@ -333,9 +384,9 @@ NominalVariable <- R6Class(
       )
 
       self$check_category_levels(category_levels)
-      self$check_category_labels(category_labels)
-
       self$category_levels <- category_levels
+
+      self$check_category_labels(category_labels)
       self$category_labels <- category_labels %||% category_levels
 
     },
@@ -360,17 +411,22 @@ LogicalVariable <- R6::R6Class(
 
   public = list(
 
-    # Validation specific to logical variables
     check_category_levels = function(value) {
-      if (!is.null(value)) {
-        checkmate::assert_logical(value, any.missing = FALSE, len = 2, unique = TRUE)
-      }
+      category_levels <- value
+      checkmate::assert_logical(category_levels,
+                                any.missing = FALSE,
+                                len = 2,
+                                null.ok = TRUE,
+                                unique = TRUE)
     },
 
     check_category_labels = function(value) {
-      if (!is.null(value)) {
-        checkmate::assert_character(value, len = 2, any.missing = FALSE)
-      }
+      category_labels <- value
+      checkmate::assert_character(category_labels,
+                                  any.missing = FALSE,
+                                  max.len = 2,
+                                  null.ok = TRUE,
+                                  unique = TRUE)
     },
 
     # Constructor
@@ -518,8 +574,8 @@ DataDictionary <- R6Class(
       self$variables <- purrr::set_names(vars, var_names)
 
       # Extract data for the tibble
-      self$dictionary <- self$create_dictionary(self$variables)
-      self$category_key <- self$create_category_key(self$variables)
+      self$dictionary <- private$create_dictionary(self$variables)
+      self$category_key <- private$create_category_key(self$variables)
       self$copy_on_modify <- copy_on_modify
 
     },
@@ -533,6 +589,18 @@ DataDictionary <- R6Class(
         'model'       = self$variables[[name]]$get_label_divby()
       )
 
+    },
+
+    get_description = function(name){
+      self$variables[[name]]$get_description()
+    },
+
+    get_divby = function(name){
+      self$variables[[name]]$get_divby_modeling()
+    },
+
+    get_units = function(name){
+      self$variables[[name]]$get_units()
     },
 
     get_category_levels = function(name, concatenate = TRUE){
@@ -561,13 +629,41 @@ DataDictionary <- R6Class(
 
     },
 
-    get_variable_names = function(){
+    get_names = function(){
       names(self$variables)
     },
 
-    get_variable_recoder = function(name = NULL,
-                                    units = 'none',
-                                    quiet = FALSE){
+    get_names_nominal = function(){
+      private$get_names_by_type("Nominal")
+    },
+
+    get_names_numeric = function(){
+      private$get_names_by_type("Numeric")
+    },
+
+    get_names_date = function(){
+      private$get_names_by_type("Date")
+    },
+
+    get_names_logical = function(){
+      private$get_names_by_type("Logical")
+    },
+
+    get_names_identifier = function(){
+      private$get_names_by_type("Identifier")
+    },
+
+    get_names_with_units = function(){
+      names(purrr::discard(self$variables, ~is.null(.x$units)))
+    },
+
+    get_names_with_divby = function(){
+      names(purrr::discard(self$variables, ~is.null(.x$divby_modeling)))
+    },
+
+    get_name_translater = function(name = NULL,
+                                   units = 'none',
+                                   quiet = FALSE){
 
       checkmate::assert_character(name, null.ok = TRUE)
 
@@ -590,7 +686,7 @@ DataDictionary <- R6Class(
       if(!is_empty(unlabeled)){
 
         if(!quiet){
-          warning("Incomplete recode information for {",
+          warning("Incomplete translate information for {",
                   paste(unlabeled, collapse = ", "),
                   "} : labels are missing.",
                   call. = FALSE)
@@ -602,7 +698,7 @@ DataDictionary <- R6Class(
 
     },
 
-    get_level_recoder = function(name = NULL, quiet = FALSE){
+    get_category_translater = function(name = NULL, quiet = FALSE){
 
       checkmate::assert_character(name, null.ok = TRUE)
 
@@ -611,6 +707,7 @@ DataDictionary <- R6Class(
         which() %>%
         names()
 
+      # give back all the translaters if no name is specified
       name <- name %||% choices
 
       output <- character(length = 0L)
@@ -625,7 +722,7 @@ DataDictionary <- R6Class(
         if(is.null(.labs)){
 
           if(!quiet){
-            warning("Recode information for variable {", name[i],
+            warning("Translate information for variable {", name[i],
                     "} is incomplete: labels are missing",
                     call. = FALSE)
           }
@@ -651,46 +748,316 @@ DataDictionary <- R6Class(
       self$category_key
     },
 
-    recode = function(x, ..., units = 'none', warn_unmatched = TRUE){
+    index = function(data, names = 'name', levels = 'level'){
+
+      name_sort <- factor(data[[names]],
+                          levels = union(self$dictionary$name,
+                                         unique(data[[names]])))
+
+      split(data, f = name_sort, drop = FALSE) %>%
+        purrr::imap_dfr(
+          .f = ~ {
+
+            out <- .x
+
+            if(.y %in% self$get_names()){
+
+              if(self$variables[[.y]]$type == "Nominal"){
+
+                .levels <- self$variables[[.y]]$get_category_levels()
+
+                out <- .x %>%
+                  dplyr::arrange(
+                    factor(.data[[levels]], levels = .levels)
+                  )
+
+              }
+
+            }
+
+            out
+
+          }
+
+        )
+
+    },
+
+    translate_data = function(x, ...,
+                              units,
+                              warn_unmatched,
+                              apply_variable_labels,
+                              apply_category_labels,
+                              nominals_to_factor){
+
+      overlapping_variables <- self %>%
+        infer_overlapping_variables(x, warn_unmatched)
+
+      unit_variables <- overlapping_variables %>%
+        intersect(self$get_names_with_units())
+
+      nominal_variables <- overlapping_variables %>%
+        intersect(self$get_names_nominal())
+
+      for(i in overlapping_variables){
+
+        .label <- self$get_label(i)
+
+        if(i %in% unit_variables && units != 'none'){
+
+          .label <- .label %||% i
+          .unit <- self$get_units(i)
+          .divby <- self$get_divby(i) %||% 1
+          # variables without divby need to say per 1 unit for consistency
+
+          if(units == 'model'){
+
+            x[[i]] %<>% magrittr::divide_by(.divby)
+            .label %<>% paste0(", per ", .divby, " ", .unit)
+
+          } else if(units == 'descriptive') {
+
+            .label %<>% paste0(", ", .unit)
+
+          }
+
+        }
+
+        if(i %in% nominal_variables && apply_category_labels){
+          x[[i]] %<>%
+            self$translate_categories(names = i,
+                                      to_factor = nominals_to_factor)
+        }
+
+        if(apply_variable_labels){
+          attr(x[[i]], 'label') <- .label
+        }
+
+
+      }
+
+      x
+
+    },
+
+    translate_names = function(x, ...,
+                               .list = NULL,
+                               units = "none",
+                               to_factor = FALSE,
+                               warn_unmatched = TRUE){
 
       x_uni <- unique(stats::na.omit(x))
 
-      variable_recoder <- self$get_variable_recoder(quiet = TRUE, units = units)
-      level_recoder <- self$get_level_recoder(quiet = TRUE)
+      .list <- .list %||% list(...)
 
-      x_in_variable_names <- x_uni %in% names(variable_recoder)
-      x_in_variable_levels <- x_uni %in% names(level_recoder)
+      translater <- self$get_name_translater(quiet = TRUE, units = units)
+
+      if(!is_empty(.list)) translater %<>% c(.list)
+
+      unmatched <- setdiff(x_uni, names(translater))
+
+      if(!is_empty(unmatched) && warn_unmatched){
+        rlang::warn(
+          message = c(
+            "i" = "Unique values in `x` could not be matched with labels in `dictionary`:",
+            purrr::set_names(unmatched, "i"),
+            "i" = "To disable this warning, set `warn_unmatched = FALSE` in `translate()`."
+          )
+        )
+      }
+
+      if(to_factor){
+        private$recode_as_factor(x, translater, unmatched)
+      } else {
+        private$recode_as_character(x, translater)
+      }
+
+    },
+
+    translate_categories = function(x, ...,
+                                    .list = NULL,
+                                    names = NULL,
+                                    to_factor = FALSE,
+                                    warn_unmatched = TRUE){
+
+      .list <- .list %||% list(...)
+
+      if(!is.null(names)){
+
+        if(length(names) == 1) names <- rep(names, length(x))
+
+        stopifnot(length(names) == length(x))
+
+        single_name <- length(unique(names)) == 1
+
+        if(!single_name && to_factor){
+
+          cli::cli_warn(
+            message = c(
+              "Detected more than one unique value in {.var name} with {.var to_factor = TRUE}",
+              i = "{.var translate_categories()} does not concatenate factor levels across multiple variables",
+              i = "output will be returned with type {.var character} instead of {.var factor}"
+            )
+          )
+
+          to_factor <- FALSE
+
+        }
+
+        return(
+          tibble::tibble(x = x, name = names) %>%
+            dplyr::group_by(name) %>%
+            tidyr::nest(data = c(x)) %>%
+            dplyr::mutate(
+              out = purrr::map2(
+                .x = data,
+                .y = name,
+                .f = ~ {
+
+                  if(.y %in% self$get_names()){
+
+                    translater <- self$get_category_translater(
+                      name = .y,
+                      quiet = TRUE
+                    ) %>%
+                      private$bind_list_to_translater(
+                        .list = .list,
+                        add_leftovers = single_name
+                        # if you add leftovers, it can disrupt the order
+                        # of levels when there is more than one name.
+                      )
+
+                  } else {
+                    # if the name doesn't match, there should be a mapping
+                    # available in the .list input
+                    translater <- .list
+
+                    if(is_empty(translater)){
+                      return(rep(NA_character_, length(.x$x)))
+                    }
+
+                  }
+
+                  unmatched <- unique(stats::na.omit(.x$x)) %>%
+                    setdiff(names(translater))
+
+                  if(to_factor){
+                    private$recode_as_factor(.x$x, translater, unmatched)
+                  } else {
+                    private$recode_as_character(.x$x, translater)
+                  }
+
+                }
+              )
+            ) %>%
+            tidyr::unnest(cols = c(data, out)) %>%
+            dplyr::pull(out)
+        )
+
+      }
+
+      x_uni <- unique(stats::na.omit(x))
+
+      translater <-
+        self$get_category_translater(name = names, quiet = TRUE) %>%
+        private$bind_list_to_translater(.list = .list)
+
+
+      # the names of translater are levels
+      dup_levels <- duplicated(names(translater))
+      # the values of translater are labels
+      dup_labels <- duplicated(translater)
+
+      # mapping the same level to multiple labels causes a problem.
+      # e.g., mapping level of "yes" to labels of X and Y? When should
+      # it map to X and when should it map to Y? We can't tell if
+      # we only see "yes"'s in the vector that we are trying to translate.
+
+      dup_problems <- names(translater)[dup_levels] %>%
+        # mapping multiple levels to the same label is okay.
+        # e.g., mapping levels of X and Y to the label of "yes"? no problem.
+        # this step removed those.
+        setdiff(names(translater)[dup_labels]) %>%
+        # this step makes it so we only throw warnings if the duplicates
+        # are actually in the input vector
+        intersect(x)
+
+      if(!purrr::is_empty(dup_problems)){
+
+        dups_explained <- dup_problems %>%
+          purrr::map_chr(
+            ~ translater[names(translater) %in% .x] %>%
+              paste0("'", ., "'") %>%
+              paste(collapse = ' and ') %>%
+              paste0("The category '", .x, "' maps to labels of ", .)
+          ) %>%
+          purrr::set_names(nm = 'x')
+
+        cli::cli_abort(
+          message = c(
+            "Detected one-to-many relationship between categories and labels",
+            dups_explained,
+            "v" = "Use `names` to clarify your mapping (see examples in `?translate_categories`)"
+          ),
+          call = NULL
+        )
+
+      }
+
+      # don't let these be recoded to NA if returning output as factor
+      unmatched <- x_uni %>%
+        setdiff(names(translater))
+
+      if(to_factor){
+        private$recode_as_factor(x, translater, unmatched)
+      } else {
+        private$recode_as_character(x, translater)
+      }
+
+    },
+
+    translate_nominal = function(x, ...,
+                                 units,
+                                 warn_unmatched){
+
+      x_uni <- unique(stats::na.omit(x))
+
+      name_translater <- self$get_name_translater(quiet = TRUE, units = units)
+      level_translater <- self$get_category_translater(quiet = TRUE)
+
+      x_in_variable_names <- x_uni %in% names(name_translater)
+      x_in_variable_levels <- x_uni %in% names(level_translater)
 
       if(!is_empty(list(...))){
-        variable_recoder %<>% c(list(...))
-        level_recoder %<>% c(list(...))
+        name_translater %<>% c(list(...))
+        level_translater %<>% c(list(...))
       }
 
       if(any(x_in_variable_levels & x_in_variable_names)){
         stop("unique values of x were found to be present in ",
              "both the variable labels and the category labels ",
              "for the given dictionary. It is not clear which ",
-             "of these should be used to recode values of x.",
+             "of these should be used to translate values of x.",
              call. = FALSE)
       }
 
       if(any(x_in_variable_levels)){
 
-        # the names of level_recoder are levels
-        dup_levels <- duplicated(names(level_recoder))
-        # the values of level_recoder are labels
-        dup_labels <- duplicated(level_recoder)
+        # the names of level_translater are levels
+        dup_levels <- duplicated(names(level_translater))
+        # the values of level_translater are labels
+        dup_labels <- duplicated(level_translater)
 
         # mapping the same level to multiple labels causes a problem.
         # e.g., mapping level of "yes" to labels of X and Y? When should
         # it map to X and when should it map to Y? We can't tell if
-        # we only see "yes"'s in the vector that we are trying to recode.
+        # we only see "yes"'s in the vector that we are trying to translate.
 
-        dup_problems <- names(level_recoder)[dup_levels] %>%
+        dup_problems <- names(level_translater)[dup_levels] %>%
           # mapping multiple levels to the same label is okay.
           # e.g., mapping levels of X and Y to the label of "yes"? no problem.
           # this step removed those.
-          setdiff(names(level_recoder)[dup_labels]) %>%
+          setdiff(names(level_translater)[dup_labels]) %>%
           # this step makes it so we only throw warnings if the duplicates
           # are actually in the input vector
           intersect(x)
@@ -700,7 +1067,7 @@ DataDictionary <- R6Class(
           dups_explained <- dup_problems %>%
             purrr::set_names() %>%
             purrr::map(
-              ~ level_recoder[names(level_recoder) %in% .x] %>%
+              ~ level_translater[names(level_translater) %in% .x] %>%
                 paste0("'", ., "'") %>%
                 paste(collapse = ' and ') %>%
                 paste0("The level '", .x, "' maps to labels of ", .)
@@ -709,10 +1076,10 @@ DataDictionary <- R6Class(
           msg <- paste0(
             "One or more levels in the dictionary map to multiple labels:\n\n",
             paste("-", paste(dups_explained), collapse = "\n"),
-            "\n\n`recode()` can only map a level to one label, ",
+            "\n\n`translate()` can only map a level to one label, ",
             "so only the first label will be used.\n",
             "This issue can be fixed by changing levels of nominal variables ",
-            "or by using recode vectors for each variable, separately."
+            "or by using translate vectors for each variable, separately."
           )
 
           warning(msg, call. = FALSE)
@@ -722,29 +1089,132 @@ DataDictionary <- R6Class(
       }
 
       if(all(x_in_variable_levels)){
-        return(dplyr::recode(x, !!!level_recoder))
+
+        out <- private$recode_as_factor(x, level_translater)
+        # out <- dplyr::recode(x, !!!level_translater)
+
+        return(out)
+
       }
 
       if(all(x_in_variable_names)){
-        return(dplyr::recode(x, !!!variable_recoder))
+
+        out <- private$recode_as_factor(x, name_translater)
+        # out <- dplyr::recode(x, !!!name_translater)
+
+        return(out)
+
       }
 
-      leftovers <- setdiff(x_uni, c(names(variable_recoder),
-                                    names(level_recoder)))
+      leftovers <- setdiff(x_uni, c(names(name_translater),
+                                    names(level_translater)))
 
       if(!is_empty(leftovers) && warn_unmatched){
-        warning(
-          "Unique values in x could not be matched with variable labels ",
-          "or variable level labels in the dictionary. The x values that ",
-          "could not be matched are: ", paste(leftovers, collapse = ", "),
-          ". To disable this warning, set `warn_unmatched = FALSE` in the ",
-          "call to `recode()`.",
-          call. = FALSE
+        rlang::warn(
+          message = c(
+            "i" = "Unique values in x could not be matched with variable labels or variable level labels in the dictionary.",
+            "i" = glue("The x values that could not be matched are: {paste_collapse(leftovers)}"),
+            "i" = "To disable this warning, set `warn_unmatched = FALSE` in `translate()`."
+          )
         )
       }
 
-      dplyr::recode(x, !!!c(variable_recoder, level_recoder))
+      # would not make sense to convert this to a factor
+      out <- dplyr::recode(x, !!!c(name_translater, level_translater))
 
+      out
+
+    },
+
+    translate_numeric = function(x,
+                                 name,
+                                 units,
+                                 warn_unmatched){
+
+      if(!name %in% self$get_names_numeric()){
+        stop("name mis-match")
+      }
+
+      x
+
+    },
+
+    set_identifiers = function(variable_names){
+
+      for(i in variable_names){
+
+        self$variables[[i]] <-
+          identifier_variable(name = i,
+                              label = self$get_label(i),
+                              description = self$get_description(i))
+
+      }
+
+      self$dictionary <- private$create_dictionary(self$variables)
+      self$category_key <- private$create_category_key(self$variables)
+
+
+    },
+
+    # Print method
+    print = function(...) {
+
+      cat("Data Dictionary:\n")
+      print(self$dictionary, n = Inf)
+
+    },
+
+    check_modify_call = function(key, field){
+
+      checkmate::assert_character(names(key),
+                                  any.missing = FALSE,
+                                  unique = TRUE,
+                                  null.ok = FALSE)
+
+      private$check_inputs_match(key)
+      private$check_inputs_unique(key)
+
+      for(i in names(key)){
+        self$variables[[i]]$chk_element(field = field, value = key[[i]])
+      }
+
+    },
+
+    # Check before you modify. If we try to do both at once and a
+    # check fails halfway through, the dictionary is still modified
+    # up to that point.
+
+    modify_dictionary = function(key, field){
+
+      for(i in names(key)){
+
+        self$variables[[i]]$set_element(field = field,
+                                        value = key[[i]])
+
+      }
+
+      self$dictionary <- private$create_dictionary(self$variables)
+      self$category_key <- private$create_category_key(self$variables)
+
+    }
+
+  ),
+
+  private = list(
+    deep_clone = function(name, value){
+      if(name == 'variables'){
+        purrr::map(value, .f = ~.x$clone(deep=TRUE))
+      } else {
+        value
+      }
+    },
+
+    get_types = function() {
+      purrr::map_chr(self$variables, 'type')
+    },
+
+    get_names_by_type = function(type) {
+      names(self$variables)[private$get_types() == type]
     },
 
     # Function to create tibble summary of variables
@@ -752,6 +1222,7 @@ DataDictionary <- R6Class(
 
       tibble::tibble(
         name            = purrr::map_chr(vars, ~ .x$fmt_name()),
+        type            = purrr::map_chr(vars, ~ .x$fmt_type()),
         label           = purrr::map_chr(vars, ~ .x$fmt_label()),
         description     = purrr::map_chr(vars, ~ .x$fmt_description()),
         units           = purrr::map_chr(vars, ~ .x$fmt_units()),
@@ -764,32 +1235,39 @@ DataDictionary <- R6Class(
 
     create_category_key = function(vars){
 
-      tibble::enframe(vars, name = 'variable') %>%
+      tibble::enframe(vars, name = 'name') %>%
         dplyr::mutate(type = purrr::map_chr(value, "type")) %>%
         dplyr::filter(type == "Nominal") %>%
-        dplyr::mutate(levels = purrr::map(value, ~.x$category_levels),
-                      labels = purrr::map(value, ~.x$category_labels)) %>%
-        dplyr::select(variable, levels, labels) %>%
-        tidyr::unnest(cols = c(levels, labels)) %>%
-        dplyr::group_by(variable) %>%
-        dplyr::mutate(reference = levels == dplyr::first(levels)) %>%
+        dplyr::mutate(level = purrr::map(value, ~.x$category_levels),
+                      label = purrr::map(value, ~.x$category_labels)) %>%
+        dplyr::select(name, level, label) %>%
+        tidyr::unnest(cols = c(level, label)) %>%
+        dplyr::group_by(name) %>%
+        dplyr::mutate(reference = level == dplyr::first(level)) %>%
         dplyr::ungroup()
 
     },
 
-    check_inputs_match = function(key){
+    check_inputs_match = function(key, dictionary_name = NULL){
 
       unmatched_inputs <- setdiff(names(key), self$dictionary$name)
 
       if(!purrr::is_empty(unmatched_inputs)){
 
-        msg <- c(
-          "unrecognized input name(s)",
-          set_names(unmatched_inputs, "i"),
-          i = "Inputs must match names of variables in the dictionary."
-        )
+        n <- length(unmatched_inputs)
+        nm <- paste_collapse(unmatched_inputs)
+        dd <- paste(dictionary_name %||% "dictionary",
+                    "get_names()",
+                    sep = "$")
 
-        rlang::abort(message = msg, call = NULL)
+        cli::cli_abort(
+          c(
+            "Invalid names in {.var ...} or {.var .list}",
+            "i" = paste("There {?is/are} {n} unrecognized name{?s}:", nm),
+            "x" = "Input names must match dictionary variable names.",
+            ">" = "Use `{dd}` to see valid names"
+          )
+        )
 
       }
 
@@ -812,60 +1290,65 @@ DataDictionary <- R6Class(
 
     },
 
+    translate_categories_internal = function(x, .list, name){
 
-    # Check before you modify. If we try to do both at once and a
-    # check fails halfway through, the dictionary is still modified
-    # up to that point, which may cause unexpected errors for users.
-
-    check_modify_call = function(key, field){
-
-      checkmate::assert_character(names(key),
-                                  any.missing = FALSE,
-                                  unique = TRUE,
-                                  null.ok = FALSE)
-
-      self$check_inputs_match(key)
-
-      self$check_inputs_unique(key)
-
-      for(i in names(key)){
-        self$variables[[i]]$chk_element(field = field, value = key[[i]])
-      }
-
-    },
-
-
-    modify_dictionary = function(key, field){
-
-      for(i in names(key)){
-
-        self$variables[[i]]$set_element(field = field,
-                                        value = key[[i]])
-
-      }
-
-      self$dictionary <- self$create_dictionary(self$variables)
-      self$category_key <- self$create_category_key(self$variables)
-
-    },
-
-    # Print method
-    print = function(...) {
-
-      cat("Data Dictionary:\n")
-      print(self$dictionary, n = Inf)
-
-    }
-  ),
-
-  private = list(
-    deep_clone = function(name, value){
-      if(name == 'variables'){
-        purrr::map(value, .f = ~.x$clone(deep=TRUE))
+      if(name %in% self$get_names()){
+        translater <-
+          self$get_category_translater(name = name, quiet = TRUE)
       } else {
-        value
+        translater <- .list
       }
+
+      private$recode_as_factor(x, translater)
+
+    },
+
+    bind_list_to_translater = function(translater, .list,
+                                       add_replacements = TRUE,
+                                       add_leftovers = TRUE){
+
+      # let ... replace categories or add new ones
+      # - replace existing categories if needed
+      # - add the leftovers to translater
+
+      .list_split <- tibble::enframe(.list) %>%
+        dplyr::mutate(in_translater = factor(name %in% names(translater),
+                                             levels = c(FALSE, TRUE),
+                                             labels = c("leftover",
+                                                        "replace"))) %>%
+        split(f = .$in_translater, drop = FALSE) %>%
+        purrr::map( ~ .x %>%
+                      dplyr::select(name, value) %>%
+                      tibble::deframe() %>%
+                      unlist())
+
+      if(!is_empty(.list_split$replace) && add_replacements){
+        translater[names(.list_split$replace)] <- .list_split$replace
+      }
+
+      if(!is_empty(.list_split$leftover) && add_leftovers){
+        translater %<>% c(.list_split$leftover)
+      }
+
+      translater
+
+    },
+
+    recode_as_factor = function(x, translater, unmatched = NULL){
+
+      x %>%
+        dplyr::recode(!!!translater) %>%
+        factor(levels = c(translater, unmatched))
+
+    },
+
+    recode_as_character = function(x, translater){
+
+      as.character(x) %>%
+        dplyr::recode(!!!translater)
+
     }
+
   )
 
 )
