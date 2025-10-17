@@ -4,7 +4,12 @@
 \alias{get_dictionary}
 \title{Extract Dictionary Meta Data as a Tibble}
 \usage{
-get_dictionary(dictionary, format_missing = FALSE, format_categories = FALSE)
+get_dictionary(
+  dictionary,
+  format_missing = FALSE,
+  format_categories = FALSE,
+  as_code = FALSE
+)
 }
 \arguments{
 \item{dictionary}{A \link[=data_dictionary]{data dictionary} object}
@@ -17,11 +22,16 @@ labels or units) are returned as stored in the dictionary. If \code{FALSE}
 is returned exactly as stored in the dictionary. If \code{FALSE} (default),
 category levels and labels are returned as list-columns extracted from
 the variable objects.}
+
+\item{as_code}{Logical. If \code{TRUE}, text is returned as code that can be
+copy/pasted into an R script to construct \code{dictionary}. If \code{FALSE} (the
+default), unknowns are returned as a \code{tibble}.}
 }
 \value{
-A tibble with one row per variable, containing meta data fields
-such as \code{label}, \code{description}, \code{units}, \code{divby_modeling},
-\code{category_levels}, and \code{category_labels}.
+A tibble with one row per variable (\code{as_code = FALSE}), containing
+meta data fields such as \code{label}, \code{description}, \code{units}, \code{divby_modeling},
+\code{category_levels}, and \code{category_labels}. If \code{as_code = TRUE}, a string
+containing code to construct the original dictionary.
 }
 \description{
 Returns a tibble of the dictionary contents, optionally formatting
@@ -32,4 +42,15 @@ for custom workflows that require dictionary information in tabular form.
 dd <- as_data_dictionary(iris)
 get_dictionary(dd)
 
+# Code to recreate dd
+dd_code <- get_dictionary(dd, as_code = TRUE)
+dd_code
+
+# Create data dictionary from code string
+dd_new <- eval(parse(text = dd_code))
+all.equal(dd, dd_new) # TRUE
+
+}
+\author{
+Byron Jaeger, Tyler Sagendorf
 }
