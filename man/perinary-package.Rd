@@ -11,13 +11,18 @@ Keeps labels and other relevant information about variables in a lightweight cla
 \seealso{
 Useful links:
 \itemize{
-  \item \url{https://github.com/bcjaeger/pericircle}
-  \item Report bugs at \url{https://github.com/bcjaeger/pericircle/issues}
+  \item \url{https://github.com/perisphere-rwe/perinary}
+  \item Report bugs at \url{https://github.com/perisphere-rwe/perinary/issues}
 }
 
 }
 \author{
 \strong{Maintainer}: Byron Jaeger \email{bcjaeger@perisphere-rwe.com} (\href{https://orcid.org/0000-0001-7399-2299}{ORCID})
+
+Other contributors:
+\itemize{
+  \item Tyler Sagendorf [contributor]
+}
 
 }
 \keyword{internal}
