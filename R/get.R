@@ -296,21 +296,59 @@ get_term_key <- function(dictionary,
 #'   is returned exactly as stored in the dictionary. If `FALSE` (default),
 #'   category levels and labels are returned as list-columns extracted from
 #'   the variable objects.
+#' @param as_code Logical. If `TRUE`, text is returned as code that can be
+#'   copy/pasted into an R script to construct `dictionary`. If `FALSE` (the
+#'   default), unknowns are returned as a `tibble`.
 #'
-#' @return A tibble with one row per variable, containing meta data fields
-#'   such as `label`, `description`, `units`, `divby_modeling`,
-#'   `category_levels`, and `category_labels`.
+#' @return A tibble with one row per variable (`as_code = FALSE`), containing
+#'   meta data fields such as `label`, `description`, `units`, `divby_modeling`,
+#'   `category_levels`, and `category_labels`. If `as_code = TRUE`, a string
+#'   containing code to construct the original dictionary.
 #'
-#' @export
+#' @author Byron Jaeger, Tyler Sagendorf
+#'
+#' @export get_dictionary
+#'
+#' @importFrom dplyr select left_join mutate across pull case_when
+#' @importFrom purrr map_chr
+#' @importFrom rlang abort
 #'
 #' @examples
 #' dd <- as_data_dictionary(iris)
 #' get_dictionary(dd)
 #'
+#' # Code to recreate dd
+#' dd_code <- get_dictionary(dd, as_code = TRUE)
+#' dd_code
+#'
+#' # Create data dictionary from code string
+#' dd_new <- eval(parse(text = dd_code))
+#' all.equal(dd, dd_new) # TRUE
+#'
 get_dictionary <- function(dictionary,
                            format_missing = FALSE,
-                           format_categories = FALSE){
+                           format_categories = FALSE,
+                           as_code = FALSE) {
+  if (!as_code) {
+    out <- .get_dictionary(
+      dictionary = dictionary,
+      format_missing = format_missing,
+      format_categories = format_categories
+    )
+  } else {
+    # Convert dictionary to code that can be used to recreate the dictionary
+    out <- .get_dictionary_as_code(
+      dictionary = dictionary
+    )
+  }
 
+  return(out)
+}
+
+
+.get_dictionary <- function(dictionary,
+                            format_missing = FALSE,
+                            format_categories = FALSE) {
   if(format_missing && format_categories) return(dictionary$dictionary)
 
   vars <- dictionary$variables
@@ -353,3 +391,105 @@ get_dictionary <- function(dictionary,
 
 }
 
+
+.get_dictionary_as_code <- function(dictionary) {
+  # Extract list columns
+  temp <- .get_dictionary(dictionary) %>%
+    select(name, category_levels, category_labels)
+
+  dd <- dictionary$dictionary %>%
+    # Replace category_levels/_labels by the list columns from temp
+    select(-c(category_levels, category_labels)) %>%
+    left_join(temp, by = "name") %>%
+    mutate(
+      # Create category_levels_char and category_labels_char columns
+      across(
+        .cols = c(category_levels, category_labels),
+        .fns = ~ map_chr(.x, function(vec_i) {
+          # Format levels and labels as "c('A','B','C')"
+          sprintf("c(%s)", paste(sQuote(vec_i, FALSE), collapse = ","))
+        }),
+        .names = "{.col}_char"
+      )
+    )
+
+  # String containing code needed to reconstruct the dictionary
+  out <- dd %>%
+    mutate(
+      across(
+        .cols = c(description, label, units),
+        .fns = ~ ifelse(.x == "none", "NULL", sQuote(.x, FALSE))
+      ),
+      divby_modeling = ifelse(divby_modeling == "none", "NULL", divby_modeling),
+      name = sQuote(name, FALSE),
+      # Get date formats from original dictionary
+      date_format = map_chr(dictionary$variables, function(var_i) {
+        var_i[["date_format"]] %||% "NULL"
+      }),
+      # Code to build each row of the dictionary. These arguments are used by
+      # all *_variable functions.
+      code = sprintf(
+        "name=%s,label=%s,description=%s",
+        name, label, description
+      ),
+      # Arguments specific to the different *_variable functions
+      code = case_when(
+        type == "Nominal" ~ sprintf(
+          "nominal_variable(%s,category_levels=%s,category_labels=%s)",
+          code, category_levels_char, category_labels_char
+        ),
+        type == "Numeric" ~ sprintf(
+          "numeric_variable(%s,units=%s,divby_modeling=%s)",
+          code, units, divby_modeling
+        ),
+        type == "Logical" ~ sprintf(
+          "logical_variable(%s,category_labels=%s)",
+          code, category_labels_char
+        ),
+        type == "Date" ~ sprintf(
+          "date_variable(%s,date_format=%s)",
+          code, ""
+        ),
+        type == "Identifier" ~ sprintf(
+          "identifier_variable(%s)",
+          code
+        ),
+        TRUE ~ "STOP"
+      ),
+      code = ifelse(
+        code == "STOP",
+        # Catch other variable types. This will be triggered once by
+        # eval(parse(text = code))
+        sprintf(
+          "abort(message = 'Invalid variable type(s): %s')",
+          paste(unique(type[code == "STOP"]), collapse = ", ")
+        ),
+        code
+      )
+    ) %>%
+    pull(code) %>%
+    paste(collapse = ",")
+
+  out <- sprintf("data_dictionary(.list = list(%s))", out)
+
+  # Verify that the dictionary that will be generated is the same as the input
+  dictionary_new <- eval(parse(text = out))
+
+  # Do not use identical, since ".__enclos_env__" will be different
+  if (isFALSE(all.equal(dictionary, dictionary_new))) {
+    # If the dictionary is different, it indicates an error in the code;
+    # nothing the user can do besides tell us to fix it. This is the last line
+    # of defense if the unit tests do not catch any issues.
+    abort(
+      message = paste0(
+        "The input dictionary does not match the dictionary generated by ",
+        "evaluating the output string. Please open a new issue: ",
+        "https://github.com/perisphere-rwe/perinary/issues/new"
+      )
+    )
+    # TODO return more specific information about the differences (e.g.,
+    # missing columns)?
+  }
+
+  return(out)
+}

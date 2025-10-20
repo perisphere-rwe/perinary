@@ -7,7 +7,7 @@ utils::globalVariables(
             "category_labels", "category_levels",
             ".", "category_type", "choices", "desc",
             "description", "divby_modeling", "label",
-            "level", "reference", "term")
+            "level", "reference", "term", "code")
 )
 
 ## usethis namespace: start
