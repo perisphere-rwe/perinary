@@ -327,10 +327,16 @@ get_term_key <- function(dictionary,
 get_dictionary <- function(dictionary,
                            format_missing = FALSE,
                            format_categories = FALSE,
-                           as_code = FALSE){
-  if (as_code) {
+                           as_code = FALSE) {
+  if (!as_code) {
+    out <- .get_dictionary(
+      dictionary = dictionary,
+      format_missing = format_missing,
+      format_categories = format_categories
+    )
+  } else {
     # Extract list columns
-    temp <- get_dictionary(dictionary) %>%
+    temp <- .get_dictionary(dictionary) %>%
       select(name, category_levels, category_labels)
 
     dd <- dictionary$dictionary %>%
@@ -350,7 +356,7 @@ get_dictionary <- function(dictionary,
       )
 
     # String containing code needed to reconstruct the dictionary
-    code <- dd %>%
+    out <- dd %>%
       mutate(
         across(
           .cols = c(description, label, units, divby_modeling),
@@ -385,16 +391,18 @@ get_dictionary <- function(dictionary,
             "date_variable(%s,date_format=%s)",
             code, ""
           ),
-          TRUE ~ "stop('Invalid type.')"
+          # Catch other variable types. This will be triggered by
+          # eval(parse(text = code))
+          TRUE ~ "stop('Invalid variable type.')"
         )
       ) %>%
       pull(code) %>%
       paste(collapse = ",")
 
-    code <- sprintf("data_dictionary(.list = list(%s))", code)
+    out <- sprintf("data_dictionary(.list = list(%s))", out)
 
     # Verify that the dictionary that will be generated is the same as the input
-    dictionary_new <- eval(parse(text = code))
+    dictionary_new <- eval(parse(text = out))
 
     # Do not use identical, since ".__enclos_env__" will be different
     if (isFALSE(all.equal(dictionary, dictionary_new))) {
@@ -411,10 +419,15 @@ get_dictionary <- function(dictionary,
       # TODO return more specific information about the differences (e.g.,
       # missing columns)?
     }
-
-    return(code)
   }
 
+  return(out)
+}
+
+
+.get_dictionary <- function(dictionary,
+                            format_missing = FALSE,
+                            format_categories = FALSE) {
   if(format_missing && format_categories) return(dictionary$dictionary)
 
   vars <- dictionary$variables
@@ -456,4 +469,3 @@ get_dictionary <- function(dictionary,
   dplyr::bind_cols(tbl_names, tbl_left, tbl_right)
 
 }
-
