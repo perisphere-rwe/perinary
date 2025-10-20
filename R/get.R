@@ -310,6 +310,7 @@ get_term_key <- function(dictionary,
 #' @export get_dictionary
 #'
 #' @importFrom dplyr select left_join mutate across pull case_when
+#' @importFrom purrr map_chr
 #' @importFrom rlang abort
 #'
 #' @examples
@@ -404,10 +405,10 @@ get_dictionary <- function(dictionary,
       # Create category_levels_char and category_labels_char columns
       across(
         .cols = c(category_levels, category_labels),
-        .fns = ~ vapply(.x, function(vec_i) {
+        .fns = ~ map_chr(.x, function(vec_i) {
           # Format levels and labels as "c('A','B','C')"
           sprintf("c(%s)", paste(sQuote(vec_i, FALSE), collapse = ","))
-        }, character(1L)),
+        }),
         .names = "{.col}_char"
       )
     )
@@ -422,9 +423,9 @@ get_dictionary <- function(dictionary,
       divby_modeling = ifelse(divby_modeling == "none", "NULL", divby_modeling),
       name = sQuote(name, FALSE),
       # Get date formats from original dictionary
-      date_format = vapply(dictionary$variables, function(var_i) {
+      date_format = map_chr(dictionary$variables, function(var_i) {
         var_i[["date_format"]] %||% "NULL"
-      }, character(1L)),
+      }),
       # Code to build each row of the dictionary. These arguments are used by
       # all *_variable functions.
       code = sprintf(
