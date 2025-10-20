@@ -365,6 +365,7 @@ get_dictionary <- function(dictionary,
         .cols = c(description, label, units),
         .fns = ~ ifelse(.x == "none", "NULL", sQuote(.x, FALSE))
       ),
+      divby_modeling = ifelse(divby_modeling == "none", "NULL", divby_modeling),
       name = sQuote(name, FALSE),
       # Get date formats from original dictionary
       date_format = vapply(dictionary$variables, function(var_i) {
