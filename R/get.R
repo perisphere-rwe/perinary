@@ -334,10 +334,64 @@ get_dictionary <- function(dictionary,
       format_missing = format_missing,
       format_categories = format_categories
     )
-
-    return(out)
+  } else {
+    # Convert dictionary to code that can be used to recreate the dictionary
+    out <- .get_dictionary_as_code(
+      dictionary = dictionary
+    )
   }
 
+  return(out)
+}
+
+
+.get_dictionary <- function(dictionary,
+                            format_missing = FALSE,
+                            format_categories = FALSE) {
+  if(format_missing && format_categories) return(dictionary$dictionary)
+
+  vars <- dictionary$variables
+
+  tbl_names <- tibble::tibble(
+    name = purrr::map_chr(vars, ~ .x$get_name()),
+  )
+
+  tbl_left <- dplyr::select(dictionary$dictionary,
+                            label,
+                            description,
+                            units,
+                            divby_modeling)
+
+  if(!format_missing){
+
+    tbl_left <- tibble::tibble(
+      label           = purrr::map_chr(vars, ~ .x$get_label() %||% NA_character_),
+      description     = purrr::map_chr(vars, ~ .x$get_description() %||% NA_character_),
+      units           = purrr::map_chr(vars, ~ .x$get_units() %||% NA_character_),
+      divby_modeling  = purrr::map_dbl(vars, ~ .x$get_divby_modeling() %||% NA_real_)
+    )
+
+  }
+
+  tbl_right <- dplyr::select(dictionary$dictionary,
+                             category_levels,
+                             category_labels)
+
+  if(!format_categories){
+
+    tbl_right <- tibble::tibble(
+      category_levels = purrr::map(vars, ~ .x$get_category_levels()),
+      category_labels = purrr::map(vars, ~ .x$get_category_labels())
+    )
+
+  }
+
+  dplyr::bind_cols(tbl_names, tbl_left, tbl_right)
+
+}
+
+
+.get_dictionary_as_code <- function(dictionary) {
   # Extract list columns
   temp <- .get_dictionary(dictionary) %>%
     select(name, category_levels, category_labels)
@@ -437,50 +491,4 @@ get_dictionary <- function(dictionary,
   }
 
   return(out)
-}
-
-
-.get_dictionary <- function(dictionary,
-                            format_missing = FALSE,
-                            format_categories = FALSE) {
-  if(format_missing && format_categories) return(dictionary$dictionary)
-
-  vars <- dictionary$variables
-
-  tbl_names <- tibble::tibble(
-    name = purrr::map_chr(vars, ~ .x$get_name()),
-  )
-
-  tbl_left <- dplyr::select(dictionary$dictionary,
-                            label,
-                            description,
-                            units,
-                            divby_modeling)
-
-  if(!format_missing){
-
-    tbl_left <- tibble::tibble(
-      label           = purrr::map_chr(vars, ~ .x$get_label() %||% NA_character_),
-      description     = purrr::map_chr(vars, ~ .x$get_description() %||% NA_character_),
-      units           = purrr::map_chr(vars, ~ .x$get_units() %||% NA_character_),
-      divby_modeling  = purrr::map_dbl(vars, ~ .x$get_divby_modeling() %||% NA_real_)
-    )
-
-  }
-
-  tbl_right <- dplyr::select(dictionary$dictionary,
-                             category_levels,
-                             category_labels)
-
-  if(!format_categories){
-
-    tbl_right <- tibble::tibble(
-      category_levels = purrr::map(vars, ~ .x$get_category_levels()),
-      category_labels = purrr::map(vars, ~ .x$get_category_labels())
-    )
-
-  }
-
-  dplyr::bind_cols(tbl_names, tbl_left, tbl_right)
-
 }
