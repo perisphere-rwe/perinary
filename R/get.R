@@ -407,7 +407,7 @@ get_dictionary <- function(dictionary,
         # eval(parse(text = code))
         sprintf(
           "abort(message = 'Invalid variable type(s): %s')",
-          paste(unique(type), collapse = ", ")
+          paste(unique(type[code == "STOP"]), collapse = ", ")
         ),
         code
       )
