@@ -130,6 +130,8 @@
 #' @seealso
 #' [data_dictionary()], [as_data_dictionary()], [set_default_dictionary()]
 #'
+#' @importFrom checkmate assert_character assert_choice assert_logical
+#'
 #' @export
 #'
 
@@ -141,11 +143,11 @@ translate_data <- function(x, ...,
                            apply_category_labels = TRUE,
                            nominals_to_factor = TRUE){
 
-  checkmate::assert_character(units, len = 1, any.missing = FALSE)
-  checkmate::assert_choice(units, choices=c('none','descriptive','model'))
-  checkmate::assert_logical(warn_unmatched, len = 1)
-  checkmate::assert_logical(apply_variable_labels, len = 1)
-  checkmate::assert_logical(apply_category_labels, len = 1)
+  assert_character(units, len = 1, any.missing = FALSE)
+  assert_choice(units, choices=c('none','descriptive','model'))
+  assert_logical(warn_unmatched, len = 1)
+  assert_logical(apply_variable_labels, len = 1)
+  assert_logical(apply_category_labels, len = 1)
 
   infer_meta(dictionary)$translate_data(
     x = x, ...,
@@ -163,18 +165,22 @@ translate_data <- function(x, ...,
 #' @param .list For `translate_names()`: an optional **named** character
 #'   vector mapping `old_name = "Label"`. When supplied, it takes precedence
 #'   over the dictionary lookup (useful for ad-hoc overrides).
+#'
+#' @importFrom checkmate assert_character assert_choice assert_list
+#'   assert_logical
+#'
 #' @export
 translate_names <- function(x, ...,
-                           .list = NULL,
-                           dictionary = NULL,
-                           units = "none",
-                           to_factor = FALSE,
-                           warn_unmatched = TRUE){
+                            .list = NULL,
+                            dictionary = NULL,
+                            units = "none",
+                            to_factor = FALSE,
+                            warn_unmatched = TRUE){
 
-  checkmate::assert_character(units, len = 1, any.missing = FALSE)
-  checkmate::assert_choice(units, choices=c('none','descriptive','model'))
-  checkmate::assert_logical(warn_unmatched, len = 1)
-  checkmate::assert_list(.list, types='character', names='named', null.ok=TRUE)
+  assert_character(units, len = 1, any.missing = FALSE)
+  assert_choice(units, choices=c('none','descriptive','model'))
+  assert_logical(warn_unmatched, len = 1)
+  assert_list(.list, types='character', names='named', null.ok=TRUE)
 
   infer_meta(dictionary)$translate_names(x = x, ...,
                                          .list = .list,
@@ -188,16 +194,19 @@ translate_names <- function(x, ...,
 #' @param names For `translate_categories()`: optional character vector of
 #'   variable names to translate (useful when `x` is a data frame or when
 #'   disambiguation is needed).
+#'
+#' @importFrom checkmate assert_list assert_logical
+#'
 #' @export
 translate_categories <- function(x, ...,
-                                .list = NULL,
-                                dictionary = NULL,
-                                names = NULL,
-                                to_factor = FALSE,
-                                warn_unmatched = TRUE){
+                                 .list = NULL,
+                                 dictionary = NULL,
+                                 names = NULL,
+                                 to_factor = FALSE,
+                                 warn_unmatched = TRUE){
 
-  checkmate::assert_logical(warn_unmatched, len = 1)
-  checkmate::assert_list(.list, types='character', names='named', null.ok=TRUE)
+  assert_logical(warn_unmatched, len = 1)
+  assert_list(.list, types='character', names='named', null.ok=TRUE)
 
   infer_meta(dictionary)$translate_categories(x = x, ...,
                                               .list = .list,

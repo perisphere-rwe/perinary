@@ -58,6 +58,8 @@ infer_dotdot <- function(..., .list = NULL){
 #'
 #' @seealso [data_dictionary()], [as_data_dictionary()], [set_default_dictionary()]
 #'
+#' @importFrom checkmate assert_class
+#' @importFrom rlang abort
 
 
 infer_meta <- function(dictionary){
@@ -65,7 +67,7 @@ infer_meta <- function(dictionary){
   .dictionary <- dictionary %||% .perinary_internal$dictionary
 
   if(is.null(.dictionary)){
-    rlang::abort(
+    abort(
       message = c(
         x = "no dictionary supplied and no dictionary found as default",
         i = "see `?as_data_dictionary` to convert your data to a dictionary",
@@ -74,7 +76,7 @@ infer_meta <- function(dictionary){
     )
   }
 
-  checkmate::assert_class(.dictionary, "DataDictionary")
+  assert_class(.dictionary, "DataDictionary")
 
   .dictionary
 

@@ -19,6 +19,11 @@
 #'   a [tibble][tibble::tibble-package] is returned.
 #'   If `as_request = TRUE` or `as_code = TRUE`, text is returned.
 #'
+#' @importFrom dplyr arrange case_when filter if_else mutate rename
+#' @importFrom glue glue
+#' @importFrom purrr map_chr
+#' @importFrom tidyr pivot_longer
+#'
 #' @export
 #'
 #' @examples
@@ -56,16 +61,16 @@ get_unknowns <- function(dictionary = NULL,
   }
 
   data_unknowns <- dictionary$dictionary %>%
-    dplyr::mutate(type = purrr::map_chr(dictionary$variables, "type"), .after = 1) %>%
-    dplyr::rename(variable = name) %>%
-    dplyr::mutate(
-      category_labels = dplyr::if_else(category_labels==category_levels,
-                                       true = 'none',
-                                       false = category_labels)
+    mutate(type = map_chr(dictionary$variables, "type"), .after = 1) %>%
+    rename(variable = name) %>%
+    mutate(
+      category_labels = if_else(category_labels==category_levels,
+                                true = 'none',
+                                false = category_labels)
     ) %>%
-    tidyr::pivot_longer(cols = -c(variable, type)) %>%
-    dplyr::filter(
-      dplyr::case_when(
+    pivot_longer(cols = -c(variable, type)) %>%
+    filter(
+      case_when(
         name %in% c("label", "description") ~ value == 'none',
         type == "Numeric" ~ value == "none" & name %in% c("units",
                                                           "divby_modeling"),
@@ -73,15 +78,15 @@ get_unknowns <- function(dictionary = NULL,
                                                           "category_labels")
       )
     ) %>%
-    dplyr::mutate(name = factor(name,
-                                levels = c("label", "category_labels",
-                                           "units", "divby_modeling",
-                                           "description"))) %>%
-    dplyr::arrange(name)
+    mutate(name = factor(name,
+                         levels = c("label", "category_labels",
+                                    "units", "divby_modeling",
+                                    "description"))) %>%
+    arrange(name)
 
   if(!show_optional){
     data_unknowns <- data_unknowns %>%
-      dplyr::filter(name %in% c("label", "units", "category_labels")) %>%
+      filter(name %in% c("label", "units", "category_labels")) %>%
       droplevels()
   }
 
@@ -90,7 +95,7 @@ get_unknowns <- function(dictionary = NULL,
   if(as_request){
 
     out <- split(data_unknowns, data_unknowns$name) %>%
-      purrr::map_chr(
+      map_chr(
         .f = ~ {
 
           .x_name <- switch(
@@ -119,7 +124,7 @@ get_unknowns <- function(dictionary = NULL,
 
           if(.x$name[1] == 'category_labels'){
 
-            text_mid <- purrr::map_chr(
+            text_mid <- map_chr(
               .x = .x$variable,
               .f = function(..x){
                 paste(dictionary$variables[[..x]]$category_levels,
@@ -147,7 +152,7 @@ get_unknowns <- function(dictionary = NULL,
     }
 
     out <- split(data_unknowns, data_unknowns$name) %>%
-      purrr::map_chr(
+      map_chr(
         .f = ~ {
 
           .fun <- paste(
@@ -178,7 +183,7 @@ get_unknowns <- function(dictionary = NULL,
 
           if(.x$name[1] == 'category_labels'){
 
-            .args <- purrr::map_chr(
+            .args <- map_chr(
               .x = .x$variable,
               .f = function(..x){
 
@@ -191,14 +196,14 @@ get_unknowns <- function(dictionary = NULL,
                                 collapse = ..collapse)
 
 
-                glue::glue("{..x} = c({..args})")
+                glue("{..x} = c({..args})")
               }
             ) %>%
               paste(collapse = .collapse)
 
           }
 
-          glue::glue("{.fun}({.args})")
+          glue("{.fun}({.args})")
 
         }
       ) %>%
@@ -233,6 +238,10 @@ get_unknowns <- function(dictionary = NULL,
 #'
 #' @export
 #'
+#' @importFrom dplyr filter if_else mutate rename_with right_join select
+#'   starts_with
+#' @importFrom tidyr drop_na pivot_longer
+#'
 #' @examples
 #' dd <- as_data_dictionary(iris)
 #' get_term_key(dd)
@@ -243,20 +252,20 @@ get_term_key <- function(dictionary,
                          term_colname = 'term'){
 
   out <- dictionary$category_key %>%
-    dplyr::mutate(
+    mutate(
       term_levels = paste(name, level, sep = term_separator),
-      term_labels = dplyr::if_else(
+      term_labels = if_else(
         label == level,
         true = NA_character_,
         false = paste(name, label, sep = term_separator)
       )
     ) %>%
-    tidyr::pivot_longer(cols = dplyr::starts_with('term_'),
-                        values_to = 'term',
-                        names_to = 'category_type',
-                        names_prefix = 'term_') %>%
-    tidyr::drop_na(term) %>%
-    dplyr::rename_with(.fn = ~ term_colname, .cols = term)
+    pivot_longer(cols = starts_with('term_'),
+                 values_to = 'term',
+                 names_to = 'category_type',
+                 names_prefix = 'term_') %>%
+    drop_na(term) %>%
+    rename_with(.fn = ~ term_colname, .cols = term)
 
   if(is.null(adjust_to)) return(out)
 
@@ -267,18 +276,18 @@ get_term_key <- function(dictionary,
   # then keep either the levels or the labels from term key,
   # depending on which one is actually in the terms.
 
-  overlap <- dplyr::right_join(out,
-                               adjust_to,
-                               by = term_colname)
+  overlap <- right_join(out,
+                        adjust_to,
+                        by = term_colname)
 
   out %>%
-    dplyr::filter(name %in% overlap$name) %>%
+    filter(name %in% overlap$name) %>%
     # drop the labels or levels, depending on which is in terms
-    dplyr::filter(any(term %in% adjust_to[[term_colname]]),
-                  .by = c(name, category_type)) %>%
-    dplyr::select(-category_type) %>%
+    filter(any(term %in% adjust_to[[term_colname]]),
+           .by = c(name, category_type)) %>%
+    select(-category_type) %>%
     # drop any levels that aren't in terms and aren't references
-    dplyr::filter(reference | term %in% adjust_to[[term_colname]])
+    filter(reference | term %in% adjust_to[[term_colname]])
 
 }
 
@@ -308,10 +317,6 @@ get_term_key <- function(dictionary,
 #' @author Byron Jaeger, Tyler Sagendorf
 #'
 #' @export get_dictionary
-#'
-#' @importFrom dplyr select left_join mutate across pull case_when
-#' @importFrom purrr map_chr
-#' @importFrom rlang abort
 #'
 #' @examples
 #' dd <- as_data_dictionary(iris)
@@ -346,6 +351,11 @@ get_dictionary <- function(dictionary,
 }
 
 
+#' @importFrom dplyr bind_cols select
+#' @importFrom purrr map map_chr map_dbl
+#' @importFrom tibble tibble
+#'
+#' @noRd
 .get_dictionary <- function(dictionary,
                             format_missing = FALSE,
                             format_categories = FALSE) {
@@ -353,45 +363,49 @@ get_dictionary <- function(dictionary,
 
   vars <- dictionary$variables
 
-  tbl_names <- tibble::tibble(
-    name = purrr::map_chr(vars, ~ .x$get_name()),
+  tbl_names <- tibble(
+    name = map_chr(vars, ~ .x$get_name()),
   )
 
-  tbl_left <- dplyr::select(dictionary$dictionary,
-                            label,
-                            description,
-                            units,
-                            divby_modeling)
+  tbl_left <- select(dictionary$dictionary,
+                     label,
+                     description,
+                     units,
+                     divby_modeling)
 
   if(!format_missing){
 
-    tbl_left <- tibble::tibble(
-      label           = purrr::map_chr(vars, ~ .x$get_label() %||% NA_character_),
-      description     = purrr::map_chr(vars, ~ .x$get_description() %||% NA_character_),
-      units           = purrr::map_chr(vars, ~ .x$get_units() %||% NA_character_),
-      divby_modeling  = purrr::map_dbl(vars, ~ .x$get_divby_modeling() %||% NA_real_)
+    tbl_left <- tibble(
+      label           = map_chr(vars, ~ .x$get_label() %||% NA_character_),
+      description     = map_chr(vars, ~ .x$get_description() %||% NA_character_),
+      units           = map_chr(vars, ~ .x$get_units() %||% NA_character_),
+      divby_modeling  = map_dbl(vars, ~ .x$get_divby_modeling() %||% NA_real_)
     )
 
   }
 
-  tbl_right <- dplyr::select(dictionary$dictionary,
-                             category_levels,
-                             category_labels)
+  tbl_right <- select(dictionary$dictionary,
+                      category_levels,
+                      category_labels)
 
   if(!format_categories){
 
-    tbl_right <- tibble::tibble(
-      category_levels = purrr::map(vars, ~ .x$get_category_levels()),
-      category_labels = purrr::map(vars, ~ .x$get_category_labels())
+    tbl_right <- tibble(
+      category_levels = map(vars, ~ .x$get_category_levels()),
+      category_labels = map(vars, ~ .x$get_category_labels())
     )
 
   }
 
-  dplyr::bind_cols(tbl_names, tbl_left, tbl_right)
+  bind_cols(tbl_names, tbl_left, tbl_right)
 
 }
 
 
+#' @importFrom dplyr across case_when left_join mutate pull select
+#' @importFrom rlang abort
+#'
+#' @noRd
 .get_dictionary_as_code <- function(dictionary) {
   # Extract list columns
   temp <- .get_dictionary(dictionary) %>%

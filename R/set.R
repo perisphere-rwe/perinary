@@ -67,8 +67,9 @@ set_divby_modeling <- function(dictionary, ..., .list = NULL){
   dd_set(dictionary, ..., .list = .list, field = 'divby_modeling')
 }
 
+#' @importFrom checkmate assert_class
 dd_set_prep <- function(dictionary, .dots, field){
-  checkmate::assert_class(dictionary, "DataDictionary")
+  assert_class(dictionary, "DataDictionary")
   dictionary$check_modify_call(.dots, field = field)
   dictionary$clone(deep = dictionary$copy_on_modify)
 }
@@ -83,6 +84,13 @@ dd_set <- function(dictionary, ..., .list, field){
 }
 
 #' @rdname set_labels
+#'
+#' @importFrom checkmate assert_class
+#' @importFrom dplyr mutate
+#' @importFrom purrr map map_lgl
+#' @importFrom rlang abort set_names
+#' @importFrom tibble enframe
+#'
 #' @export
 set_category_labels <- function(dictionary, ..., .list = NULL){
 
@@ -91,10 +99,10 @@ set_category_labels <- function(dictionary, ..., .list = NULL){
 
   if(is_empty(.dots)) return(dictionary)
 
-  checkmate::assert_class(dictionary, "DataDictionary")
+  assert_class(dictionary, "DataDictionary")
 
-  input_frame <- tibble::enframe(.dots) %>%
-    dplyr::mutate(inputs = purrr::map(value, names))
+  input_frame <- enframe(.dots) %>%
+    mutate(inputs = map(value, names))
 
   dictionary <- dd_set_prep(dictionary, .dots, field = 'category_label')
 
@@ -109,7 +117,7 @@ set_category_labels <- function(dictionary, ..., .list = NULL){
 
       highlight <- names(current_cats[match(.dots[[i]], current_cats)])
 
-      rlang::abort(
+      abort(
         message = c(
           glue("Invalid assignment of label \'{.dots[[i]]}\' to \\
                category \'{levels_to_modify}\' of variable `{i}`"),
@@ -125,16 +133,16 @@ set_category_labels <- function(dictionary, ..., .list = NULL){
 
 
   missing_level_names <- input_frame$value %>%
-    purrr::map_lgl(.f = ~ "" %in% names(.x)) %>%
+    map_lgl(.f = ~ "" %in% names(.x)) %>%
     which()
 
   if(!is_empty(missing_level_names)){
 
     problems <- .dots[missing_level_names] %>%
       paste_named_vec() %>%
-      purrr::set_names(nm = "x")
+      set_names(nm = "x")
 
-    rlang::abort(
+    abort(
       message = c(
         "Inputs in `...` must be name-value pairs",
         "i" = "for `set_category_labels()`, values must also be named vectors",
@@ -148,8 +156,8 @@ set_category_labels <- function(dictionary, ..., .list = NULL){
   }
 
 
-  input_frame %<>% dplyr::mutate(
-    choices = purrr::map(
+  input_frame %<>% mutate(
+    choices = map(
       name,
       ~dictionary$variables[[.x]]$get_category_levels()
     )
@@ -175,8 +183,8 @@ set_category_labels <- function(dictionary, ..., .list = NULL){
   for(i in names(.dots)){
 
     # create input lists for eventual call to modify_dictionary
-    input_lvls <- purrr::set_names(list(names(.dots[[i]])), i)
-    input_labs <- purrr::set_names(list(as.character(.dots[[i]])), i)
+    input_lvls <- set_names(list(names(.dots[[i]])), i)
+    input_labs <- set_names(list(as.character(.dots[[i]])), i)
 
     current_lvls <- dictionary$variables[[i]]$get_category_levels()
     current_labs <- dictionary$variables[[i]]$fetch_category_labels()
@@ -199,16 +207,16 @@ set_category_labels <- function(dictionary, ..., .list = NULL){
     #
     # } else {
 
-      # put the inputs into the existing labels.
-      input_key <- purrr::set_names(input_labs[[1]], input_lvls[[1]])
+    # put the inputs into the existing labels.
+    input_key <- set_names(input_labs[[1]], input_lvls[[1]])
 
-      # be careful not to mess up the established order
-      updated_key <- purrr::set_names(current_labs, current_lvls)
-      updated_key[names(input_key)] <- input_key
+    # be careful not to mess up the established order
+    updated_key <- set_names(current_labs, current_lvls)
+    updated_key[names(input_key)] <- input_key
 
-      input_labs[[1]] <- purrr::set_names(updated_key, NULL)
+    input_labs[[1]] <- set_names(updated_key, NULL)
 
-      dictionary$modify_dictionary(input_labs, field = 'category_labels')
+    dictionary$modify_dictionary(input_labs, field = 'category_labels')
 
     # }
 
@@ -220,6 +228,13 @@ set_category_labels <- function(dictionary, ..., .list = NULL){
 
 
 #' @rdname set_labels
+#'
+#' @importFrom checkmate assert_class
+#' @importFrom dplyr mutate select
+#' @importFrom purrr map map2
+#' @importFrom rlang set_names
+#' @importFrom tibble deframe enframe
+#'
 #' @export
 set_category_order <- function(dictionary, ..., .list = NULL){
 
@@ -227,20 +242,20 @@ set_category_order <- function(dictionary, ..., .list = NULL){
   assert_valid_dotdot(..., .list = .list)
   .dots <- infer_dotdot(..., .list = .list)
 
-  checkmate::assert_class(dictionary, "DataDictionary")
+  assert_class(dictionary, "DataDictionary")
 
   if(is_empty(.dots)) return(dictionary)
 
-  input_frame <- tibble::enframe(.dots) %>%
-    dplyr::mutate(
-      inputs = purrr::map(value, names),
-      choices = purrr::map(name, ~dictionary$get_category_levels(name = .x))
+  input_frame <- enframe(.dots) %>%
+    mutate(
+      inputs = map(value, names),
+      choices = map(name, ~dictionary$get_category_levels(name = .x))
     )
 
   .check <- input_frame %>%
-    dplyr::mutate(value = purrr::map2(value, choices, union)) %>%
-    dplyr::select(name, value) %>%
-    tibble::deframe()
+    mutate(value = map2(value, choices, union)) %>%
+    select(name, value) %>%
+    deframe()
 
   dictionary$check_modify_call(.check, field = "category_label")
 
@@ -261,7 +276,7 @@ set_category_order <- function(dictionary, ..., .list = NULL){
   for(i in names(.dots)){
 
     # create input lists for eventual call to modify_dictionary
-    inputs <- purrr::set_names(list(as.character(.dots[[i]])), i)
+    inputs <- set_names(list(as.character(.dots[[i]])), i)
 
     current_lvls <- dictionary$variables[[i]]$get_category_levels()
     unused_lvls <- setdiff(current_lvls, inputs[[1]])
@@ -273,7 +288,7 @@ set_category_order <- function(dictionary, ..., .list = NULL){
     if(!is.null(dictionary$variables[[i]]$category_labels)){
 
       current_labs <- dictionary$variables[[i]]$get_category_labels() %>%
-        purrr::set_names(current_lvls)
+        set_names(current_lvls)
 
       input_labs <- inputs
       input_labs[[1]] <- as.character(current_labs[inputs[[1]]])
@@ -294,6 +309,9 @@ set_category_order <- function(dictionary, ..., .list = NULL){
 #' @param ... quoted or unquoted names of identifier variables
 #'
 #' @returns a modified `dictionary`
+#'
+#' @importFrom checkmate assert_class
+#'
 #' @export
 #'
 set_identifiers <- function(dictionary, ...){
@@ -302,7 +320,7 @@ set_identifiers <- function(dictionary, ...){
   # assert_valid_dotdot(..., .list = .list, names_required = FALSE)
   # .dots <- infer_dotdot(..., .list = .list)
 
-  checkmate::assert_class(dictionary, "DataDictionary")
+  assert_class(dictionary, "DataDictionary")
 
   dictionary <- dictionary$clone(deep = dictionary$copy_on_modify)
 

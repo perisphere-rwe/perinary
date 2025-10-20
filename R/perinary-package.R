@@ -12,10 +12,6 @@ utils::globalVariables(
 
 ## usethis namespace: start
 #' @importFrom magrittr %<>%
-#' @importFrom purrr is_empty
-#' @importFrom tibble tibble
-#' @importFrom glue glue
-#' @import rlang
 #' @import R6
 ## usethis namespace: end
 NULL

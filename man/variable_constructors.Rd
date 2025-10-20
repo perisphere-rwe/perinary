@@ -2,17 +2,123 @@
 % Please edit documentation in R/variable.R
 \name{variable_constructors}
 \alias{variable_constructors}
+\alias{nominal_variable}
+\alias{numeric_variable}
+\alias{date_variable}
+\alias{identifier_variable}
+\alias{logical_variable}
 \title{Variable Constructors}
+\usage{
+nominal_variable(
+  name,
+  label = NULL,
+  description = NULL,
+  category_levels = NULL,
+  category_labels = NULL
+)
+
+numeric_variable(
+  name,
+  label = NULL,
+  description = NULL,
+  units = NULL,
+  divby_modeling = NULL
+)
+
+date_variable(name, label = NULL, description = NULL, date_format = NULL)
+
+identifier_variable(name, label = NULL, description = NULL)
+
+logical_variable(
+  name,
+  label = NULL,
+  description = NULL,
+  category_labels = c("FALSE", "TRUE")
+)
+}
 \arguments{
-\item{name}{Character. The name of the variable (required).}
+\item{name}{Character. The name of the variable.}
 
-\item{label}{Character. A short label for the variable (optional).}
+\item{label}{Character or \code{NULL}. A short label for the variable.}
 
-\item{description}{Character. A longer description of the variable
+\item{description}{Character or \code{NULL}. A longer description of the variable
 (optional).}
+
+\item{category_levels}{Character vector or \code{NULL}. The set of unique category
+codes.}
+
+\item{category_labels}{Character vector or \code{NULL}. Labels for the categories.
+For \code{nominal_variable}, the labels will default to \code{category_levels} if not
+provided. For \code{logical_variable}, this is a length 2 vector containing
+optional labels for the two levels: \code{FALSE} and \code{TRUE}, respectively.}
+
+\item{units}{Character or \code{NULL}. Units for the variable (e.g., "kg",
+"years").}
+
+\item{divby_modeling}{Numeric or \code{NULL}. A constant indicating what to divide
+the variable by before modeling. This improves interpretability of model
+coefficients.}
+
+\item{date_format}{Character or \code{NULL}. Optional format string for parsing date values
+(e.g., "\%Y-\%m-\%d").}
 }
 \description{
-Constructors for variable metadata classes (\code{NumericVariable},
-\code{NominalVariable}, \code{DateVariable}, \code{IdentifierVariable}).
+Constructors for variable metadata classes.
+}
+\details{
+\describe{
+\item{\code{DateVariable}}{Calendar or time-based data.}
+\item{\code{IdentifierVariable}}{ID variables, like subject IDs.}
+\item{\code{LogicalVariable}}{Indicator variables.}
+\item{\code{NominalVariable}}{Categorical data.}
+\item{\code{NumericVariable}}{Continuous or quantitative data.}
+}
+}
+\examples{
+# NominalVariable
+sex <- nominal_variable(
+  name = "sex",
+  label = "Sex",
+  description = "This is a longer description of the variable.",
+  category_levels = c("M", "F"),
+  category_labels = c("Male", "Female")
+)
+sex
+
+# NumericVariable
+age <- numeric_variable(
+  name = "age",
+  label = "Age of participant",
+  units = "years",
+  # In a linear regression model, for example, the coefficient for age will
+  # be the change in the mean of the response per 10 year increase in age.
+  divby_modeling = 10
+)
+age
+
+# DateVariable
+visit_date <- date_variable(
+  name = "visit_date",
+  label = "Visit Date",
+  date_format = "\%Y-\%m-\%d"
+)
+visit_date
+
+# IdentifierVariable
+patient_id <- identifier_variable(
+  name = "patient_id",
+  label = "Patient Identifier"
+)
+patient_id
+
+# LogicalVariable
+smoker <- logical_variable(
+  name = "smoking_status",
+  label = "Current smoker",
+  # Labels correspond to FALSE and TRUE, respectively
+  category_labels = c("Non-smoker", "Smoker")
+)
+smoker
+
 }
 \keyword{internal}

@@ -26,6 +26,10 @@
 #'   and `category`, and ensures consistent ordering of model terms with
 #'   appended reference rows (if missing).
 #'
+#' @importFrom dplyr arrange desc filter full_join if_else mutate rename
+#' @importFrom rlang !! abort set_names
+#' @importFrom tidyr fill
+#'
 #' @export
 #'
 #' @examples
@@ -54,20 +58,20 @@ append_term_key <- function(data,
   refs_in_terms <- refs[which(refs %in% term_order)]
 
   if (!is_empty(refs_in_terms)){
-    rlang::abort(
+    abort(
       message = c("Reference category detected in model terms",
-                  purrr::set_names(refs_in_terms, "x"),
+                  set_names(refs_in_terms, "x"),
                   "i" = "Use `translate_data()` on your data before modeling"),
       call = NULL
     )
   }
 
   append_instructions <- key %>%
-    dplyr::rename(term = !!term_colname) %>%
-    dplyr::mutate(order = match(term, term_order) - 1) %>%
-    tidyr::fill(order, .direction = 'up') %>%
-    dplyr::filter(reference) %>%
-    dplyr::arrange(desc(order))
+    rename(term = !!term_colname) %>%
+    mutate(order = match(term, term_order) - 1) %>%
+    fill(order, .direction = 'up') %>%
+    filter(reference) %>%
+    arrange(desc(order))
 
   for(i in seq_len(nrow(append_instructions))){
 
@@ -77,13 +81,13 @@ append_term_key <- function(data,
   }
 
   key %>%
-    dplyr::full_join(data, by = term_colname) %>%
-    dplyr::mutate(name = dplyr::if_else(is.na(name), term, name)) %>%
-    dplyr::mutate(term = factor(term, levels = term_order)) %>%
-    dplyr::arrange(term) %>%
-    dplyr::mutate(
+    full_join(data, by = term_colname) %>%
+    mutate(name = if_else(is.na(name), term, name)) %>%
+    mutate(term = factor(term, levels = term_order)) %>%
+    arrange(term) %>%
+    mutate(
       term = as.character(term),
-      reference = dplyr::if_else(is.na(reference), FALSE, reference)
+      reference = if_else(is.na(reference), FALSE, reference)
     )
 
 }

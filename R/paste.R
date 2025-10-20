@@ -31,6 +31,7 @@ NULL
 #' `paste_collapse()` returns a single character scalar with elements
 #' of `x` collapsed by `", "` and a natural `"and"` before the last item.
 #'
+#' @importFrom glue glue_collapse
 
 paste_collapse <- function(x, as_code=FALSE){
 
@@ -43,7 +44,7 @@ paste_collapse <- function(x, as_code=FALSE){
   last <- if(length(x) == 2) " and " else ", and "
 
   as.character(
-    glue::glue_collapse(x, sep = ', ', last = last)
+    glue_collapse(x, sep = ', ', last = last)
   )
 
 }
@@ -69,19 +70,20 @@ paste_quotes <- function(x){
 #' - If `x` is an **atomic vector**: a single character scalar of the form
 #'   `"name1 = value1, name2 = value2, ..."`.
 #'
+#' @importFrom purrr imap_chr map
 
 paste_named_vec <- function(x, name_fill = "MISSING_NAME"){
 
   if(is.list(x)){
     return(
-      purrr::map(x, paste_named_vec, name_fill = name_fill) %>%
-      purrr::imap_chr(
-        .f = function(.x, .n){
-          .n <- .n %||% name_fill
-          if(.n == "") .n <- name_fill
-          glue("{.n} = c({.x})")
-        }
-      )
+      map(x, paste_named_vec, name_fill = name_fill) %>%
+        imap_chr(
+          .f = function(.x, .n){
+            .n <- .n %||% name_fill
+            if(.n == "") .n <- name_fill
+            glue("{.n} = c({.x})")
+          }
+        )
     )
   }
 

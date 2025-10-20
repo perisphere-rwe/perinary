@@ -38,27 +38,29 @@ NULL
 #' `assert_valid_field()` returns `NULL` invisibly on success; otherwise
 #' it aborts with an informative message.
 #'
+#' @importFrom glue glue
+#' @importFrom rlang abort
 
 assert_valid_field <- function(name, type, field, suggest = NULL){
 
   msg = c(
-    glue::glue(
+    glue(
       "Invalid specification of `{field}` for variable `{name}`"
     ),
-    "x" = glue::glue(
+    "x" = glue(
       "`{field}` cannot be specified for {type} variables"
     )
   )
 
   if(!is.null(suggest)){
     msg %<>% c(
-      "i" = glue::glue(
+      "i" = glue(
         "`{field}` may be specified for {paste_collapse(suggest)} variables."
       )
     )
   }
 
-  rlang::abort(message = msg, call = NULL)
+  abort(message = msg, call = NULL)
 
 }
 
@@ -76,6 +78,9 @@ assert_valid_field <- function(name, type, field, suggest = NULL){
 #' `assert_in_set()` returns `NULL` invisibly when all `values` are in
 #' `choices`; otherwise it aborts with a bulleted list of unknown values and
 #' the recognized set.
+#'
+#' @importFrom glue glue
+#' @importFrom rlang abort
 
 assert_in_set <- function(values, choices,
                           value_type = "values",
@@ -90,11 +95,11 @@ assert_in_set <- function(values, choices,
       if(!is.null(variable)) c("i" = glue("Variable: `{variable}`")),
       "x" = glue("Unrecognized input values: \\
                  {paste_collapse(unmatched_values)}"),
-      "i" = glue::glue("Recognized values in dictionary: \\
-                       {paste_collapse(choices)}")
+      "i" = glue("Recognized values in dictionary: \\
+                  {paste_collapse(choices)}")
     )
 
-    rlang::abort(message = msg, call = NULL)
+    abort(message = msg, call = NULL)
 
   }
 
@@ -112,6 +117,8 @@ assert_in_set <- function(values, choices,
 #' `assert_valid_dotdot()` returns `NULL` invisibly; it aborts if both
 #' `...` and `.list` are supplied, and it warns if both are empty.
 #'
+#' @importFrom glue glue
+#' @importFrom rlang abort warn
 
 assert_valid_dotdot <- function(..., .list, names_required = TRUE){
 
@@ -119,22 +126,22 @@ assert_valid_dotdot <- function(..., .list, names_required = TRUE){
   empty_list <- is_empty(.list)
 
   if(!empty_dots && !empty_list){
-    rlang::abort(
+    abort(
       message = c(
         "`...` must be empty if `.list` is not `NULL`",
-        i = glue::glue("This function can work with either \\
-                       unquoted inputs or a list of inputs, \\
-                       but it is not intended to be used with both \\
-                       at once.")
+        i = glue("This function can work with either \\
+                  unquoted inputs or a list of inputs, \\
+                  but it is not intended to be used with both \\
+                  at once.")
       )
     )
   }
 
   if(empty_dots && empty_list){
-    rlang::warn(
+    warn(
       message = c(
-        i = glue::glue("`...` is empty and so is `.list`. No action can \\
-        be taken when both of these inputs are unspecified.")
+        i = glue("`...` is empty and so is `.list`. No action can \\
+                 be taken when both of these inputs are unspecified.")
       )
     )
   }
@@ -148,9 +155,12 @@ assert_valid_dotdot <- function(..., .list, names_required = TRUE){
 }
 
 
+#' @importFrom cli cli_abort
+#' @importFrom purrr map_chr
+#' @importFrom rlang as_label enquos
 assert_named_dots <- function(...) {
 
-  .dots <- rlang::enquos(...)
+  .dots <- enquos(...)
 
   nm <- names(.dots)
 
@@ -160,10 +170,10 @@ assert_named_dots <- function(...) {
 
     n <- length(unnamed_idx)
     nm <- .dots[unnamed_idx] %>%
-      purrr::map_chr(rlang::as_label) %>%
+      map_chr(as_label) %>%
       paste_collapse(as_code = TRUE)
 
-    cli::cli_abort(
+    cli_abort(
       c(
         "Unnamed inputs in {.var ...}",
         "i" = paste("There {?is/are} {n} unnamed input{?s}:", nm),
@@ -176,6 +186,9 @@ assert_named_dots <- function(...) {
 
 }
 
+
+#' @importFrom cli cli_abort
+#' @importFrom purrr map_chr
 assert_named_list <- function(x) {
 
   nm <- names(x) %||% rep("", length(x))
@@ -191,7 +204,7 @@ assert_named_list <- function(x) {
 
       # Try to give a friendly representation of each bad element
       nm <- x[unnamed_idx] %>%
-        purrr::map_chr( ~ {
+        map_chr( ~ {
         if (is.atomic(.x) && length(.x) == 1)
           as.character(.x)
         else
@@ -199,7 +212,7 @@ assert_named_list <- function(x) {
       }) %>%
         paste_collapse(as_code = TRUE)
 
-      cli::cli_abort(
+      cli_abort(
         c(
           "Unnamed inputs in {.var .list}",
           "i" = paste("There {?is/are} {n} unnamed input{?s}:", nm),
