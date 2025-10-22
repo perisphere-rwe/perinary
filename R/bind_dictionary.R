@@ -27,6 +27,8 @@
 #'
 #' @returns `r roxy_describe_dd()`
 #'
+#' @importFrom purrr reduce
+#'
 #' @export
 #'
 #' @examples
@@ -59,9 +61,9 @@ bind_dictionary <- function(..., .list = NULL,
   assert_valid_dotdot(..., .list = .list, names_required = FALSE)
   .dots <- infer_dotdot(..., .list = .list)
 
-  purrr::reduce(.dots,  .f = .bind_dictionary, .dir = 'forward',
-                conflict_preference = conflict_preference,
-                keep_unmatched_y = keep_unmatched_y)
+  reduce(.dots,  .f = .bind_dictionary, .dir = 'forward',
+         conflict_preference = conflict_preference,
+         keep_unmatched_y = keep_unmatched_y)
 
 }
 
@@ -87,6 +89,7 @@ right_bind <- function(..., .list = NULL,
 
 }
 
+#' @importFrom purrr is_empty
 .bind_dictionary <- function(x, y,
                              conflict_preference = NULL,
                              keep_unmatched_y){
@@ -96,7 +99,7 @@ right_bind <- function(..., .list = NULL,
 
   dupes <- intersect(names(vars_x), names(vars_y))
 
-  if (!purrr::is_empty(dupes) && is.null(conflict_preference)) {
+  if (!is_empty(dupes) && is.null(conflict_preference)) {
     warning("Overlapping variable names in dictionaries:\n\n",
             paste(paste("-",dupes), collapse = "\n"),
             "\n\nVariable definitions from the `x` dictionary are ",

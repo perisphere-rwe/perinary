@@ -63,6 +63,11 @@ data_dictionary <- function(..., .list = NULL, copy_on_modify = TRUE){
 #'  variable labels stored in the 'label' attribute are incorporated in the
 #'  resulting dictionary.
 #'
+#' @importFrom checkmate assert_data_frame
+#' @importFrom purrr imap map_lgl
+#' @importFrom rlang warn
+#' @importFrom stats na.omit
+#'
 #' @export
 #'
 #' @examples
@@ -74,9 +79,9 @@ data_dictionary <- function(..., .list = NULL, copy_on_modify = TRUE){
 #'
 as_data_dictionary <- function(x, copy_on_modify = TRUE){
 
-  checkmate::assert_data_frame(x)
+  assert_data_frame(x)
 
-  vars <- purrr::imap(
+  vars <- imap(
     .x = x,
     .f = ~ {
 
@@ -85,7 +90,7 @@ as_data_dictionary <- function(x, copy_on_modify = TRUE){
           NominalVariable$new(
             name = .y,
             label = attr(.x, 'label'),
-            category_levels = levels(.x) %||% unique(stats::na.omit(.x))
+            category_levels = levels(.x) %||% unique(na.omit(.x))
           )
         )
       }
@@ -124,12 +129,12 @@ as_data_dictionary <- function(x, copy_on_modify = TRUE){
 
   )
 
-  keep <- which(purrr::map_lgl(vars, ~!is.null(.x)))
+  keep <- which(map_lgl(vars, ~!is.null(.x)))
 
   leftovers <- setdiff(vars, vars[keep])
 
   if(!is_empty(leftovers)){
-    rlang::warn(
+    warn(
       message = c(
         "Could not map the following variables to a specific type:",
         i = paste_collapse(leftovers)

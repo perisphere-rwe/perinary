@@ -1,6 +1,8 @@
 
 # DataVariable ----
 
+#' @importFrom checkmate assert_character assert_choice
+#' @importFrom rlang abort
 DataVariable <- R6Class(
 
   "DataVariable",
@@ -39,34 +41,34 @@ DataVariable <- R6Class(
 
     check_name = function(value) {
       name <- value
-      checkmate::assert_character(name, len = 1, any.missing = FALSE)
+      assert_character(name, len = 1, any.missing = FALSE)
     },
 
     check_type = function(value) {
       type <- value
-      checkmate::assert_character(type, len = 1, any.missing = FALSE)
-      checkmate::assert_choice(type, choices = c("Data",
-                                                 "Numeric",
-                                                 "Nominal",
-                                                 "Logical",
-                                                 "Identifier",
-                                                 "Date"))
+      assert_character(type, len = 1, any.missing = FALSE)
+      assert_choice(type, choices = c("Data",
+                                      "Numeric",
+                                      "Nominal",
+                                      "Logical",
+                                      "Identifier",
+                                      "Date"))
     },
 
     check_label = function(value) {
       label <- value
-      checkmate::assert_character(label,
-                                  len = 1,
-                                  any.missing = FALSE,
-                                  null.ok = TRUE)
+      assert_character(label,
+                       len = 1,
+                       any.missing = FALSE,
+                       null.ok = TRUE)
     },
 
     check_description = function(value) {
       description <- value
-      checkmate::assert_character(description,
-                                  len = 1,
-                                  any.missing = FALSE,
-                                  null.ok = TRUE)
+      assert_character(description,
+                       len = 1,
+                       any.missing = FALSE,
+                       null.ok = TRUE)
     },
 
     check_category_levels = function(value) {
@@ -188,7 +190,7 @@ DataVariable <- R6Class(
                           description = NULL) {
 
       if (missing(name) || !is.character(name) || length(name) != 1) {
-        rlang::abort(
+        abort(
           message = "'name' must be a single character string and is required.",
           call = NULL
         )
@@ -221,6 +223,8 @@ DataVariable <- R6Class(
 
 # NumericVariable ----
 
+#' @importFrom checkmate assert_character assert_numeric
+#' @importFrom rlang abort
 NumericVariable <- R6Class(
 
   "NumericVariable",
@@ -231,17 +235,17 @@ NumericVariable <- R6Class(
 
     check_units = function(value) {
       units <- value
-      checkmate::assert_character(units,
-                                  len = 1,
-                                  any.missing = FALSE,
-                                  null.ok = TRUE)
+      assert_character(units,
+                       len = 1,
+                       any.missing = FALSE,
+                       null.ok = TRUE)
     },
 
 
     check_divby_modeling = function(value) {
 
       if(is.null(self$units) && !is.null(value)){
-        rlang::abort(
+        abort(
           message = c(
             "x" = "Cannot set `divby_modeling` if units are unknown",
             "i" = glue("Use `set_units()` to specify units for `{self$name}`")
@@ -252,11 +256,11 @@ NumericVariable <- R6Class(
 
       divby_modeling <- value
 
-      checkmate::assert_numeric(divby_modeling,
-                                len = 1,
-                                lower = 1,
-                                any.missing = FALSE,
-                                null.ok = TRUE)
+      assert_numeric(divby_modeling,
+                     len = 1,
+                     lower = 1,
+                     any.missing = FALSE,
+                     null.ok = TRUE)
 
     },
 
@@ -311,6 +315,10 @@ NumericVariable <- R6Class(
 
 # NominalVariable ----
 
+#' @importFrom checkmate assert_character
+#' @importFrom cli cli_abort
+#' @importFrom purrr imap_chr
+#' @importFrom rlang abort set_names
 NominalVariable <- R6Class(
   "NominalVariable",
   inherit = DataVariable,  # Inherit from DataVariable
@@ -319,19 +327,19 @@ NominalVariable <- R6Class(
 
     check_category_levels = function(value) {
       category_levels <- value
-      checkmate::assert_character(category_levels,
-                                  any.missing = FALSE,
-                                  null.ok = TRUE,
-                                  unique = TRUE)
+      assert_character(category_levels,
+                       any.missing = FALSE,
+                       null.ok = TRUE,
+                       unique = TRUE)
     },
 
     check_category_labels = function(value) {
 
 
       category_labels <- value
-      checkmate::assert_character(category_labels,
-                                  any.missing = FALSE,
-                                  null.ok = TRUE)
+      assert_character(category_labels,
+                       any.missing = FALSE,
+                       null.ok = TRUE)
 
       if(!is.null(value)){
         # only you can prevent label duplication
@@ -342,16 +350,16 @@ NominalVariable <- R6Class(
           dups <- value_tbl[value_tbl > 1]
 
           dups_explained <- dups %>%
-            purrr::imap_chr(
+            imap_chr(
               ~ names(value)[value==.y] %>%
                 paste_quotes() %>%
                 paste_collapse() %>%
                 paste("you are assigning levels", ., "to the label",
                       paste_quotes(.y))
             ) %>%
-            purrr::set_names(nm = "x")
+            set_names(nm = "x")
 
-          cli::cli_abort(
+          cli_abort(
             message = c(
               "!" = paste("Invalid duplication of {length(dups)} label{?s}",
                           "for variable", paste_ticks(self$name)),
@@ -405,6 +413,7 @@ NominalVariable <- R6Class(
 
 # LogicalVariable ----
 
+#' @importFrom checkmate assert_character assert_logical
 LogicalVariable <- R6::R6Class(
   "LogicalVariable",
   inherit = DataVariable,
@@ -413,20 +422,20 @@ LogicalVariable <- R6::R6Class(
 
     check_category_levels = function(value) {
       category_levels <- value
-      checkmate::assert_logical(category_levels,
-                                any.missing = FALSE,
-                                len = 2,
-                                null.ok = TRUE,
-                                unique = TRUE)
+      assert_logical(category_levels,
+                     any.missing = FALSE,
+                     len = 2,
+                     null.ok = TRUE,
+                     unique = TRUE)
     },
 
     check_category_labels = function(value) {
       category_labels <- value
-      checkmate::assert_character(category_labels,
-                                  any.missing = FALSE,
-                                  max.len = 2,
-                                  null.ok = TRUE,
-                                  unique = TRUE)
+      assert_character(category_labels,
+                       any.missing = FALSE,
+                       max.len = 2,
+                       null.ok = TRUE,
+                       unique = TRUE)
     },
 
     # Constructor
@@ -463,6 +472,7 @@ LogicalVariable <- R6::R6Class(
 
 # DateVariable ----
 
+#' @importFrom checkmate assert_character
 DateVariable <- R6Class(
   "DateVariable",
   inherit = DataVariable,
@@ -474,7 +484,7 @@ DateVariable <- R6Class(
 
     check_date_format = function(value) {
       if (!is.null(value)) {
-        checkmate::assert_character(value, len = 1, any.missing = FALSE)
+        assert_character(value, len = 1, any.missing = FALSE)
       }
     },
 
@@ -537,6 +547,16 @@ is_data_dictionary <- function(x){
   inherits(x, "DataDictionary")
 }
 
+#' @importFrom checkmate assert_character assert_choice
+#' @importFrom cli cli_abort cli_warn
+#' @importFrom dplyr arrange filter first group_by mutate pull recode select
+#'   ungroup
+#' @importFrom magrittr divide_by
+#' @importFrom purrr compact discard imap_dfr map map2 map_chr map_lgl reduce
+#' @importFrom rlang !!! is_empty set_names warn
+#' @importFrom stats na.omit
+#' @importFrom tibble enframe tibble
+#' @importFrom tidyr nest unnest
 DataDictionary <- R6Class(
 
   "DataDictionary",
@@ -563,15 +583,15 @@ DataDictionary <- R6Class(
              "to create a DataDictionary.", call. = FALSE)
       }
 
-      if (!all(purrr::map_lgl(vars, ~ inherits(.x, "DataVariable")))) {
+      if (!all(map_lgl(vars, ~ inherits(.x, "DataVariable")))) {
         stop("All inputs must inherit from 'DataVariable' ",
              "(e.g., NumericVariable, NominalVariable).", call. = FALSE)
       }
 
-      var_names <- purrr::map_chr(vars, ~.x$name)
+      var_names <- map_chr(vars, ~.x$name)
 
       # Store variables list
-      self$variables <- purrr::set_names(vars, var_names)
+      self$variables <- set_names(vars, var_names)
 
       # Extract data for the tibble
       self$dictionary <- private$create_dictionary(self$variables)
@@ -605,27 +625,27 @@ DataDictionary <- R6Class(
 
     get_category_levels = function(name, concatenate = TRUE){
 
-      res <- purrr::map(
+      res <- map(
         .x = name,
         .f = ~ self$variables[[.x]]$fetch_category_levels()
       )
 
       if(!concatenate) return(res)
 
-      purrr::reduce(res, .f = base::c)
+      reduce(res, .f = c)
 
     },
 
     get_category_labels = function(name, concatenate = TRUE){
 
-      res <- purrr::map(
+      res <- map(
         .x = name,
         .f = ~ self$variables[[.x]]$fetch_category_labels()
       )
 
       if(!concatenate) return(res)
 
-      purrr::reduce(res, .f = base::c)
+      reduce(res, .f = c)
 
     },
 
@@ -654,32 +674,32 @@ DataDictionary <- R6Class(
     },
 
     get_names_with_units = function(){
-      names(purrr::discard(self$variables, ~is.null(.x$units)))
+      names(discard(self$variables, ~is.null(.x$units)))
     },
 
     get_names_with_divby = function(){
-      names(purrr::discard(self$variables, ~is.null(.x$divby_modeling)))
+      names(discard(self$variables, ~is.null(.x$divby_modeling)))
     },
 
     get_name_translater = function(name = NULL,
                                    units = 'none',
                                    quiet = FALSE){
 
-      checkmate::assert_character(name, null.ok = TRUE)
+      assert_character(name, null.ok = TRUE)
 
       .name <- name %||% names(self$variables)
 
       for(i in seq_along(.name)){
-        checkmate::assert_choice(.name[i],
-                                 .var.name = .name[i],
-                                 choices = names(self$variables))
+        assert_choice(.name[i],
+                      .var.name = .name[i],
+                      choices = names(self$variables))
       }
 
-      output <- purrr::map(
-        .x = purrr::set_names(.name),
+      output <- map(
+        .x = set_names(.name),
         .f = ~ self$get_label(.x, units)
       ) %>%
-        purrr::compact()
+        compact()
 
       unlabeled <- setdiff(.name, names(output))
 
@@ -700,10 +720,10 @@ DataDictionary <- R6Class(
 
     get_category_translater = function(name = NULL, quiet = FALSE){
 
-      checkmate::assert_character(name, null.ok = TRUE)
+      assert_character(name, null.ok = TRUE)
 
       choices <- self$variables %>%
-        purrr::map_lgl(~.x$type == "Nominal") %>%
+        map_lgl(~.x$type == "Nominal") %>%
         which() %>%
         names()
 
@@ -714,7 +734,7 @@ DataDictionary <- R6Class(
 
       for(i in seq_along(name)){
 
-        checkmate::assert_choice(name[i], choices = choices)
+        assert_choice(name[i], choices = choices)
 
         .labs <- self$variables[[ name[i] ]]$category_labels
         .lvls <- self$variables[[ name[i] ]]$category_levels
@@ -732,7 +752,7 @@ DataDictionary <- R6Class(
         }
 
         output %<>% append(
-          values = purrr::set_names(
+          values = set_names(
             x = self$variables[[ name[i] ]]$category_labels,
             nm = self$variables[[ name[i] ]]$category_levels
           )
@@ -755,7 +775,7 @@ DataDictionary <- R6Class(
                                          unique(data[[names]])))
 
       split(data, f = name_sort, drop = FALSE) %>%
-        purrr::imap_dfr(
+        imap_dfr(
           .f = ~ {
 
             out <- .x
@@ -767,7 +787,7 @@ DataDictionary <- R6Class(
                 .levels <- self$variables[[.y]]$get_category_levels()
 
                 out <- .x %>%
-                  dplyr::arrange(
+                  arrange(
                     factor(.data[[levels]], levels = .levels)
                   )
 
@@ -812,7 +832,7 @@ DataDictionary <- R6Class(
 
           if(units == 'model'){
 
-            x[[i]] %<>% magrittr::divide_by(.divby)
+            x[[i]] %<>% divide_by(.divby)
             .label %<>% paste0(", per ", .divby, " ", .unit)
 
           } else if(units == 'descriptive') {
@@ -846,7 +866,7 @@ DataDictionary <- R6Class(
                                to_factor = FALSE,
                                warn_unmatched = TRUE){
 
-      x_uni <- unique(stats::na.omit(x))
+      x_uni <- unique(na.omit(x))
 
       .list <- .list %||% list(...)
 
@@ -857,10 +877,10 @@ DataDictionary <- R6Class(
       unmatched <- setdiff(x_uni, names(translater))
 
       if(!is_empty(unmatched) && warn_unmatched){
-        rlang::warn(
+        warn(
           message = c(
             "i" = "Unique values in `x` could not be matched with labels in `dictionary`:",
-            purrr::set_names(unmatched, "i"),
+            set_names(unmatched, "i"),
             "i" = "To disable this warning, set `warn_unmatched = FALSE` in `translate()`."
           )
         )
@@ -892,7 +912,7 @@ DataDictionary <- R6Class(
 
         if(!single_name && to_factor){
 
-          cli::cli_warn(
+          cli_warn(
             message = c(
               "Detected more than one unique value in {.var name} with {.var to_factor = TRUE}",
               i = "{.var translate_categories()} does not concatenate factor levels across multiple variables",
@@ -905,11 +925,11 @@ DataDictionary <- R6Class(
         }
 
         return(
-          tibble::tibble(x = x, name = names) %>%
-            dplyr::group_by(name) %>%
-            tidyr::nest(data = c(x)) %>%
-            dplyr::mutate(
-              out = purrr::map2(
+          tibble(x = x, name = names) %>%
+            group_by(name) %>%
+            nest(data = c(x)) %>%
+            mutate(
+              out = map2(
                 .x = data,
                 .y = name,
                 .f = ~ {
@@ -938,7 +958,7 @@ DataDictionary <- R6Class(
 
                   }
 
-                  unmatched <- unique(stats::na.omit(.x$x)) %>%
+                  unmatched <- unique(na.omit(.x$x)) %>%
                     setdiff(names(translater))
 
                   if(to_factor){
@@ -950,13 +970,13 @@ DataDictionary <- R6Class(
                 }
               )
             ) %>%
-            tidyr::unnest(cols = c(data, out)) %>%
-            dplyr::pull(out)
+            unnest(cols = c(data, out)) %>%
+            pull(out)
         )
 
       }
 
-      x_uni <- unique(stats::na.omit(x))
+      x_uni <- unique(na.omit(x))
 
       translater <-
         self$get_category_translater(name = names, quiet = TRUE) %>%
@@ -982,18 +1002,18 @@ DataDictionary <- R6Class(
         # are actually in the input vector
         intersect(x)
 
-      if(!purrr::is_empty(dup_problems)){
+      if(!is_empty(dup_problems)){
 
         dups_explained <- dup_problems %>%
-          purrr::map_chr(
+          map_chr(
             ~ translater[names(translater) %in% .x] %>%
               paste0("'", ., "'") %>%
               paste(collapse = ' and ') %>%
               paste0("The category '", .x, "' maps to labels of ", .)
           ) %>%
-          purrr::set_names(nm = 'x')
+          set_names(nm = 'x')
 
-        cli::cli_abort(
+        cli_abort(
           message = c(
             "Detected one-to-many relationship between categories and labels",
             dups_explained,
@@ -1020,7 +1040,7 @@ DataDictionary <- R6Class(
                                  units,
                                  warn_unmatched){
 
-      x_uni <- unique(stats::na.omit(x))
+      x_uni <- unique(na.omit(x))
 
       name_translater <- self$get_name_translater(quiet = TRUE, units = units)
       level_translater <- self$get_category_translater(quiet = TRUE)
@@ -1062,11 +1082,11 @@ DataDictionary <- R6Class(
           # are actually in the input vector
           intersect(x)
 
-        if(!purrr::is_empty(dup_problems)){
+        if(!is_empty(dup_problems)){
 
           dups_explained <- dup_problems %>%
-            purrr::set_names() %>%
-            purrr::map(
+            set_names() %>%
+            map(
               ~ level_translater[names(level_translater) %in% .x] %>%
                 paste0("'", ., "'") %>%
                 paste(collapse = ' and ') %>%
@@ -1091,7 +1111,7 @@ DataDictionary <- R6Class(
       if(all(x_in_variable_levels)){
 
         out <- private$recode_as_factor(x, level_translater)
-        # out <- dplyr::recode(x, !!!level_translater)
+        # out <- recode(x, !!!level_translater)
 
         return(out)
 
@@ -1100,7 +1120,7 @@ DataDictionary <- R6Class(
       if(all(x_in_variable_names)){
 
         out <- private$recode_as_factor(x, name_translater)
-        # out <- dplyr::recode(x, !!!name_translater)
+        # out <- recode(x, !!!name_translater)
 
         return(out)
 
@@ -1110,7 +1130,7 @@ DataDictionary <- R6Class(
                                     names(level_translater)))
 
       if(!is_empty(leftovers) && warn_unmatched){
-        rlang::warn(
+        warn(
           message = c(
             "i" = "Unique values in x could not be matched with variable labels or variable level labels in the dictionary.",
             "i" = glue("The x values that could not be matched are: {paste_collapse(leftovers)}"),
@@ -1120,7 +1140,7 @@ DataDictionary <- R6Class(
       }
 
       # would not make sense to convert this to a factor
-      out <- dplyr::recode(x, !!!c(name_translater, level_translater))
+      out <- recode(x, !!!c(name_translater, level_translater))
 
       out
 
@@ -1166,10 +1186,10 @@ DataDictionary <- R6Class(
 
     check_modify_call = function(key, field){
 
-      checkmate::assert_character(names(key),
-                                  any.missing = FALSE,
-                                  unique = TRUE,
-                                  null.ok = FALSE)
+      assert_character(names(key),
+                       any.missing = FALSE,
+                       unique = TRUE,
+                       null.ok = FALSE)
 
       private$check_inputs_match(key)
       private$check_inputs_unique(key)
@@ -1203,14 +1223,14 @@ DataDictionary <- R6Class(
   private = list(
     deep_clone = function(name, value){
       if(name == 'variables'){
-        purrr::map(value, .f = ~.x$clone(deep=TRUE))
+        map(value, .f = ~.x$clone(deep=TRUE))
       } else {
         value
       }
     },
 
     get_types = function() {
-      purrr::map_chr(self$variables, 'type')
+      map_chr(self$variables, 'type')
     },
 
     get_names_by_type = function(type) {
@@ -1220,31 +1240,31 @@ DataDictionary <- R6Class(
     # Function to create tibble summary of variables
     create_dictionary = function(vars) {
 
-      tibble::tibble(
-        name            = purrr::map_chr(vars, ~ .x$fmt_name()),
-        type            = purrr::map_chr(vars, ~ .x$fmt_type()),
-        label           = purrr::map_chr(vars, ~ .x$fmt_label()),
-        description     = purrr::map_chr(vars, ~ .x$fmt_description()),
-        units           = purrr::map_chr(vars, ~ .x$fmt_units()),
-        divby_modeling  = purrr::map_chr(vars, ~ .x$fmt_divby_modeling()),
-        category_levels = purrr::map_chr(vars, ~ .x$fmt_category_levels()),
-        category_labels = purrr::map_chr(vars, ~ .x$fmt_category_labels())
+      tibble(
+        name            = map_chr(vars, ~ .x$fmt_name()),
+        type            = map_chr(vars, ~ .x$fmt_type()),
+        label           = map_chr(vars, ~ .x$fmt_label()),
+        description     = map_chr(vars, ~ .x$fmt_description()),
+        units           = map_chr(vars, ~ .x$fmt_units()),
+        divby_modeling  = map_chr(vars, ~ .x$fmt_divby_modeling()),
+        category_levels = map_chr(vars, ~ .x$fmt_category_levels()),
+        category_labels = map_chr(vars, ~ .x$fmt_category_labels())
       )
 
     },
 
     create_category_key = function(vars){
 
-      tibble::enframe(vars, name = 'name') %>%
-        dplyr::mutate(type = purrr::map_chr(value, "type")) %>%
-        dplyr::filter(type == "Nominal") %>%
-        dplyr::mutate(level = purrr::map(value, ~.x$category_levels),
-                      label = purrr::map(value, ~.x$category_labels)) %>%
-        dplyr::select(name, level, label) %>%
-        tidyr::unnest(cols = c(level, label)) %>%
-        dplyr::group_by(name) %>%
-        dplyr::mutate(reference = level == dplyr::first(level)) %>%
-        dplyr::ungroup()
+      enframe(vars, name = 'name') %>%
+        mutate(type = map_chr(value, "type")) %>%
+        filter(type == "Nominal") %>%
+        mutate(level = map(value, ~.x$category_levels),
+               label = map(value, ~.x$category_labels)) %>%
+        select(name, level, label) %>%
+        unnest(cols = c(level, label)) %>%
+        group_by(name) %>%
+        mutate(reference = level == first(level)) %>%
+        ungroup()
 
     },
 
@@ -1252,7 +1272,7 @@ DataDictionary <- R6Class(
 
       unmatched_inputs <- setdiff(names(key), self$dictionary$name)
 
-      if(!purrr::is_empty(unmatched_inputs)){
+      if(!is_empty(unmatched_inputs)){
 
         n <- length(unmatched_inputs)
         nm <- paste_collapse(unmatched_inputs)
@@ -1260,7 +1280,7 @@ DataDictionary <- R6Class(
                     "get_names()",
                     sep = "$")
 
-        cli::cli_abort(
+        cli_abort(
           c(
             "Invalid names in {.var ...} or {.var .list}",
             "i" = paste("There {?is/are} {n} unrecognized name{?s}:", nm),
@@ -1276,12 +1296,12 @@ DataDictionary <- R6Class(
     check_inputs_unique = function(key){
 
       duplicated_inputs <- table(names(key)) %>%
-        tibble::enframe() %>%
-        dplyr::mutate(value = as.numeric(value)) %>%
-        dplyr::filter(value > 1) %>%
-        dplyr::pull(name)
+        enframe() %>%
+        mutate(value = as.numeric(value)) %>%
+        filter(value > 1) %>%
+        pull(name)
 
-      if(!purrr::is_empty(duplicated_inputs)){
+      if(!is_empty(duplicated_inputs)){
         warning("duplicated input name(s): \n\n",
                 paste(paste("-", duplicated_inputs), collapse = "\n"),
                 "\n\nInputs should only need to be specified once."
@@ -1311,16 +1331,16 @@ DataDictionary <- R6Class(
       # - replace existing categories if needed
       # - add the leftovers to translater
 
-      .list_split <- tibble::enframe(.list) %>%
-        dplyr::mutate(in_translater = factor(name %in% names(translater),
-                                             levels = c(FALSE, TRUE),
-                                             labels = c("leftover",
-                                                        "replace"))) %>%
+      .list_split <- enframe(.list) %>%
+        mutate(in_translater = factor(name %in% names(translater),
+                                      levels = c(FALSE, TRUE),
+                                      labels = c("leftover",
+                                                 "replace"))) %>%
         split(f = .$in_translater, drop = FALSE) %>%
-        purrr::map( ~ .x %>%
-                      dplyr::select(name, value) %>%
-                      tibble::deframe() %>%
-                      unlist())
+        map( ~ .x %>%
+               select(name, value) %>%
+               deframe() %>%
+               unlist())
 
       if(!is_empty(.list_split$replace) && add_replacements){
         translater[names(.list_split$replace)] <- .list_split$replace
@@ -1337,7 +1357,7 @@ DataDictionary <- R6Class(
     recode_as_factor = function(x, translater, unmatched = NULL){
 
       x %>%
-        dplyr::recode(!!!translater) %>%
+        recode(!!!translater) %>%
         factor(levels = c(translater, unmatched))
 
     },
@@ -1345,7 +1365,7 @@ DataDictionary <- R6Class(
     recode_as_character = function(x, translater){
 
       as.character(x) %>%
-        dplyr::recode(!!!translater)
+        recode(!!!translater)
 
     }
 
