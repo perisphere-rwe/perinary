@@ -66,6 +66,10 @@
 #'   output will be converted to a factor with its level order determined
 #'   using relevant information from `dictionary`.
 #'
+#' @param drop_unused_levels Logical (default `FALSE`). If `TRUE` (and
+#'   `nominals_to_factor = TRUE` or `to_factor = TRUE`), unused levels will be
+#'   dropped from nominal variables.
+#'
 #' @details
 #'
 #' With the choice `units = "model"`, any numeric variable in
@@ -141,7 +145,8 @@ translate_data <- function(x, ...,
                            warn_unmatched = TRUE,
                            apply_variable_labels = TRUE,
                            apply_category_labels = TRUE,
-                           nominals_to_factor = TRUE){
+                           nominals_to_factor = TRUE,
+                           drop_unused_levels = FALSE){
 
   assert_character(units, len = 1, any.missing = FALSE)
   assert_choice(units, choices=c('none','descriptive','model'))
@@ -155,7 +160,8 @@ translate_data <- function(x, ...,
     warn_unmatched = warn_unmatched,
     apply_variable_labels = apply_variable_labels,
     apply_category_labels = apply_category_labels,
-    nominals_to_factor = nominals_to_factor
+    nominals_to_factor = nominals_to_factor,
+    drop_unused_levels = drop_unused_levels
   )
 
 }
@@ -175,18 +181,23 @@ translate_names <- function(x, ...,
                             dictionary = NULL,
                             units = "none",
                             to_factor = FALSE,
-                            warn_unmatched = TRUE){
+                            warn_unmatched = TRUE,
+                            drop_unused_levels = FALSE){
 
   assert_character(units, len = 1, any.missing = FALSE)
   assert_choice(units, choices=c('none','descriptive','model'))
   assert_logical(warn_unmatched, len = 1)
   assert_list(.list, types='character', names='named', null.ok=TRUE)
 
-  infer_meta(dictionary)$translate_names(x = x, ...,
-                                         .list = .list,
-                                         units = units,
-                                         to_factor = to_factor,
-                                         warn_unmatched = warn_unmatched)
+  infer_meta(dictionary)$translate_names(
+    x = x,
+    ...,
+    .list = .list,
+    units = units,
+    to_factor = to_factor,
+    warn_unmatched = warn_unmatched,
+    drop_unused_levels = drop_unused_levels
+  )
 
 }
 
@@ -203,16 +214,21 @@ translate_categories <- function(x, ...,
                                  dictionary = NULL,
                                  names = NULL,
                                  to_factor = FALSE,
-                                 warn_unmatched = TRUE){
+                                 warn_unmatched = TRUE,
+                                 drop_unused_levels = FALSE){
 
   assert_logical(warn_unmatched, len = 1)
   assert_list(.list, types='character', names='named', null.ok=TRUE)
 
-  infer_meta(dictionary)$translate_categories(x = x, ...,
-                                              .list = .list,
-                                              names = names,
-                                              to_factor = to_factor,
-                                              warn_unmatched = warn_unmatched)
+  infer_meta(dictionary)$translate_categories(
+    x = x,
+    ...,
+    .list = .list,
+    names = names,
+    to_factor = to_factor,
+    warn_unmatched = warn_unmatched,
+    drop_unused_levels = drop_unused_levels
+  )
 
 }
 
