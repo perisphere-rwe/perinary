@@ -808,7 +808,8 @@ DataDictionary <- R6Class(
                               warn_unmatched,
                               apply_variable_labels,
                               apply_category_labels,
-                              nominals_to_factor){
+                              nominals_to_factor,
+                              drop_unused_levels){
 
       overlapping_variables <- self %>%
         infer_overlapping_variables(x, warn_unmatched)
@@ -846,7 +847,8 @@ DataDictionary <- R6Class(
         if(i %in% nominal_variables && apply_category_labels){
           x[[i]] %<>%
             self$translate_categories(names = i,
-                                      to_factor = nominals_to_factor)
+                                      to_factor = nominals_to_factor,
+                                      drop_unused_levels = drop_unused_levels)
         }
 
         if(apply_variable_labels){
@@ -864,7 +866,8 @@ DataDictionary <- R6Class(
                                .list = NULL,
                                units = "none",
                                to_factor = FALSE,
-                               warn_unmatched = TRUE){
+                               warn_unmatched = TRUE,
+                               drop_unused_levels = FALSE){
 
       x_uni <- unique(na.omit(x))
 
@@ -887,7 +890,7 @@ DataDictionary <- R6Class(
       }
 
       if(to_factor){
-        private$recode_as_factor(x, translater, unmatched)
+        private$recode_as_factor(x, translater, unmatched, drop_unused_levels)
       } else {
         private$recode_as_character(x, translater)
       }
@@ -898,7 +901,8 @@ DataDictionary <- R6Class(
                                     .list = NULL,
                                     names = NULL,
                                     to_factor = FALSE,
-                                    warn_unmatched = TRUE){
+                                    warn_unmatched = TRUE,
+                                    drop_unused_levels = FALSE){
 
       .list <- .list %||% list(...)
 
@@ -962,7 +966,9 @@ DataDictionary <- R6Class(
                     setdiff(names(translater))
 
                   if(to_factor){
-                    private$recode_as_factor(.x$x, translater, unmatched)
+                    private$recode_as_factor(
+                      .x$x, translater, unmatched, drop_unused_levels
+                    )
                   } else {
                     private$recode_as_character(.x$x, translater)
                   }
@@ -1029,7 +1035,7 @@ DataDictionary <- R6Class(
         setdiff(names(translater))
 
       if(to_factor){
-        private$recode_as_factor(x, translater, unmatched)
+        private$recode_as_factor(x, translater, unmatched, drop_unused_levels)
       } else {
         private$recode_as_character(x, translater)
       }
@@ -1354,11 +1360,20 @@ DataDictionary <- R6Class(
 
     },
 
-    recode_as_factor = function(x, translater, unmatched = NULL){
+    recode_as_factor = function(x,
+                                translater,
+                                unmatched = NULL,
+                                drop_unused_levels = FALSE){
 
-      x %>%
+      x <- x %>%
         recode(!!!translater) %>%
         factor(levels = c(translater, unmatched))
+
+      if (drop_unused_levels) {
+        x <- droplevels(x)
+      }
+
+      return(x)
 
     },
 

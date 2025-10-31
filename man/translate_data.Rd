@@ -14,7 +14,8 @@ translate_data(
   warn_unmatched = TRUE,
   apply_variable_labels = TRUE,
   apply_category_labels = TRUE,
-  nominals_to_factor = TRUE
+  nominals_to_factor = TRUE,
+  drop_unused_levels = FALSE
 )
 
 translate_names(
@@ -24,7 +25,8 @@ translate_names(
   dictionary = NULL,
   units = "none",
   to_factor = FALSE,
-  warn_unmatched = TRUE
+  warn_unmatched = TRUE,
+  drop_unused_levels = FALSE
 )
 
 translate_categories(
@@ -34,7 +36,8 @@ translate_categories(
   dictionary = NULL,
   names = NULL,
   to_factor = FALSE,
-  warn_unmatched = TRUE
+  warn_unmatched = TRUE,
+  drop_unused_levels = FALSE
 )
 }
 \arguments{
@@ -86,6 +89,10 @@ a factor so that the order of categories from the dictionary is applied.}
 \item{nominals_to_factor}{Logical (default \code{TRUE}). If \code{TRUE},
 nominal variables are converted to factors with level order
 determined using relevant information from \code{dictionary}.}
+
+\item{drop_unused_levels}{Logical (default \code{FALSE}). If \code{TRUE} (and
+\code{nominals_to_factor = TRUE} or \code{to_factor = TRUE}), unused levels will be
+dropped from nominal variables.}
 
 \item{.list}{For \code{translate_names()}: an optional \strong{named} character
 vector mapping \code{old_name = "Label"}. When supplied, it takes precedence
