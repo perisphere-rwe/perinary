@@ -1035,6 +1035,13 @@ DataDictionary <- R6Class(
         setdiff(names(translater))
 
       if(to_factor){
+        # if a dictionary has 2 or more variables that share the same levels and
+        # labels, you can have the odd situation where the same label/level pair
+        # appear more than once in the translater vector. Calling factor() with
+        # a duplicated level will throw an error, so the translater is filtered
+        # here by removing any items that have the exact same level and label.
+        translater <- translater[!(dup_labels & dup_levels)]
+
         private$recode_as_factor(x, translater, unmatched, drop_unused_levels)
       } else {
         private$recode_as_character(x, translater)
