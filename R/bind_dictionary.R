@@ -19,7 +19,7 @@
 #'   `x` is on the left of `y` in the function arguments. If "right",
 #'   `y` definitions are preferred.
 #'
-#' @param keep_unmatched_y logical. If `TRUE`, variables in `y` that are
+#' @param drop_unmatched_variables logical. If `TRUE`, variables in `y` that are
 #'   not in `x` will be retained in the output. If `FALSE` (default),
 #'   only variables from `x` and those in `y` that overlap with `x`
 #'   will be included, subject to `conflict_preference`.
@@ -56,43 +56,43 @@
 
 bind_dictionary <- function(..., .list = NULL,
                             conflict_preference = 'left',
-                            keep_unmatched_y = FALSE) {
+                            drop_unmatched_variables = FALSE) {
 
   assert_valid_dotdot(..., .list = .list, names_required = FALSE)
   .dots <- infer_dotdot(..., .list = .list)
 
   reduce(.dots,  .f = .bind_dictionary, .dir = 'forward',
          conflict_preference = conflict_preference,
-         keep_unmatched_y = keep_unmatched_y)
+         drop_unmatched_variables = drop_unmatched_variables)
 
 }
 
 #' @rdname bind_dictionary
 #' @export
 left_bind <- function(..., .list = NULL,
-                      keep_unmatched_y = FALSE) {
+                      drop_unmatched_variables = FALSE) {
 
   bind_dictionary(..., .list = .list,
                   conflict_preference = 'left',
-                  keep_unmatched_y = keep_unmatched_y)
+                  drop_unmatched_variables = drop_unmatched_variables)
 
 }
 
 #' @rdname bind_dictionary
 #' @export
 right_bind <- function(..., .list = NULL,
-                      keep_unmatched_y = FALSE) {
+                       drop_unmatched_variables = FALSE) {
 
   bind_dictionary(..., .list = .list,
                   conflict_preference = 'right',
-                  keep_unmatched_y = keep_unmatched_y)
+                  drop_unmatched_variables = drop_unmatched_variables)
 
 }
 
 #' @importFrom purrr is_empty
 .bind_dictionary <- function(x, y,
                              conflict_preference = NULL,
-                             keep_unmatched_y){
+                             drop_unmatched_variables){
 
   vars_x <- x$variables
   vars_y <- y$variables
@@ -118,7 +118,7 @@ right_bind <- function(..., .list = NULL,
   )
 
   # keep the order of the x dictionary
-  if(keep_unmatched_y){
+  if(drop_unmatched_variables){
     combined_vars <- combined_vars[c(names(vars_x), vars_y_unmatched)]
   } else {
     combined_vars <- combined_vars[names(vars_x)]

@@ -10,12 +10,12 @@ bind_dictionary(
   ...,
   .list = NULL,
   conflict_preference = "left",
-  keep_unmatched_y = FALSE
+  drop_unmatched_variables = FALSE
 )
 
-left_bind(..., .list = NULL, keep_unmatched_y = FALSE)
+left_bind(..., .list = NULL, drop_unmatched_variables = FALSE)
 
-right_bind(..., .list = NULL, keep_unmatched_y = FALSE)
+right_bind(..., .list = NULL, drop_unmatched_variables = FALSE)
 }
 \arguments{
 \item{...}{\link[=data_dictionary]{Data dictionary} objects to combine.}
@@ -31,7 +31,7 @@ the definitions in the \code{x} dictionary are preferred because
 \code{x} is on the left of \code{y} in the function arguments. If "right",
 \code{y} definitions are preferred.}
 
-\item{keep_unmatched_y}{logical. If \code{TRUE}, variables in \code{y} that are
+\item{drop_unmatched_variables}{logical. If \code{TRUE}, variables in \code{y} that are
 not in \code{x} will be retained in the output. If \code{FALSE} (default),
 only variables from \code{x} and those in \code{y} that overlap with \code{x}
 will be included, subject to \code{conflict_preference}.}
