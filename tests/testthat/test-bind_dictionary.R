@@ -49,7 +49,7 @@ test_that(
     expect_equal(
       bind_dictionary(dd_1, dd_3,
                       conflict_preference = 'right',
-                      keep_unmatched_y = TRUE) %>%
+                      drop_unmatched_variables = TRUE) %>%
         getElement("dictionary") %>%
         dplyr::filter(name == "newboy") %>%
         dplyr::pull(name),
