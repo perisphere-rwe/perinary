@@ -14,6 +14,7 @@ DataVariable <- R6Class(
     type = NULL,
     label = NULL,
     description = NULL,
+    templates = NULL,
 
     # relevant for nominal variables but should be
     # set to a value of 'none' for numeric variables
@@ -69,6 +70,23 @@ DataVariable <- R6Class(
                        len = 1,
                        any.missing = FALSE,
                        null.ok = TRUE)
+    },
+
+    check_templates = function(value){
+
+      templates <- value
+
+      assert_in_set(values = names(templates),
+                    choices = c("label", "description"),
+                    value_type = "template names",
+                    value_location = "templates")
+
+      assert_list(templates,
+                  type = c('character', 'character'),
+                  any.missing = FALSE,
+                  null.ok = FALSE,
+                  len = 2)
+
     },
 
     check_category_levels = function(value) {
@@ -202,10 +220,15 @@ DataVariable <- R6Class(
       self$check_label(label)
       self$check_description(description)
 
+      # nothing to check b/c templates can not be set during construction
+      self$templates <- list(label = character(),
+                             description = character())
+
       self$name        <- name
       self$type        <- type
       self$label       <- label
       self$description <- description
+
 
 
     },

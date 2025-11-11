@@ -84,6 +84,7 @@ assert_valid_field <- function(name, type, field, suggest = NULL){
 
 assert_in_set <- function(values, choices,
                           value_type = "values",
+                          value_location = 'dictionary',
                           variable = NULL){
 
   unmatched_values <- setdiff(values, choices)
@@ -95,7 +96,7 @@ assert_in_set <- function(values, choices,
       if(!is.null(variable)) c("i" = glue("Variable: `{variable}`")),
       "x" = glue("Unrecognized input values: \\
                  {paste_collapse(unmatched_values)}"),
-      "i" = glue("Recognized values in dictionary: \\
+      "i" = glue("Recognized values in {value_location}: \\
                   {paste_collapse(choices)}")
     )
 
