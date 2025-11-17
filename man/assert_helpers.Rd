@@ -9,7 +9,13 @@
 \usage{
 assert_valid_field(name, type, field, suggest = NULL)
 
-assert_in_set(values, choices, value_type = "values", variable = NULL)
+assert_in_set(
+  values,
+  choices,
+  value_type = "values",
+  value_location = "dictionary",
+  variable = NULL
+)
 
 assert_valid_dotdot(..., .list, names_required = TRUE)
 }

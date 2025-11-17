@@ -7,6 +7,9 @@ test_that(
     expect_equal(age_years$get_category_labels(), NULL)
     expect_equal(age_years$fmt_category_labels(), "none")
 
+    expect_equal(age_years$get_template_description(), NULL)
+    expect_equal(age_years$fmt_template_label(), "none")
+
     expect_equal(date_recorded$get_units(), NULL)
     expect_equal(date_recorded$get_category_levels(), NULL)
     expect_equal(date_recorded$fmt_divby_modeling(), 'none')
