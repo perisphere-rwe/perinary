@@ -34,6 +34,7 @@ DataVariable <- R6Class(
              "type"            = self$check_type(value),
              "label"           = self$check_label(value),
              "description"     = self$check_description(value),
+             "templates"       = self$check_templates(value),
              "units"           = self$check_units(value),
              "divby_modeling"  = self$check_divby_modeling(value),
              "category_level"  = self$check_category_levels(value),
