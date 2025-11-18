@@ -167,8 +167,8 @@ DataVariable <- R6Class(
     # return the value (can return NULL)
     get_name = function() self$get_element("name"),
     get_type = function() self$get_element("type"),
-    get_label = function() self$get_element("label"),
-    get_description = function() self$get_element("description"),
+    get_label = function() self$get_element("label") %||% self$get_template_label(),
+    get_description = function() self$get_element("description") %||% self$get_template_description(),
     get_template_label = function() self$get_element("template_label"),
     get_template_description = function() self$get_element("template_description"),
     get_units = function() self$get_element("units"),
