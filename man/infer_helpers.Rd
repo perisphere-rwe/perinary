@@ -26,10 +26,14 @@ infer_overlapping_variables(dictionary, data, warn_unmatched)
 precedence over \code{...}.}
 
 \item{.dots}{a list of name value pairs. Values with type environment
-are captured and translated to}
+are captured and translated to regular strings based on existing templates
+in \code{dictionary}}
 
 \item{dictionary}{A \code{DataDictionary} or \code{NULL}. If \code{NULL}, the function
 attempts to use the package default set via \code{\link[=set_default_dictionary]{set_default_dictionary()}}.}
+
+\item{field}{designate whether we are looking at the "description" field
+or the "label" field.}
 
 \item{x}{character string}
 
@@ -83,11 +87,6 @@ suppressing the warning.
 }
 }
 
-\examples{
-
-infer_curlies("the {animal} is {color}")
-
-}
 \seealso{
 \code{\link[=data_dictionary]{data_dictionary()}}, \code{\link[=as_data_dictionary]{as_data_dictionary()}}, \code{\link[=set_default_dictionary]{set_default_dictionary()}}
 }
