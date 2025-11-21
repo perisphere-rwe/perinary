@@ -44,7 +44,13 @@ infer_dotdot <- function(..., .list = NULL){
 #' @rdname infer_helpers
 #'
 #' @param .dots a list of name value pairs. Values with type environment
-#'   are captured and translated to
+#'   are captured and translated to regular strings based on existing templates
+#'   in `dictionary`
+#'
+#' @param dictionary `r roxy_describe_dd()`
+#'
+#' @param field designate whether we are looking at the "description" field
+#'   or the "label" field.
 #'
 #' @importFrom purrr map map2 map_lgl map_chr map2_chr discard set_names keep
 #' @importFrom glue glue
