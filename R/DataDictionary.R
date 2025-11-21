@@ -75,26 +75,27 @@ DataVariable <- R6Class(
                        null.ok = TRUE)
     },
 
-    # TODO: assert that {} appears at least once in value
     check_template_label = function(value){
 
-      template_label <- value
-
-      assert_character(template_label,
+      assert_character(value,
+                       .var.name = 'template_label',
                        len = 1,
                        any.missing = FALSE,
                        null.ok = TRUE)
+
+      if(!is.null(value)) assert_valid_template(value)
 
     },
 
     check_template_description = function(value){
 
-      template_description <- value
-
-      assert_character(template_description,
+      assert_character(value,
+                       .var.name = 'template_description',
                        len = 1,
                        any.missing = FALSE,
                        null.ok = TRUE)
+
+      if(!is.null(value)) assert_valid_template(value)
 
     },
 

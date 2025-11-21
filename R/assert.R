@@ -155,6 +155,27 @@ assert_valid_dotdot <- function(..., .list, names_required = TRUE){
 
 }
 
+#' @importFrom rlang is_empty
+assert_valid_template <- function(x) {
+
+  inner <- infer_curlies(x)
+
+  # validate allowed characters (letters, digits, underscores)
+  invalid <- !grepl("^[A-Za-z0-9_]+$", inner)
+
+  if (any(invalid)) {
+    bad_vals <- paste0("{", inner[invalid], "}", collapse = ", ")
+    stop(
+      sprintf("Invalid template specification: illegal characters inside %s", bad_vals),
+      call. = FALSE
+    )
+  }
+
+  invisible(TRUE)
+
+}
+
+
 
 #' @importFrom cli cli_abort
 #' @importFrom purrr map_chr

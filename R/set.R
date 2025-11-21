@@ -75,12 +75,18 @@ dd_set_prep <- function(dictionary, .dots, field){
 }
 
 dd_set <- function(dictionary, ..., .list, field){
+
   assert_valid_dotdot(..., .list = .list)
-  .dots <- infer_dotdot(..., .list = .list)
+
+  # capture input and plug in templates from dictionary
+  .dots <- infer_dotdot(..., .list = .list) %>%
+    infer_templates(dictionary, field = field)
+
   if(is_empty(.dots)) return(dictionary)
   dictionary <- dd_set_prep(dictionary, .dots, field = field)
   dictionary$modify_dictionary(.dots, field = field)
   dictionary
+
 }
 
 #' @rdname set_labels

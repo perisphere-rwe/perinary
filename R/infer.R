@@ -43,6 +43,114 @@ infer_dotdot <- function(..., .list = NULL){
 
 #' @rdname infer_helpers
 #'
+#' @param .dots a list of name value pairs. Values with type environment
+#'   are captured and translated to
+#'
+#' @importFrom purrr map map2 map_lgl map_chr map2_chr discard set_names keep
+#' @importFrom glue glue
+#'
+infer_templates <- function(.dots, dictionary, field){
+
+  template_vars <- names(which(map_lgl(.dots, is.environment)))
+
+  if(is_empty(template_vars)) return(.dots)
+
+  templates <- map(
+    .x = set_names(template_vars),
+    .f = ~ switch(
+      field,
+      'label' = dictionary$get_template_label(.x),
+      'description' = dictionary$get_template_description(.x)
+    )
+  )
+
+  invalid_vars <- names(keep(templates, .p = is.null))
+
+  if(!is_empty(invalid_vars)){
+    info <- paste_collapse(invalid_vars)
+    cli_abort(
+      "No {field} template has been set in supplied dictionary for {info}"
+    )
+  }
+
+  invalid_binds <- map2(
+    .x = .dots[template_vars],
+    .y = templates,
+    .f = ~setdiff(names(.x), infer_curlies(.y))
+  ) %>%
+    discard(.p = is_empty)
+
+  if (!is_empty(invalid_binds)) {
+
+    nm <- names(invalid_binds)
+    n <- length(nm)
+
+    binds_explained <- map_chr(
+      .x = nm,
+      .f = ~ paste0(
+        "valid bindings for ",
+        paste_collapse(.x, as_code = TRUE), " are ",
+        paste_collapse(infer_curlies(templates[.x]), as_code = TRUE),
+        ", but supplied bindings included ",
+        paste_collapse(invalid_binds[[.x]], as_code = TRUE)
+      )
+    ) %>%
+      set_names("i")
+
+    cli_abort(
+      c(
+        "Bindings in {.var use_template()} must match bindings of \\
+        the variables that the template is used on.",
+        "i" = paste(
+          "There {?is/are} {n} variable{?s} with unmatched bindings:",
+          paste_collapse(nm)
+        ),
+        binds_explained
+      )
+    )
+
+  }
+
+  # all potential errors should have been triggered by this stage.
+  # all we do here is plug the bindings in to the corresponding variable's
+  # label or description, then return .dots as a named list of strings.
+
+  .dots[template_vars] <- map2_chr(
+    .x = templates,
+    .y = .dots[template_vars],
+    .f = ~ glue(.x, .envir = .y)
+  )
+
+  .dots
+
+}
+
+#' @rdname infer_helpers
+#'
+#' @param x character string
+#'
+#' @returns character vector of all symbols in curly braces: {}
+#'
+
+infer_curlies <- function(x){
+
+  # extract everything inside { }
+  vals <- gregexpr("\\{([^}]*)\\}", x, perl = TRUE)
+  matches <- regmatches(x, vals)[[1]]
+
+  # if no matches, throw your custom error
+  if (is_empty(matches)) {
+    stop("Invalid template specification: no values in the template appear inside of curly brackets",
+         call. = FALSE)
+  }
+
+  # strip braces
+  gsub("^\\{|\\}$", "", matches)
+
+}
+
+#' @rdname infer_helpers
+#'
 #' @param dictionary A `DataDictionary` or `NULL`. If `NULL`, the function
 #'   attempts to use the package default set via [set_default_dictionary()].
 #'
