@@ -170,6 +170,7 @@ dd_peng
 ```
 
 
+
 ## Modify objects using dictionaries
 
 The `translate` function family includes `translate_categories()`, `translate_names()`, and `translate_data()`. These functions are the bridge between your `dictionary` and your data. So, how do they work?
