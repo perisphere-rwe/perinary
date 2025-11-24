@@ -1,5 +1,6 @@
 #' @keywords internal
 #' @import R6
+#' @importFrom rlang %||%
 "_PACKAGE"
 
 utils::globalVariables(

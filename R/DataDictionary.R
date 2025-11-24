@@ -14,6 +14,8 @@ DataVariable <- R6Class(
     type = NULL,
     label = NULL,
     description = NULL,
+    template_label = NULL,
+    template_description = NULL,
 
     # relevant for nominal variables but should be
     # set to a value of 'none' for numeric variables
@@ -29,14 +31,16 @@ DataVariable <- R6Class(
 
     check_input = function(field, value){
       switch(field,
-             "name"            = self$check_name(value),
-             "type"            = self$check_type(value),
-             "label"           = self$check_label(value),
-             "description"     = self$check_description(value),
-             "units"           = self$check_units(value),
-             "divby_modeling"  = self$check_divby_modeling(value),
-             "category_level"  = self$check_category_levels(value),
-             "category_label"  = self$check_category_labels(value))
+             "name"                 = self$check_name(value),
+             "type"                 = self$check_type(value),
+             "label"                = self$check_label(value),
+             "description"          = self$check_description(value),
+             "template_label"       = self$check_template_label(value),
+             "template_description" = self$check_template_description(value),
+             "units"                = self$check_units(value),
+             "divby_modeling"       = self$check_divby_modeling(value),
+             "category_level"       = self$check_category_levels(value),
+             "category_label"       = self$check_category_labels(value))
     },
 
     check_name = function(value) {
@@ -69,6 +73,30 @@ DataVariable <- R6Class(
                        len = 1,
                        any.missing = FALSE,
                        null.ok = TRUE)
+    },
+
+    check_template_label = function(value){
+
+      assert_character(value,
+                       .var.name = 'template_label',
+                       len = 1,
+                       any.missing = FALSE,
+                       null.ok = TRUE)
+
+      if(!is.null(value)) assert_valid_template(value)
+
+    },
+
+    check_template_description = function(value){
+
+      assert_character(value,
+                       .var.name = 'template_description',
+                       len = 1,
+                       any.missing = FALSE,
+                       null.ok = TRUE)
+
+      if(!is.null(value)) assert_valid_template(value)
+
     },
 
     check_category_levels = function(value) {
@@ -130,6 +158,8 @@ DataVariable <- R6Class(
     set_type = function(value) self$set_element("type", value),
     set_label = function(value) self$set_element("label", value),
     set_description = function(value) self$set_element("description", value),
+    set_template_label = function(value) self$set_element("template_label", value),
+    set_template_description = function(value) self$set_element("template_description", value),
     set_units = function(value) self$set_element("units", value),
     set_divby_modeling = function(value) self$set_element("divby_modeling", value),
     set_category_levels = function(value) self$set_element("category_levels", value),
@@ -138,8 +168,10 @@ DataVariable <- R6Class(
     # return the value (can return NULL)
     get_name = function() self$get_element("name"),
     get_type = function() self$get_element("type"),
-    get_label = function() self$get_element("label"),
-    get_description = function() self$get_element("description"),
+    get_label = function() self$get_element("label") %||% self$get_template_label(),
+    get_description = function() self$get_element("description") %||% self$get_template_description(),
+    get_template_label = function() self$get_element("template_label"),
+    get_template_description = function() self$get_element("template_description"),
     get_units = function() self$get_element("units"),
     get_divby_modeling = function() self$get_element("divby_modeling"),
     get_category_levels = function() self$get_element("category_levels"),
@@ -155,11 +187,17 @@ DataVariable <- R6Class(
     fetch_type = function()
       self$get_type(),
 
-    fetch_label = function()
-      self$get_label() %||% self$fetch_name(),
+    fetch_label = function(){
 
-    fetch_description = function()
-      self$get_description() %||% self$fetch_label(),
+      self$get_label() %||% self$get_template_label() %||% self$fetch_name()
+
+    },
+
+    fetch_description = function(){
+
+      self$get_description() %||% self$get_template_description() %||% self$fetch_label()
+
+    },
 
     fetch_units = function()
       self$get_units(),
@@ -178,6 +216,8 @@ DataVariable <- R6Class(
     fmt_type = function() self$fmt_element("type"),
     fmt_label = function() self$fmt_element("label"),
     fmt_description = function() self$fmt_element("description"),
+    fmt_template_label = function() self$fmt_element("template_label"),
+    fmt_template_description = function() self$fmt_element("template_description"),
     fmt_units = function() self$fmt_element("units"),
     fmt_divby_modeling = function() self$fmt_element("divby_modeling"),
     fmt_category_levels = function() self$fmt_element("category_levels"),
@@ -187,7 +227,9 @@ DataVariable <- R6Class(
     initialize = function(name,
                           type = "Data",
                           label = NULL,
-                          description = NULL) {
+                          description = NULL,
+                          template_label = NULL,
+                          template_description = NULL) {
 
       if (missing(name) || !is.character(name) || length(name) != 1) {
         abort(
@@ -196,16 +238,19 @@ DataVariable <- R6Class(
         )
       }
 
-
       self$check_name(name)
       self$check_type(type)
       self$check_label(label)
       self$check_description(description)
+      self$check_template_label(template_label)
+      self$check_template_description(template_description)
 
-      self$name        <- name
-      self$type        <- type
-      self$label       <- label
-      self$description <- description
+      self$name                 <- name
+      self$type                 <- type
+      self$label                <- label
+      self$description          <- description
+      self$template_label       <- template_label
+      self$template_description <- template_description
 
 
     },
@@ -213,9 +258,11 @@ DataVariable <- R6Class(
     # Method to print object information
     print = function(...) {
       cat(self$fmt_type(), "Variable:\n")
-      cat("  Name               :", self$fmt_name(),        "\n")
-      cat("  Label              :", self$fmt_label(),       "\n")
-      cat("  Description        :", self$fmt_description(), "\n")
+      cat("  Name                 :", self$fmt_name(),                 "\n")
+      cat("  Label                :", self$fmt_label(),                "\n")
+      cat("  Description          :", self$fmt_description(),          "\n")
+      cat("  Label template       :", self$fmt_template_label(),       "\n")
+      cat("  Description template :", self$fmt_template_description(), "\n")
     }
   )
 
@@ -307,8 +354,8 @@ NumericVariable <- R6Class(
     # Overriding print method to include unit information
     print = function(...) {
       super$print(...)          # Call the parent class print
-      cat("  Units              :", self$fmt_units(), "\n")
-      cat("  Modeling Divisor   :", self$fmt_divby_modeling(), "\n")
+      cat("  Units                :", self$fmt_units(), "\n")
+      cat("  Modeling Divisor     :", self$fmt_divby_modeling(), "\n")
     }
   )
 )
@@ -404,8 +451,8 @@ NominalVariable <- R6Class(
 
       super$print(...)  # Call the parent class print
 
-      cat("  Category Levels    :", self$fmt_category_levels(), "\n")
-      cat("  Category Labels    :", self$fmt_category_labels(), "\n")
+      cat("  Category Levels      :", self$fmt_category_levels(), "\n")
+      cat("  Category Labels      :", self$fmt_category_labels(), "\n")
 
     }
   )
@@ -463,8 +510,8 @@ LogicalVariable <- R6::R6Class(
     # Print method (mirroring NominalVariable)
     print = function(...) {
       super$print(...)
-      cat("  Category Levels    :", self$fmt_category_levels(), "\n")
-      cat("  Category Labels    :", self$fmt_category_labels(), "\n")
+      cat("  Category Levels      :", self$fmt_category_levels(), "\n")
+      cat("  Category Labels      :", self$fmt_category_labels(), "\n")
     }
   )
 )
@@ -508,7 +555,7 @@ DateVariable <- R6Class(
     print = function(...) {
       super$print(...)
       if (!is.null(self$date_format)) {
-        cat("  Date Format        :", self$date_format, "\n")
+        cat("  Date Format          :", self$date_format, "\n")
       }
     }
   )
@@ -611,8 +658,16 @@ DataDictionary <- R6Class(
 
     },
 
+    get_template_label = function(name){
+      self$variables[[name]]$get_template_label()
+    },
+
     get_description = function(name){
       self$variables[[name]]$get_description()
+    },
+
+    get_template_description = function(name){
+      self$variables[[name]]$get_template_description()
     },
 
     get_divby = function(name){

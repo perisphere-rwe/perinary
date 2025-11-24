@@ -3,11 +3,17 @@
 \name{infer_helpers}
 \alias{infer_helpers}
 \alias{infer_dotdot}
+\alias{infer_templates}
+\alias{infer_curlies}
 \alias{infer_meta}
 \alias{infer_overlapping_variables}
 \title{Internal inference helpers}
 \usage{
 infer_dotdot(..., .list = NULL)
+
+infer_templates(.dots, dictionary, field)
+
+infer_curlies(x)
 
 infer_meta(dictionary)
 
@@ -19,8 +25,17 @@ infer_overlapping_variables(dictionary, data, warn_unmatched)
 \item{.list}{A pre-assembled list. If supplied and non-\code{NULL}, it takes
 precedence over \code{...}.}
 
+\item{.dots}{a list of name value pairs. Values with type environment
+are captured and translated to regular strings based on existing templates
+in \code{dictionary}}
+
 \item{dictionary}{A \code{DataDictionary} or \code{NULL}. If \code{NULL}, the function
 attempts to use the package default set via \code{\link[=set_default_dictionary]{set_default_dictionary()}}.}
+
+\item{field}{designate whether we are looking at the "description" field
+or the "label" field.}
+
+\item{x}{character string}
 
 \item{data}{A data frame or data.table whose column names will be checked
 against the dictionary.}
@@ -31,6 +46,8 @@ variables present in \code{data} but absent from the dictionary.}
 \value{
 \code{infer_dotdot()} returns a \strong{list}. If \code{.list} is non-\code{NULL}, it is
 returned as-is; otherwise \code{list(...)} is returned.
+
+character vector of all symbols in curly braces: {}
 
 \code{infer_meta()} returns a validated \strong{\code{DataDictionary}}.
 
