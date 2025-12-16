@@ -55,8 +55,93 @@ test_that(
 
     expect_equal(dd_modified$variables$logical$description,
                  'I am perplexed')
-
   }
 )
 
 
+
+test_that(
+  desc = "... in set_templates must be formulas",
+  code = {
+
+    # Template is not a formula -> error
+    expect_error(
+      dd_modified <- set_templates(
+        dictionary = dd,
+        number = "This is a {template}."
+      ),
+      regexp = "Arguments passed to ... must be formulas."
+    )
+
+    # Template is not a formula -> no error
+    expect_no_error(
+      dd_modified <- set_templates(
+        dictionary = dd,
+        number ~ "This is a {template}."
+      )
+    )
+  }
+)
+
+
+test_that(
+  desc = "Templates are in the expected format",
+  code = {
+
+    # Templates should have curly braces, and the components inside the curly
+    # braces should be syntactically valid variable names.
+
+    err <- "Invalid template specification for variable"
+
+    # Template must contain {}
+    expect_error(
+      dd_modified <- set_templates(
+        dictionary = dd,
+        number ~ "Invalid template."
+      ),
+      regexp = err
+    )
+
+    # The text in {} must begin with an upper or lowercase letter
+    expect_error(
+      dd_modified <- set_templates(
+        dictionary = dd,
+        number ~ "Invalid {1template}."
+      ),
+      regexp = err
+    )
+
+    expect_error(
+      dd_modified <- set_templates(
+        dictionary = dd,
+        number ~ "Invalid {_template}."
+      ),
+      regexp = err
+    )
+
+    # Spaces are not allowed in {}
+    expect_error(
+      dd_modified <- set_templates(
+        dictionary = dd,
+        number ~ "Invalid {tem plate}."
+      ),
+      regexp = err
+    )
+  }
+)
+
+
+test_that(
+  desc = "Template variables exist in the data dictionary",
+  code = {
+
+    expect_error(
+      dd_modified <- set_templates(
+        dictionary = dd,
+        foo ~ "Valid {template}."
+      ),
+      regexp = "One or more variables do not exist in dictionary names"
+    )
+
+  }
+)

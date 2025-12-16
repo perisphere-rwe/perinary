@@ -155,19 +155,24 @@ assert_valid_dotdot <- function(..., .list, names_required = TRUE){
 
 }
 
-#' @importFrom rlang is_empty
+#' @importFrom rlang abort is_empty
 assert_valid_template <- function(x) {
 
   inner <- infer_curlies(x)
 
-  # validate allowed characters (letters, digits, underscores)
-  invalid <- !grepl("^[A-Za-z0-9_]+$", inner)
+  # validate allowed characters (letters, digits, underscores). The text in the
+  # curly braces can only start with an upper or lowercase letter, followed by
+  # zero or more letters, numbers, underscores, or periods.
+  invalid <- !grepl("^[A-Za-z]+[A-Za-z0-9_.]*$", inner)
 
   if (any(invalid)) {
     bad_vals <- paste0("{", inner[invalid], "}", collapse = ", ")
-    stop(
-      sprintf("Invalid template specification: illegal characters inside %s", bad_vals),
-      call. = FALSE
+    abort(
+      message = paste0(
+        "Invalid template specification: illegal characters inside ",
+        bad_vals
+      ),
+      call = FALSE
     )
   }
 
