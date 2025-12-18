@@ -474,8 +474,7 @@ set_templates <- function(dictionary,
       loc <- map(formula_left, function(lhs_i) {
         eval_select(
           expr = str2lang(lhs_i),
-          data = dd_names,
-          env = parent.frame(n = 2L)
+          data = dd_names
         )
       })
     },

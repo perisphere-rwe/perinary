@@ -172,7 +172,7 @@ assert_valid_template <- function(x) {
         "Invalid template specification: illegal characters inside ",
         bad_vals
       ),
-      call = FALSE
+      call = NULL
     )
   }
 
