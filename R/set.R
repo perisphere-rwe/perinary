@@ -400,7 +400,7 @@ set_label_templates <- function(dictionary,
   set_templates(
     dictionary,
     ...,
-    field = "label",
+    field = "template_label",
     show_duplicate_template_warnings = show_duplicate_template_warnings
   )
 }
@@ -414,7 +414,7 @@ set_description_templates <- function(dictionary,
   set_templates(
     dictionary,
     ...,
-    field = "description",
+    field = "template_description",
     show_duplicate_template_warnings = show_duplicate_template_warnings
   )
 }
@@ -432,9 +432,12 @@ set_description_templates <- function(dictionary,
 #' @noRd
 set_templates <- function(dictionary,
                           ...,
-                          field = c("label", "description"),
+                          field = c("template_label",
+                                    "template_description"),
                           show_duplicate_template_warnings = TRUE) {
-  field <- match.arg(field, choices = c("label", "description"))
+
+  field <- match.arg(field, choices = c("template_label",
+                                        "template_description"))
 
   dots <- c(...)
 
