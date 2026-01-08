@@ -355,12 +355,13 @@ set_default_dictionary <- function(dictionary) {
 #' @title Set Label and Description Templates
 #'
 #' @description Add label or description templates to a `DataDictionary`.
+#'   Templates allow you to store and re-use text with placeholders, making it
+#'   easier to describe multiple variables with similar labels and/or
+#'   descriptions (see examples).
 #'
 #' @param dictionary `r roxy_describe_dd()`
 #' @param ... one or more formulas. See details.
-#' @param show_duplicate_template_warnings logical; whether to display a warning
-#'   if multiple templates will be assigned to the same row of
-#'   `get_dictionary(dictionary)`.
+#' @param show_warnings logical; whether to display warnings.
 #'
 #' @returns a modified `dictionary`.
 #'
@@ -396,12 +397,12 @@ NULL
 #' @export
 set_label_templates <- function(dictionary,
                                 ...,
-                                show_duplicate_template_warnings = TRUE) {
+                                show_warnings = TRUE) {
   set_templates(
     dictionary,
     ...,
     field = "template_label",
-    show_duplicate_template_warnings = show_duplicate_template_warnings
+    show_warnings = show_warnings
   )
 }
 
@@ -410,12 +411,12 @@ set_label_templates <- function(dictionary,
 #' @export
 set_description_templates <- function(dictionary,
                                       ...,
-                                      show_duplicate_template_warnings = TRUE) {
+                                      show_warnings = TRUE) {
   set_templates(
     dictionary,
     ...,
     field = "template_description",
-    show_duplicate_template_warnings = show_duplicate_template_warnings
+    show_warnings = show_warnings
   )
 }
 
@@ -434,7 +435,7 @@ set_templates <- function(dictionary,
                           ...,
                           field = c("template_label",
                                     "template_description"),
-                          show_duplicate_template_warnings = TRUE) {
+                          show_warnings = TRUE) {
 
   field <- match.arg(field, choices = c("template_label",
                                         "template_description"))
@@ -510,11 +511,27 @@ set_templates <- function(dictionary,
   is_duped <- duplicated(names(var_labels), fromLast = TRUE)
   duped_vars <- unique(names(var_labels)[is_duped])
 
-  if (show_duplicate_template_warnings && length(duped_vars)) {
+  if (show_warnings && length(duped_vars)) {
+    # Only display the first 3 duplicated variables
+    if (length(duped_vars) > 3L) {
+      n_duped <- length(duped_vars) - 3L
+      duped_vars <- paste(duped_vars[1:3], collapse = ", ")
+
+      duped_vars <- glue("{duped_vars}, and {n_duped} other variable")
+
+      # More than one additional duplicated variable
+      if (n_duped > 1L) {
+        duped_vars <- paste0(duped_vars, "s")
+      }
+
+    } else {
+      duped_vars <- paste(duped_vars, collapse = ", ")
+    }
+
     warn(
       message = paste0(
         "Multiple templates specified for the following variables: ",
-        paste(duped_vars, collapse = ", "),
+        duped_vars,
         ". The last template specified for each variable will be used."
       )
     )
@@ -541,7 +558,6 @@ set_templates <- function(dictionary,
   err_vars <- names(err)[map_lgl(err, is.character)]
 
   if (length(err_vars)) {
-    # TODO limit the number of variables shown in the error message?
     cli_abort(
       message = paste0(
         "Invalid template specification for variable{?s} ",

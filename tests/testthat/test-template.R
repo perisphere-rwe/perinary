@@ -145,3 +145,42 @@ test_that(
 
   }
 )
+
+
+test_that(
+  desc = "Assigning multiple templates to the same variable throws a warning",
+  code = {
+
+    expect_warning(
+      dd_modified <- set_templates(
+        dictionary = dd,
+        number ~ "First {template}.",
+        number ~ "Second {template}." # duplicate name
+      ),
+      regexp = "Multiple templates specified for the following variables"
+    )
+
+    # If more than 3 variables have more than 1 template being assigned, the
+    # first 3 variables are shown and the remaining are tallied in the warning
+    expect_warning(
+      dd_modified <- set_templates(
+        dictionary = dd,
+        c(number, integer, logical, character, factor) ~ "First {template}.",
+        # Duplicate variables, different template
+        c(number, integer, logical, character, factor) ~ "Second {template}."
+      ),
+      regexp = "2 other variables"
+    )
+
+    # Turn warnings off
+    expect_no_warning(
+      dd_modified <- set_templates(
+        dictionary = dd,
+        number ~ "First {template}.",
+        number ~ "Second {template}.", # duplicate variable, different template
+        show_warnings = FALSE
+      )
+    )
+
+  }
+)

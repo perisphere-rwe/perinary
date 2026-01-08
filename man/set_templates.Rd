@@ -6,28 +6,25 @@
 \alias{set_description_templates}
 \title{Set Label and Description Templates}
 \usage{
-set_label_templates(dictionary, ..., show_duplicate_template_warnings = TRUE)
+set_label_templates(dictionary, ..., show_warnings = TRUE)
 
-set_description_templates(
-  dictionary,
-  ...,
-  show_duplicate_template_warnings = TRUE
-)
+set_description_templates(dictionary, ..., show_warnings = TRUE)
 }
 \arguments{
 \item{dictionary}{A \link[=data_dictionary]{data dictionary} object}
 
 \item{...}{one or more formulas. See details.}
 
-\item{show_duplicate_template_warnings}{logical; whether to display a warning
-if multiple templates will be assigned to the same row of
-\code{get_dictionary(dictionary)}.}
+\item{show_warnings}{logical; whether to display warnings.}
 }
 \value{
 a modified \code{dictionary}.
 }
 \description{
 Add label or description templates to a \code{DataDictionary}.
+Templates allow you to store and re-use text with placeholders, making it
+easier to describe multiple variables with similar labels and/or
+descriptions (see examples).
 }
 \examples{
 library(perinary)
