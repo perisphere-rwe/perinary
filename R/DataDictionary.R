@@ -899,11 +899,18 @@ DataDictionary <- R6Class(
 
         }
 
-        if(i %in% nominal_variables && apply_category_labels){
-          x[[i]] %<>%
-            self$translate_categories(names = i,
-                                      to_factor = nominals_to_factor,
-                                      drop_unused_levels = drop_unused_levels)
+        if(i %in% nominal_variables){
+
+          if(apply_category_labels){
+            x[[i]] %<>%
+              self$translate_categories(names = i,
+                                        to_factor = nominals_to_factor,
+                                        drop_unused_levels = drop_unused_levels)
+          } else if (nominals_to_factor) {
+            x[[i]] %<>%
+              factor(levels = self$variables[[i]]$get_category_levels())
+          }
+
         }
 
         if(apply_variable_labels){
