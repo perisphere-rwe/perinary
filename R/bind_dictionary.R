@@ -119,9 +119,9 @@ right_bind <- function(..., .list = NULL,
 
   # keep the order of the x dictionary
   if(drop_unmatched_variables){
-    combined_vars <- combined_vars[c(names(vars_x), vars_y_unmatched)]
-  } else {
     combined_vars <- combined_vars[names(vars_x)]
+  } else {
+    combined_vars <- combined_vars[c(names(vars_x), vars_y_unmatched)]
   }
 
   DataDictionary$new(combined_vars)
