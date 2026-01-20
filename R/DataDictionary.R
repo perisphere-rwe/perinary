@@ -823,6 +823,45 @@ DataDictionary <- R6Class(
       self$category_key
     },
 
+    set_variable_order = function(...,
+                                  .before,
+                                  .after){
+
+      null_before <- rlang::quo_is_null(.before)
+      null_after <- rlang::quo_is_null(.after)
+
+      if(!null_before && !null_after) {
+        warning("Only one of `.before` and `.after` can be specified.",
+                " The `.after` input will be ignored.",
+                call. = FALSE)
+      }
+
+      tmp_data <- matrix(data = 0,
+                         nrow = 1,
+                         ncol = length(self$variables),
+                         dimnames = list(rows=NULL,
+                                         cols = names(self$variables))) %>%
+        tibble::as_tibble()
+
+      if(!null_before){
+        new_order <-
+          names(dplyr::relocate(tmp_data, ..., .before = !!.before))
+      } else if (!null_after){
+        new_order <-
+          names(dplyr::relocate(tmp_data, ..., .after = !!.after))
+      } else {
+        new_order <-
+          names(dplyr::relocate(tmp_data, ...))
+      }
+
+
+      self$variables <- self$variables[new_order]
+      self$dictionary <- private$create_dictionary(self$variables)
+      self$category_key <- private$create_category_key(self$variables)
+      self
+
+    },
+
     index = function(data, names = 'name', levels = 'level'){
 
       name_sort <- factor(data[[names]],

@@ -233,6 +233,65 @@ set_category_labels <- function(dictionary, ..., .list = NULL){
 }
 
 
+#' Modify order of variables in a data dictionary
+#'
+#'  This is a thin wrapper for using [dplyr::relocate] to set the order
+#'  of variables in a `r roxy_describe_dd()`. The inputs (apart from
+#'  `dictionary`) are named and interpreted exactly as they are in
+#'  [dplyr::relocate]. The variables will be reordered as specified in the
+#'  dictionary returned.
+#'
+#'  The order of variables in the dictionary determines the order of
+#'  results when indexing functions are applied, such as [index_terms].
+#'  Setting the order of variables to match their expected order of
+#'  presentation in tables can help streamline table generation (see
+#'  examples.)
+#'
+#' @param dictionary `r roxy_describe_dd()`
+#' @param ...,.before,.after see [relocate documentation][dplyr::relocate]
+#'
+#' @details
+#' Additional details...
+#'
+#'
+#' @examples
+#'
+#' dd_ordered <- as_data_dictionary(iris) %>%
+#'   set_variable_order(Species, .before = Sepal.Length) %>%
+#'   set_variable_order(ends_with("Length"), .after = Petal.Width)
+#'
+#' set_default_dictionary(dd_ordered)
+#'
+#' # index_terms() is using the order of variables in `dd_ordered` to
+#' # return a dataframe sorted the same way as `dd_ordered` is. Note
+#' # this also respects the ordering of categories within variables,
+#' # which is not straightforward to do with the usual dplyr::arrange()
+#'
+#' lm(Sepal.Length ~ ., data = iris) %>%
+#'   broom::tidy() %>%
+#'   dplyr::filter(term != "(Intercept)") %>%
+#'   append_term_key() %>%
+#'   index_terms()
+#'
+#'
+#' @export
+#'
+#' @importFrom rlang enquo
+#'
+set_variable_order <- function(dictionary,
+                               ...,
+                               .before = NULL,
+                               .after = NULL){
+
+  out <- dictionary$clone(deep = dictionary$copy_on_modify)
+
+  out$set_variable_order(...,
+                         .before = enquo(.before),
+                         .after = enquo(.after))
+
+}
+
+
 #' @rdname set_labels
 #'
 #' @importFrom checkmate assert_class
@@ -419,7 +478,6 @@ set_description_templates <- function(dictionary,
     show_warnings = show_warnings
   )
 }
-
 
 #' @param field character; the field of the data dictionary that will receive
 #'   the templates. Either "label" or "description".
