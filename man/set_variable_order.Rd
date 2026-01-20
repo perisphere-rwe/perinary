@@ -24,8 +24,6 @@ results when indexing functions are applied, such as \link{index_terms}.
 Setting the order of variables to match their expected order of
 presentation in tables can help streamline table generation (see
 examples.)
-
-Additional details...
 }
 \examples{
 

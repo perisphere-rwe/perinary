@@ -250,9 +250,6 @@ set_category_labels <- function(dictionary, ..., .list = NULL){
 #' @param dictionary `r roxy_describe_dd()`
 #' @param ...,.before,.after see [relocate documentation][dplyr::relocate]
 #'
-#' @details
-#' Additional details...
-#'
 #'
 #' @examples
 #'
