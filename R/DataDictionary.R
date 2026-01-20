@@ -461,7 +461,7 @@ NominalVariable <- R6Class(
 # LogicalVariable ----
 
 #' @importFrom checkmate assert_character assert_logical
-LogicalVariable <- R6::R6Class(
+LogicalVariable <- R6Class(
   "LogicalVariable",
   inherit = DataVariable,
 
@@ -596,13 +596,13 @@ is_data_dictionary <- function(x){
 
 #' @importFrom checkmate assert_character assert_choice
 #' @importFrom cli cli_abort cli_warn
-#' @importFrom dplyr arrange filter first group_by mutate pull recode select
-#'   ungroup
+#' @importFrom dplyr arrange filter first group_by mutate pull relocate recode
+#'   select ungroup
 #' @importFrom magrittr divide_by
 #' @importFrom purrr compact discard imap_dfr map map2 map_chr map_lgl reduce
-#' @importFrom rlang !!! is_empty set_names warn
+#' @importFrom rlang !!! is_empty quo_is_null set_names warn
 #' @importFrom stats na.omit
-#' @importFrom tibble enframe tibble
+#' @importFrom tibble as_tibble enframe tibble
 #' @importFrom tidyr nest unnest
 DataDictionary <- R6Class(
 
@@ -827,8 +827,8 @@ DataDictionary <- R6Class(
                                   .before,
                                   .after){
 
-      null_before <- rlang::quo_is_null(.before)
-      null_after <- rlang::quo_is_null(.after)
+      null_before <- quo_is_null(.before)
+      null_after <- quo_is_null(.after)
 
       if(!null_before && !null_after) {
         warning("Only one of `.before` and `.after` can be specified.",
@@ -841,17 +841,17 @@ DataDictionary <- R6Class(
                          ncol = length(self$variables),
                          dimnames = list(rows=NULL,
                                          cols = names(self$variables))) %>%
-        tibble::as_tibble()
+        as_tibble()
 
       if(!null_before){
         new_order <-
-          names(dplyr::relocate(tmp_data, ..., .before = !!.before))
+          names(relocate(tmp_data, ..., .before = !!.before))
       } else if (!null_after){
         new_order <-
-          names(dplyr::relocate(tmp_data, ..., .after = !!.after))
+          names(relocate(tmp_data, ..., .after = !!.after))
       } else {
         new_order <-
-          names(dplyr::relocate(tmp_data, ...))
+          names(relocate(tmp_data, ...))
       }
 
 
