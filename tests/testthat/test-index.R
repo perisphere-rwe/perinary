@@ -5,7 +5,9 @@ test_that(
 
     dd_iris <- as_data_dictionary(iris) %>%
       set_category_order(Species = c("setosa")) %>%
-      set_category_labels(Species = c(versicolor = "Versi"))
+      set_category_labels(Species = c(versicolor = "Versi")) %>%
+      set_variable_order(Species, .before = 1) %>%
+      set_variable_order(ends_with("Length"), .after = Species)
 
     set_default_dictionary(dd_iris)
 

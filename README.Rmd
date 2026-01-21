@@ -169,6 +169,19 @@ dd_peng
 
 ```
 
+Modify variable order for any variable with `set_variable_order()`. This impacts the order in which variables will appear after calling `index_terms()` (more on this in the next section)
+
+```{r}
+
+# moves the specified category or categories to the front, putting the 
+# remaining categories behind with the same relative order to each other
+
+dd_peng <- dd_peng %>% 
+  set_variable_order(species, .before = 1)
+
+dd_peng
+
+```
 
 
 ## Modify objects using dictionaries
@@ -272,7 +285,7 @@ fit_appended
 
 ```
 
-Second, we use `index_terms` to re-order the rows of these data based on the order they appear in the dictionary. This is helpful when you want variables to be listed in consistent order throughout your report.
+Second, we use `index_terms` to re-order the rows of these data based on the order they appear in the dictionary. This is helpful when you want variables to be listed in consistent order throughout your report. This is also where our earlier use of `set_variable_order()` has relevance - note how the variable ordering we set there is reflected in this table (i.e., species is first).
 
 ```{r}
 

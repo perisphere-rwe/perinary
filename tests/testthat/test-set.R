@@ -1,4 +1,8 @@
 
+
+
+
+
 test_that(
 
   desc = "Set using ... and .list", code = {
@@ -18,7 +22,8 @@ test_that(
       set_units(number = 'units',
                 integer = 'units') %>%
       set_divby_modeling(number = 10,
-                         integer = 5)
+                         integer = 5) %>%
+      set_variable_order(integer, .after = logical)
 
     dd_set_dotlist <- dd_test %>%
       set_labels(.list = list(number = "A double value",
@@ -35,17 +40,21 @@ test_that(
       set_units(.list = list(number = 'units',
                              integer = 'units')) %>%
       set_divby_modeling(.list = list(number = 10,
-                                      integer = 5))
+                                      integer = 5)) %>%
+      set_variable_order(integer, .after = logical)
 
     expect_equal(dd_set_dotdots, dd_set_dotlist)
 
     # verify that empty calls to set_whatever won't affect the dictionary
     expect_warning(set_labels(dd_set_dotdots))
 
-
     # verify that the dictionary table is modified by set functions
     expect_equal(dd_set_dotdots$dictionary$label[1],
                  c(number = "A double value"))
+
+    # verify that the dictionary order was modified
+    expect_equal(dd_set_dotdots$dictionary$name[2:3],
+                 c('logical' = 'logical', 'integer' = 'integer'))
 
     # verify that dictionary variables are modified by set functions
     expect_equal(dd_set_dotdots$variables$integer$get_label(),
@@ -70,6 +79,9 @@ test_that(
 
     expect_error(set_units(dd_test, factor = 'ohno'),
                  regexp = 'cannot be specified for Nominal variables')
+
+    expect_error(set_variable_order(dd_test, not_there, .before = integer),
+                 regexp = 'exist')
 
     expect_error(set_divby_modeling(dd_test, factor = 'ohno'),
                  regexp = 'cannot be specified for Nominal variables')
