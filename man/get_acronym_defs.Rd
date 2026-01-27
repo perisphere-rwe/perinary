@@ -12,6 +12,8 @@ get_acronym_defs(dictionary, acronyms = NULL, show_warnings = TRUE)
 \item{acronyms}{\code{NULL} or a character vector of acronyms. One or more of
 \code{names(dictionary$get_acronyms())}. If \code{NULL}, all acronyms in \code{dictionary}
 will be selected.}
+
+\item{show_warnings}{logical; whether to display warnings.}
 }
 \value{
 a character string of the form "acronym1 = acronym 1 description;

@@ -518,6 +518,7 @@ get_dictionary <- function(dictionary,
 #' @param acronyms `NULL` or a character vector of acronyms. One or more of
 #'   `names(dictionary$get_acronyms())`. If `NULL`, all acronyms in `dictionary`
 #'   will be selected.
+#' @param show_warnings logical; whether to display warnings.
 #'
 #' @returns a character string of the form "acronym1 = acronym 1 description;
 #'   acronym2 = acronym 2 description."
