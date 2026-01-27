@@ -495,6 +495,10 @@ set_templates <- function(dictionary,
   field <- match.arg(field, choices = c("template_label",
                                         "template_description"))
 
+  if (!is.logical(show_warnings) && length(show_warnings) == 1L) {
+    stop("show_warnings must be TRUE or FALSE.")
+  }
+
   dots <- c(...)
 
   dot_classes <- map_chr(dots, class)
@@ -631,4 +635,116 @@ set_templates <- function(dictionary,
   )
 
   return(dictionary)
+}
+
+
+#' @title Set and Remove Acronyms
+#'
+#' @description Add acronyms and their descriptions to a `DataDictionary`.
+#'   Acronyms can also be removed if they are no longer used.
+#'
+#' @param dictionary `r roxy_describe_dd()`
+#' @param ... one or more comma-separated name-value pairs. Pairs are of the
+#'   form of `acronym = "spelled-out acronym"` or `"acronym" = "spelled-out
+#'   acronym"`.
+#' @param show_warnings logical; whether to display warnings.
+#'
+#' @returns A modified `dictionary`.
+#'
+#' @seealso \code{\link{get_acronym_defs}}
+#'
+#' @export
+#'
+#' @importFrom cli cli_abort
+#' @importFrom rlang abort warn
+#'
+#' @examples
+#' dd <- as_data_dictionary(iris)
+#' dd$get_acronyms() # NULL
+#'
+#' dd <- set_acronyms(dictionary = dd,
+#'                    SBP = "systolic blood pressure",
+#'                    DBP = "diastolic blood pressure")
+#'
+#' dd$get_acronyms()
+
+set_acronyms <- function(dictionary,
+                         ...,
+                         show_warnings = TRUE) {
+  if (!is.logical(show_warnings) && length(show_warnings) == 1L) {
+    stop("show_warnings must be TRUE or FALSE.")
+  }
+
+  dots <- list(...)
+
+  if (length(dots) == 0L) {
+    if (show_warnings) {
+      warn(
+        message = "No acronyms provided. Returning the original dictionary."
+      )
+    }
+
+    return(dictionary)
+  }
+
+  throw_error <- map_lgl(dots, function(dot_i) {
+    !is.null(dot_i) && (
+      !is.vector(dot_i, mode = "character") ||
+        length(dot_i) != 1L
+    )
+  })
+
+  throw_error <- any(throw_error) || is.null(names(dots))
+
+  if (throw_error) {
+    cli_abort(
+      message = paste0(
+        "... must be one or more name = value pairs, where value is NULL or ",
+        "a length 1 character vector. Please see the examples section of ",
+        "{.topic perinary::set_acronyms} to learn more."
+      )
+    )
+  }
+
+  # NULL or a named character vector
+  acronyms <- dictionary$get_acronyms()
+
+  # If an acronym is set to NULL, remove it
+  null_types <- which(map_chr(dots, typeof) == "NULL")
+
+  if (length(acronyms) && length(null_types)) {
+    acronyms <- acronyms[!names(acronyms) %in% names(dots)[null_types]]
+  }
+
+  dots[null_types] <- NULL
+
+  empty_dots <- length(dots) == 0L
+
+  dots <- unlist(dots, recursive = FALSE, use.names = TRUE)
+
+  # Check for duplicate acronyms
+  if (show_warnings & !empty_dots) {
+    assert_inputs_unique(dots)
+  }
+
+  # Update/add acronyms
+  if (!empty_dots) {
+    # If there are any duplicates, the last description will be used
+    acronyms[names(dots)] <- dots
+  }
+
+  # Empty list should be NULL. This can happen if all acronyms were set to NULL
+  if (length(acronyms) == 0L) {
+    acronyms <- NULL
+  }
+
+  if (length(acronyms)) {
+    acronyms <- acronyms[order(names(acronyms))] # sort
+  }
+
+  out <- dictionary$clone(deep = dictionary$copy_on_modify)
+
+  out$acronyms <- acronyms
+
+  return(out)
 }

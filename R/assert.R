@@ -256,6 +256,26 @@ assert_named_list <- function(x) {
 
 
 
+#' @importFrom dplyr mutate filter pull
+#' @importFrom rlang is_empty
+#' @importFrom tibble enframe
+#'
+#' @noRd
+assert_inputs_unique <- function(key){
 
+  duplicated_inputs <- table(names(key)) %>%
+    enframe() %>%
+    mutate(value = as.numeric(value)) %>%
+    filter(value > 1) %>%
+    pull(name)
 
+  if(!is_empty(duplicated_inputs)){
+    warning("duplicated input name(s): \n\n",
+            paste(paste("-", duplicated_inputs), collapse = "\n"),
+            "\n\nInputs should only need to be specified once.",
+            call. = FALSE
+    )
+  }
+
+}
 
