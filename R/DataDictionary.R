@@ -27,6 +27,9 @@ DataVariable <- R6Class(
     units = NULL,
     divby_modeling = NULL,
 
+    # Not necessarily associated with any variable
+    acronyms = NULL,
+
     # Checkers
 
     check_input = function(field, value){
@@ -40,7 +43,8 @@ DataVariable <- R6Class(
              "units"                = self$check_units(value),
              "divby_modeling"       = self$check_divby_modeling(value),
              "category_level"       = self$check_category_levels(value),
-             "category_label"       = self$check_category_labels(value))
+             "category_label"       = self$check_category_labels(value),
+             "acronym"              = self$check_acronyms(value))
     },
 
     check_name = function(value) {
@@ -135,6 +139,15 @@ DataVariable <- R6Class(
 
     },
 
+    check_acronyms = function(value) {
+      if (!is.null(value)) {
+        assert_valid_field(self$name,
+                           self$type,
+                           field = "acronyms",
+                           suggest = "Nominal")
+      }
+    },
+
     # Retrievers
     get_element = function(x){
       self[[x]]
@@ -164,6 +177,7 @@ DataVariable <- R6Class(
     set_divby_modeling = function(value) self$set_element("divby_modeling", value),
     set_category_levels = function(value) self$set_element("category_levels", value),
     set_category_labels = function(value) self$set_element("category_labels", value),
+    set_acronyms = function(value) self$set_element("acronyms", value),
 
     # return the value (can return NULL)
     get_name = function() self$get_element("name"),
@@ -176,6 +190,7 @@ DataVariable <- R6Class(
     get_divby_modeling = function() self$get_element("divby_modeling"),
     get_category_levels = function() self$get_element("category_levels"),
     get_category_labels = function() self$get_element("category_labels"),
+    get_acronyms = function() self$get_element("acronyms"),
 
     get_label_and_unit = function(sep = ', ') self$fetch_label(),
     get_label_divby = function() self$fetch_label(),
@@ -621,6 +636,9 @@ DataDictionary <- R6Class(
     # manage modification by reference
     copy_on_modify = NULL,
 
+    # Named vector of acronyms (NULL by default)
+    acronyms = NULL,
+
     # Constructor
     initialize = function(vars, copy_on_modify = TRUE) {
 
@@ -821,6 +839,10 @@ DataDictionary <- R6Class(
 
     get_category_key = function(){
       self$category_key
+    },
+
+    get_acronyms = function(){
+      self$acronyms
     },
 
     set_variable_order = function(...,
@@ -1407,21 +1429,8 @@ DataDictionary <- R6Class(
 
     },
 
-    check_inputs_unique = function(key){
-
-      duplicated_inputs <- table(names(key)) %>%
-        enframe() %>%
-        mutate(value = as.numeric(value)) %>%
-        filter(value > 1) %>%
-        pull(name)
-
-      if(!is_empty(duplicated_inputs)){
-        warning("duplicated input name(s): \n\n",
-                paste(paste("-", duplicated_inputs), collapse = "\n"),
-                "\n\nInputs should only need to be specified once."
-        )
-      }
-
+    check_inputs_unique = function(key) {
+      assert_inputs_unique(key)
     },
 
     translate_categories_internal = function(x, .list, name){

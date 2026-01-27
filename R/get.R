@@ -507,3 +507,106 @@ get_dictionary <- function(dictionary,
 
   return(out)
 }
+
+
+#' @title Get Acronym Definitions
+#'
+#' @description Get nicely formatted acronym definitions. Primarily intended for
+#'   use in footnotes.
+#'
+#' @param dictionary `r roxy_describe_dd()`
+#' @param acronyms `NULL` or a character vector of acronyms. One or more of
+#'   `names(dictionary$get_acronyms())`. If `NULL`, all acronyms in `dictionary`
+#'   will be selected.
+#' @param show_warnings logical; whether to display warnings.
+#'
+#' @returns a character string of the form "acronym1 = acronym 1 description;
+#'   acronym2 = acronym 2 description."
+#'
+#' @author Tyler Sagendorf
+#'
+#' @export
+#'
+#' @importFrom cli cli_abort
+#' @importFrom rlang abort warn
+#'
+#' @examples
+#' dd <- as_data_dictionary(iris)
+#' dd$get_acronyms() # NULL
+#'
+#' dd <- set_acronyms(dictionary = dd,
+#'                    BP = "blood pressure",
+#'                    SBP = "systolic blood pressure",
+#'                    DBP = "diastolic blood pressure")
+#'
+#' dd$get_acronyms()
+#'
+#' get_acronym_defs(dd, acronyms = NULL) # use all acronyms (default)
+#' get_acronym_defs(dd, acronyms = c("DBP", "BP"))
+#'
+#' # Attempt to select an acronym that was not set
+#' get_acronym_defs(dd, acronyms = "FOO") # character(0L)
+#'
+get_acronym_defs <- function(dictionary,
+                             acronyms = NULL,
+                             show_warnings = TRUE) {
+  if (!is.logical(show_warnings) && length(show_warnings) == 1L) {
+    abort(
+      message = "show_warnings must be TRUE or FALSE."
+    )
+  }
+
+  if (!is.null(acronyms) && !is.vector(acronyms, mode = "character")) {
+    abort(
+      message = "acronyms must be NULL or a character vector."
+    )
+  }
+
+  out <- dictionary$get_acronyms()
+
+  if (is.null(out)) {
+    cli_abort(
+      message = paste0(
+        "No acronyms in dictionary. Use {.topic perinary::set_acronyms} to ",
+        "set the acronyms first."
+      )
+    )
+  }
+
+  if (is.null(acronyms)) {
+    acronyms <- names(out)
+  }
+
+  keep <- intersect(names(out), acronyms)
+
+  if (length(keep) == 0L) {
+    if (show_warnings) {
+      warn(
+        message = "No acronyms match names(dictionary$get_acronyms())."
+      )
+    }
+
+    return(character(0L))
+  }
+
+  if (show_warnings && length(keep) != length(acronyms)) {
+    missing_acronyms <- setdiff(acronyms, keep)
+
+    warn(
+      message = paste0(
+        "The following acronyms are provided, but not present in ",
+        "names(dictionary$get_acronyms()): ",
+        paste(missing_acronyms, collapse = ", ")
+      )
+    )
+  }
+
+  # Acronyms were already sorted by set_acronyms()
+  out <- out[keep]
+
+  out <- paste(names(out), out, sep = " = ")
+  out <- paste(out, collapse = "; ")
+  out <- paste0(out, ".")
+
+  return(out)
+}

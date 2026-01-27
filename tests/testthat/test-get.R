@@ -78,5 +78,61 @@ test_that(
 )
 
 
+# get_acronym_defs ----
+test_that(
+  desc = "Acronyms must be set before getting definitions",
+  code = {
+    # An error is thrown when there are no acronyms
+    expect_error(
+      get_acronym_defs(dd_test), # dd_test has no acronyms
+      regexp = "No acronyms"
+    )
 
+    # A warning is issued when there are acronyms, but none are selected.
+    # get_acronym_defs should also return an empty character vector.
+    dd_1 <- set_acronyms(dictionary = dd_test, FOO = "foo", BAR = "bar")
 
+    expect_warning(
+      defs <- get_acronym_defs(dd_1, acronyms = "invalid"),
+      regexp = "No acronyms match names"
+    )
+
+    expect_warning(
+      get_acronym_defs(dd_1, acronyms = character(0L)),
+      regexp = "No acronyms match names"
+    )
+
+    expect_identical(
+      defs,
+      character(0L)
+    )
+  }
+)
+
+test_that(
+  desc = "Acronym definitions are correct and formatted properly",
+  code = {
+    dd_1 <- set_acronyms(dictionary = dd_test, FOO = "foo", BAR = "bar")
+
+    # Acronyms should be in alphabetic order (handled by set_acronyms)
+    expected <- "BAR = bar; FOO = foo."
+
+    # Select all acronyms
+    expect_identical(
+      get_acronym_defs(dd_1),
+      expected
+    )
+
+    # Order doesn't matter
+    expect_identical(
+      get_acronym_defs(dd_1, acronyms = c("FOO", "BAR")),
+      expected
+    )
+
+    # Select a single acronym
+    expect_identical(
+      get_acronym_defs(dd_1, acronyms = "FOO"),
+      "FOO = foo."
+    )
+  }
+)

@@ -251,3 +251,74 @@ test_that(
   }
 )
 
+
+# set_acronyms ----
+
+test_that(
+  desc = "... is one or more name = value pairs.",
+  code = {
+    err <- "one or more name = value pairs"
+
+    # Expected: acronym = "spelled-out acronym"
+    expect_error(
+      set_acronyms(dd_test, FOO ~ "description"),
+      regexp = err
+    )
+
+    expect_no_error(
+      set_acronyms(dd_test, FOO = "description")
+    )
+
+    expect_no_error(
+      set_acronyms(dd_test, "FOO" = "description")
+    )
+
+    expect_no_error(
+      set_acronyms(dd_test, FOO = "foo", BAR = "bar")
+    )
+  }
+)
+
+test_that(
+  desc = "acronyms can be updated and removed.",
+  code = {
+    dd_1 <- set_acronyms(dd_test, FOO = "description", BAR = "description")
+
+    # Acronyms should be sorted alphabetically by name
+    expect_identical(
+      names(dd_1$get_acronyms()),
+      sort(names(dd_1$get_acronyms()))
+    )
+
+    # Update acronym (this shouldn't happen, in practice)
+    expect_no_error(
+      dd_1 <- set_acronyms(dd_1, BAR = "bar")
+    )
+
+    expect_identical(
+      "bar",
+      dd_1$get_acronyms()[["BAR"]]
+    )
+
+    # Remove FOO
+    expect_no_error(
+      dd_1 <- set_acronyms(dd_1, FOO = NULL)
+    )
+
+    expect_identical(
+      "BAR",
+      names(dd_1$get_acronyms()) # BAR remains
+    )
+
+    # Remove BAR (no more acronyms)
+    expect_no_error(
+      dd_1 <- set_acronyms(dd_1, BAR = NULL)
+    )
+
+    expect_null(
+      dd_1$get_acronyms()
+    )
+
+  }
+)
+
