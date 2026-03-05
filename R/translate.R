@@ -171,6 +171,11 @@ translate_data <- function(x, ...,
 #' @param .list For `translate_names()`: an optional **named** character
 #'   vector mapping `old_name = "Label"`. When supplied, it takes precedence
 #'   over the dictionary lookup (useful for ad-hoc overrides).
+#' @param allow_duplicates a logical value indicating whether to allow
+#'  a single label to be attached to multiple variable names. This is
+#'  `FALSE` by default because allowing duplicate labels can cause unexpected
+#'  errors in downstream applications. Use with caution.
+#'
 #'
 #' @importFrom checkmate assert_character assert_choice assert_list
 #'   assert_logical
@@ -182,11 +187,13 @@ translate_names <- function(x, ...,
                             units = "none",
                             to_factor = FALSE,
                             warn_unmatched = TRUE,
+                            allow_duplicates = FALSE,
                             drop_unused_levels = FALSE){
 
   assert_character(units, len = 1, any.missing = FALSE)
   assert_choice(units, choices=c('none','descriptive','model'))
   assert_logical(warn_unmatched, len = 1)
+  assert_logical(allow_duplicates, len = 1)
   assert_list(.list, types='character', names='named', null.ok=TRUE)
 
   infer_meta(dictionary)$translate_names(
@@ -196,6 +203,7 @@ translate_names <- function(x, ...,
     units = units,
     to_factor = to_factor,
     warn_unmatched = warn_unmatched,
+    allow_duplicates = allow_duplicates,
     drop_unused_levels = drop_unused_levels
   )
 

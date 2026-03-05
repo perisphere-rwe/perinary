@@ -968,6 +968,7 @@ DataDictionary <- R6Class(
                                units = "none",
                                to_factor = FALSE,
                                warn_unmatched = TRUE,
+                               allow_duplicates = FALSE,
                                drop_unused_levels = FALSE){
 
       x_uni <- unique(na.omit(x))
@@ -985,9 +986,39 @@ DataDictionary <- R6Class(
           message = c(
             "i" = "Unique values in `x` could not be matched with labels in `dictionary`:",
             set_names(unmatched, "i"),
-            "i" = "To disable this warning, set `warn_unmatched = FALSE` in `translate()`."
+            "i" = "To disable this warning, set `warn_unmatched = FALSE` in `translate_names()`."
           )
         )
+      }
+
+      overlapped <- intersect(x_uni, names(translater))
+
+      dups <- translater[duplicated(translater[overlapped])]
+
+      if(!is_empty(dups)){
+
+        if(!allow_duplicates){
+          dups_explained <- dups %>%
+            imap_chr(
+              ~ names(translater)[translater==.x] %>%
+                paste_quotes() %>%
+                paste_collapse() %>%
+                paste("The label", paste_quotes(.x),
+                      "is being assigned to", .)
+            ) %>%
+            set_names(nm = "x")
+
+          cli_abort(
+            message = c(
+              "Detected one-to-many relationship between labels and names",
+              dups_explained,
+              "i" = "Set `allow_duplicates = TRUE` to bypass, but this may cause other perinary functions to fail unexpectedly",
+              "v" = "Modify labels with `set_labels()` or remove one of the duplicated names from `x` to fix."
+            ),
+            call = NULL
+          )
+        }
+
       }
 
       if(to_factor){
@@ -1475,7 +1506,9 @@ DataDictionary <- R6Class(
 
       x <- x %>%
         recode(!!!translater) %>%
-        factor(levels = c(translater, unmatched))
+        # a duplicate level can occasionally squeak in but only if
+        # it is explicitly allowed by the user or if it is harmless
+        factor(levels = unique(c(translater, unmatched)))
 
       if (drop_unused_levels) {
         x <- droplevels(x)
