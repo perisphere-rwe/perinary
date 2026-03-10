@@ -4,7 +4,13 @@
 \alias{get_acronym_defs}
 \title{Get Acronym Definitions}
 \usage{
-get_acronym_defs(dictionary, acronyms = NULL, show_warnings = TRUE)
+get_acronym_defs(
+  dictionary,
+  acronyms = NULL,
+  sep = "; ",
+  sep_last = NULL,
+  show_warnings = TRUE
+)
 }
 \arguments{
 \item{dictionary}{A \link[=data_dictionary]{data dictionary} object}
@@ -12,6 +18,11 @@ get_acronym_defs(dictionary, acronyms = NULL, show_warnings = TRUE)
 \item{acronyms}{\code{NULL} or a character vector of acronyms. One or more of
 \code{names(dictionary$get_acronyms())}. If \code{NULL}, all acronyms in \code{dictionary}
 will be selected.}
+
+\item{sep}{character; separator for the acronyms.}
+
+\item{sep_last}{\code{NULL} or character; the separator for the last two acronyms.
+If \code{NULL}, \code{sep} will be used instead.}
 
 \item{show_warnings}{logical; whether to display warnings.}
 }

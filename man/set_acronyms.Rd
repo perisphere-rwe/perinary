@@ -4,13 +4,16 @@
 \alias{set_acronyms}
 \title{Set and Remove Acronyms}
 \usage{
-set_acronyms(dictionary, ..., show_warnings = TRUE)
+set_acronyms(dictionary, ..., .list = NULL, show_warnings = TRUE)
 }
 \arguments{
 \item{dictionary}{A \link[=data_dictionary]{data dictionary} object}
 
 \item{...}{one or more comma-separated name-value pairs. Pairs are of the
 form of \code{acronym = "spelled-out acronym"} or \code{"acronym" = "spelled-out acronym"}.}
+
+\item{.list}{a list of name-value pairs. This argument is optional and
+intended to be used in place of \code{...} for programmatic setting of acronyms.}
 
 \item{show_warnings}{logical; whether to display warnings.}
 }

@@ -261,18 +261,18 @@ assert_named_list <- function(x) {
 #' @importFrom tibble enframe
 #'
 #' @noRd
-assert_inputs_unique <- function(key){
+assert_inputs_unique <- function(key, dup_label = "input name(s)"){
 
-  duplicated_inputs <- table(names(key)) %>%
+  duplicated_inputs <- table(key) %>%
     enframe() %>%
     mutate(value = as.numeric(value)) %>%
     filter(value > 1) %>%
     pull(name)
 
   if(!is_empty(duplicated_inputs)){
-    warning("duplicated input name(s): \n\n",
+    warning("duplicated ", dup_label, ": \n\n",
             paste(paste("-", duplicated_inputs), collapse = "\n"),
-            "\n\nInputs should only need to be specified once.",
+            "\n\nInputs should only be specified once.",
             call. = FALSE
     )
   }

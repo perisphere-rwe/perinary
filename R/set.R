@@ -647,6 +647,8 @@ set_templates <- function(dictionary,
 #' @param ... one or more comma-separated name-value pairs. Pairs are of the
 #'   form of `acronym = "spelled-out acronym"` or `"acronym" = "spelled-out
 #'   acronym"`.
+#' @param .list a list of name-value pairs. This argument is optional and
+#'   intended to be used in place of `...` for programmatic setting of acronyms.
 #' @param show_warnings logical; whether to display warnings.
 #'
 #' @returns A modified `dictionary`.
@@ -670,12 +672,16 @@ set_templates <- function(dictionary,
 
 set_acronyms <- function(dictionary,
                          ...,
+                         .list = NULL,
                          show_warnings = TRUE) {
   if (!is.logical(show_warnings) && length(show_warnings) == 1L) {
     stop("show_warnings must be TRUE or FALSE.")
   }
 
-  dots <- list(...)
+  assert_valid_dotdot(..., .list = .list, names_required = TRUE)
+
+  # capture input and plug in templates from dictionary
+  dots <- infer_dotdot(..., .list = .list)
 
   if (length(dots) == 0L) {
     if (show_warnings) {
@@ -724,7 +730,7 @@ set_acronyms <- function(dictionary,
 
   # Check for duplicate acronyms
   if (show_warnings & !empty_dots) {
-    assert_inputs_unique(dots)
+    assert_inputs_unique(names(dots))
   }
 
   # Update/add acronyms

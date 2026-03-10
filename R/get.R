@@ -518,6 +518,9 @@ get_dictionary <- function(dictionary,
 #' @param acronyms `NULL` or a character vector of acronyms. One or more of
 #'   `names(dictionary$get_acronyms())`. If `NULL`, all acronyms in `dictionary`
 #'   will be selected.
+#' @param sep character; separator for the acronyms.
+#' @param sep_last `NULL` or character; the separator for the last two acronyms.
+#'   If `NULL`, `sep` will be used instead.
 #' @param show_warnings logical; whether to display warnings.
 #'
 #' @returns a character string of the form "acronym1 = acronym 1 description;
@@ -549,7 +552,21 @@ get_dictionary <- function(dictionary,
 #'
 get_acronym_defs <- function(dictionary,
                              acronyms = NULL,
+                             sep = "; ",
+                             sep_last = NULL,
                              show_warnings = TRUE) {
+  if (!is.character(sep) || length(sep) != 1L) {
+    abort(
+      message = "sep should be a length 1 character vector."
+    )
+  }
+
+  if (!is.null(sep_last) && (!is.character(sep) || length(sep) != 1L)) {
+    abort(
+      message = "sep_last should be NULL or a length 1 character vector."
+    )
+  }
+
   if (!is.logical(show_warnings) && length(show_warnings) == 1L) {
     abort(
       message = "show_warnings must be TRUE or FALSE."
@@ -605,7 +622,17 @@ get_acronym_defs <- function(dictionary,
   out <- out[keep]
 
   out <- paste(names(out), out, sep = " = ")
-  out <- paste(out, collapse = "; ")
+
+  sep_last <- sep_last %||% sep
+
+  if (length(out) > 1L) {
+    # Split into first n - 1 acronyms and the n-th acronym
+    out_head <- paste(setdiff(out, out[length(out)]), collapse = sep)
+    out_last <- out[length(out)]
+
+    out <- paste(out_head, out_last, sep = sep_last)
+  }
+
   out <- paste0(out, ".")
 
   return(out)

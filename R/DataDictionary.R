@@ -1415,7 +1415,7 @@ DataDictionary <- R6Class(
     },
 
     check_inputs_unique = function(key) {
-      assert_inputs_unique(key)
+      assert_inputs_unique(names(key))
     },
 
     translate_categories_internal = function(x, .list, name){

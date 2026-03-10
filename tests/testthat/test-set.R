@@ -262,7 +262,7 @@ test_that(
     # Expected: acronym = "spelled-out acronym"
     expect_error(
       set_acronyms(dd_test, FOO ~ "description"),
-      regexp = err
+      regexp = "unnamed input"
     )
 
     expect_no_error(
