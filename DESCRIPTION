@@ -1,7 +1,7 @@
 Package: perinary
 Title: Data Dictionaries
-Version: 0.0.1
-Date: 2026-01-08
+Version: 0.0.2
+Date: 2026-03-10
 Authors@R: 
     c(
       person("Byron", "Jaeger", email = "bcjaeger@perisphere-rwe.com", 

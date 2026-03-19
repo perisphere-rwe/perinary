@@ -621,6 +621,9 @@ DataDictionary <- R6Class(
     # manage modification by reference
     copy_on_modify = NULL,
 
+    # Named vector of acronyms (NULL by default)
+    acronyms = NULL,
+
     # Constructor
     initialize = function(vars, copy_on_modify = TRUE) {
 
@@ -821,6 +824,10 @@ DataDictionary <- R6Class(
 
     get_category_key = function(){
       self$category_key
+    },
+
+    get_acronyms = function(){
+      self$acronyms
     },
 
     set_variable_order = function(...,
@@ -1407,21 +1414,8 @@ DataDictionary <- R6Class(
 
     },
 
-    check_inputs_unique = function(key){
-
-      duplicated_inputs <- table(names(key)) %>%
-        enframe() %>%
-        mutate(value = as.numeric(value)) %>%
-        filter(value > 1) %>%
-        pull(name)
-
-      if(!is_empty(duplicated_inputs)){
-        warning("duplicated input name(s): \n\n",
-                paste(paste("-", duplicated_inputs), collapse = "\n"),
-                "\n\nInputs should only need to be specified once."
-        )
-      }
-
+    check_inputs_unique = function(key) {
+      assert_inputs_unique(names(key))
     },
 
     translate_categories_internal = function(x, .list, name){
