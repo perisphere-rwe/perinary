@@ -82,7 +82,7 @@ suppressing the warning.
 
 \itemize{
 \item Functions never modify inputs.
-\item Errors use \code{rlang::abort()} with actionable guidance.
+\item Errors use \code{cli::cli_abort()} with actionable guidance.
 \item Variable names in messages are shown explicitly (e.g., \code{date_measure}).
 }
 }

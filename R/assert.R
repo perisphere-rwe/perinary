@@ -15,7 +15,7 @@
 #' messages consistent and informative within the package.
 #'
 #' @section Conventions:
-#' - Errors use `rlang::abort()` with a bulleted message (via `glue`).
+#' - Errors use `cli::cli_abort()` with a bulleted message.
 #' - Messages reference variable names and fields explicitly (e.g.,
 #'   `` `date_measure` ``).
 #' - Helpers do not modify inputs; they only validate and signal.
@@ -38,8 +38,8 @@ NULL
 #' `assert_valid_field()` returns `NULL` invisibly on success; otherwise
 #' it aborts with an informative message.
 #'
+#' @importFrom cli cli_abort
 #' @importFrom glue glue
-#' @importFrom rlang abort
 
 assert_valid_field <- function(name, type, field, suggest = NULL){
 
@@ -61,7 +61,7 @@ assert_valid_field <- function(name, type, field, suggest = NULL){
     )
   }
 
-  abort(message = msg, call = NULL)
+  cli_abort(msg)
 
 }
 
@@ -80,8 +80,8 @@ assert_valid_field <- function(name, type, field, suggest = NULL){
 #' `choices`; otherwise it aborts with a bulleted list of unknown values and
 #' the recognized set.
 #'
+#' @importFrom cli cli_abort
 #' @importFrom glue glue
-#' @importFrom rlang abort
 
 assert_in_set <- function(values, choices,
                           value_type = "values",
@@ -101,7 +101,7 @@ assert_in_set <- function(values, choices,
                   {paste_collapse(choices)}")
     )
 
-    abort(message = msg, call = NULL)
+    cli_abort(msg)
 
   }
 
@@ -119,8 +119,8 @@ assert_in_set <- function(values, choices,
 #' `assert_valid_dotdot()` returns `NULL` invisibly; it aborts if both
 #' `...` and `.list` are supplied, and it warns if both are empty.
 #'
+#' @importFrom cli cli_abort cli_warn
 #' @importFrom glue glue
-#' @importFrom rlang abort warn
 
 assert_valid_dotdot <- function(..., .list, names_required = TRUE){
 
@@ -128,8 +128,8 @@ assert_valid_dotdot <- function(..., .list, names_required = TRUE){
   empty_list <- is_empty(.list)
 
   if(!empty_dots && !empty_list){
-    abort(
-      message = c(
+    cli_abort(
+      c(
         "`...` must be empty if `.list` is not `NULL`",
         i = glue("This function can work with either \\
                   unquoted inputs or a list of inputs, \\
@@ -140,8 +140,8 @@ assert_valid_dotdot <- function(..., .list, names_required = TRUE){
   }
 
   if(empty_dots && empty_list){
-    warn(
-      message = c(
+    cli_warn(
+      c(
         i = glue("`...` is empty and so is `.list`. No action can \\
                  be taken when both of these inputs are unspecified.")
       )
@@ -156,7 +156,8 @@ assert_valid_dotdot <- function(..., .list, names_required = TRUE){
 
 }
 
-#' @importFrom rlang abort is_empty
+#' @importFrom cli cli_abort
+#' @importFrom rlang is_empty
 assert_valid_template <- function(x) {
 
   inner <- infer_curlies(x)
@@ -168,12 +169,11 @@ assert_valid_template <- function(x) {
 
   if (any(invalid)) {
     bad_vals <- paste0("{", inner[invalid], "}", collapse = ", ")
-    abort(
-      message = paste0(
+    cli_abort(
+      paste0(
         "Invalid template specification: illegal characters inside ",
         bad_vals
-      ),
-      call = NULL
+      )
     )
   }
 
@@ -257,6 +257,7 @@ assert_named_list <- function(x) {
 
 
 
+#' @importFrom cli cli_warn
 #' @importFrom dplyr mutate filter pull
 #' @importFrom rlang is_empty
 #' @importFrom tibble enframe
@@ -271,11 +272,10 @@ assert_inputs_unique <- function(key){
     pull(name)
 
   if(!is_empty(duplicated_inputs)){
-    warning("duplicated input name(s): \n\n",
-            paste(paste("-", duplicated_inputs), collapse = "\n"),
-            "\n\nInputs should only need to be specified once.",
-            call. = FALSE
-    )
+    cli_warn(c(
+      "Duplicated input name{?s}: {.val {duplicated_inputs}}",
+      "i" = "Inputs should only need to be specified once."
+    ))
   }
 
 }

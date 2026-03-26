@@ -17,7 +17,7 @@
 #' @section Conventions:
 #'
 #' - Functions never modify inputs.
-#' - Errors use `rlang::abort()` with actionable guidance.
+#' - Errors use `cli::cli_abort()` with actionable guidance.
 #' - Variable names in messages are shown explicitly (e.g., `date_measure`).
 #'
 #' @keywords internal
@@ -147,8 +147,7 @@ infer_curlies <- function(x){
 
   # if no matches, throw your custom error
   if (is_empty(matches)) {
-    stop("Invalid template specification: no values in the template appear inside of curly brackets",
-         call. = FALSE)
+    cli_abort("Invalid template specification: no values in the template appear inside of curly brackets.")
   }
 
   # strip braces
@@ -174,7 +173,7 @@ infer_curlies <- function(x){
 #' @seealso [data_dictionary()], [as_data_dictionary()], [set_default_dictionary()]
 #'
 #' @importFrom checkmate assert_class
-#' @importFrom rlang abort
+#' @importFrom cli cli_abort cli_warn
 
 
 infer_meta <- function(dictionary){
@@ -182,11 +181,11 @@ infer_meta <- function(dictionary){
   .dictionary <- dictionary %||% .perinary_internal$dictionary
 
   if(is.null(.dictionary)){
-    abort(
-      message = c(
+    cli_abort(
+      c(
         x = "no dictionary supplied and no dictionary found as default",
-        i = "see `?as_data_dictionary` to convert your data to a dictionary",
-        i = "see `?set_default_dictionary` to store your dictionary as a default"
+        i = "see {.topic as_data_dictionary} to convert your data to a dictionary",
+        i = "see {.topic set_default_dictionary} to store your dictionary as a default"
       )
     )
   }
@@ -227,13 +226,10 @@ infer_overlapping_variables <- function(dictionary, data, warn_unmatched){
 
   if(!is_empty(unmatched_variables) && warn_unmatched){
 
-    msg <- paste0(
-      "dictionary does not contain information for some variables in ",
-      "data: ", paste(unmatched_variables, collapse = ', '),
-      ". To suppress this warning, set `warn_unmatched` to `FALSE`"
-    )
-
-    warning(msg, call. = FALSE)
+    cli_warn(c(
+      "Dictionary does not contain information for some variable{?s} in {.arg data}: {.val {unmatched_variables}}",
+      "i" = "To suppress this warning, set {.code warn_unmatched = FALSE}."
+    ))
 
   }
 

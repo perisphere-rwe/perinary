@@ -27,7 +27,8 @@
 #'   appended reference rows (if missing).
 #'
 #' @importFrom dplyr arrange desc filter full_join if_else mutate rename
-#' @importFrom rlang !! abort set_names
+#' @importFrom cli cli_abort
+#' @importFrom rlang !! set_names
 #' @importFrom tidyr fill
 #'
 #' @export
@@ -58,11 +59,12 @@ append_term_key <- function(data,
   refs_in_terms <- refs[which(refs %in% term_order)]
 
   if (!is_empty(refs_in_terms)){
-    abort(
-      message = c("Reference category detected in model terms",
-                  set_names(refs_in_terms, "x"),
-                  "i" = "Use `translate_data()` on your data before modeling"),
-      call = NULL
+    cli_abort(
+      c(
+        "Reference category detected in model terms",
+        set_names(refs_in_terms, "x"),
+        "i" = "Use {.fn translate_data} on your data before modeling"
+      )
     )
   }
 

@@ -64,8 +64,8 @@ data_dictionary <- function(..., .list = NULL, copy_on_modify = TRUE){
 #'  resulting dictionary.
 #'
 #' @importFrom checkmate assert_data_frame
+#' @importFrom cli cli_warn
 #' @importFrom purrr imap map_lgl
-#' @importFrom rlang warn
 #' @importFrom stats na.omit
 #'
 #' @export
@@ -134,12 +134,10 @@ as_data_dictionary <- function(x, copy_on_modify = TRUE){
   leftovers <- setdiff(vars, vars[keep])
 
   if(!is_empty(leftovers)){
-    warn(
-      message = c(
-        "Could not map the following variables to a specific type:",
-        i = paste_collapse(leftovers)
-      )
-    )
+    cli_warn(c(
+      "Could not map the following variable{?s} to a specific type:",
+      i = "{.val {leftovers}}"
+    ))
   }
 
   DataDictionary$new(vars[keep])

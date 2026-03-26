@@ -2,7 +2,7 @@
 # DataVariable ----
 
 #' @importFrom checkmate assert_character assert_choice
-#' @importFrom rlang abort
+#' @importFrom cli cli_abort
 DataVariable <- R6Class(
 
   "DataVariable",
@@ -232,10 +232,7 @@ DataVariable <- R6Class(
                           template_description = NULL) {
 
       if (missing(name) || !is.character(name) || length(name) != 1) {
-        abort(
-          message = "'name' must be a single character string and is required.",
-          call = NULL
-        )
+        cli_abort("{.arg name} must be a single character string and is required.")
       }
 
       self$check_name(name)
@@ -271,7 +268,7 @@ DataVariable <- R6Class(
 # NumericVariable ----
 
 #' @importFrom checkmate assert_character assert_numeric
-#' @importFrom rlang abort
+#' @importFrom cli cli_abort
 NumericVariable <- R6Class(
 
   "NumericVariable",
@@ -292,13 +289,10 @@ NumericVariable <- R6Class(
     check_divby_modeling = function(value) {
 
       if(is.null(self$units) && !is.null(value)){
-        abort(
-          message = c(
-            "x" = "Cannot set `divby_modeling` if units are unknown",
-            "i" = glue("Use `set_units()` to specify units for `{self$name}`")
-          ),
-          call = NULL
-        )
+        cli_abort(c(
+          "x" = "Cannot set {.arg divby_modeling} if units are unknown",
+          "i" = "Use {.fn set_units} to specify units for {.val {self$name}}"
+        ))
       }
 
       divby_modeling <- value
@@ -365,7 +359,7 @@ NumericVariable <- R6Class(
 #' @importFrom checkmate assert_character
 #' @importFrom cli cli_abort
 #' @importFrom purrr imap_chr
-#' @importFrom rlang abort set_names
+#' @importFrom rlang set_names
 NominalVariable <- R6Class(
   "NominalVariable",
   inherit = DataVariable,  # Inherit from DataVariable
@@ -599,7 +593,7 @@ is_data_dictionary <- function(x){
 #' @importFrom dplyr arrange filter first group_by mutate pull relocate recode
 #'   select ungroup
 #' @importFrom purrr compact discard imap_dfr map map2 map_chr map_lgl reduce
-#' @importFrom rlang !!! is_empty quo_is_null set_names warn
+#' @importFrom rlang !!! is_empty quo_is_null set_names
 #' @importFrom stats na.omit
 #' @importFrom tibble as_tibble enframe tibble
 #' @importFrom tidyr nest unnest
@@ -628,13 +622,14 @@ DataDictionary <- R6Class(
 
       # Validate that all are instances of DataVariable or its children
       if (length(vars) == 0) {
-        stop("At least one variable must be provided ",
-             "to create a DataDictionary.", call. = FALSE)
+        cli_abort("At least one variable must be provided to create a {.cls DataDictionary}.")
       }
 
       if (!all(map_lgl(vars, ~ inherits(.x, "DataVariable")))) {
-        stop("All inputs must inherit from 'DataVariable' ",
-             "(e.g., NumericVariable, NominalVariable).", call. = FALSE)
+        cli_abort(c(
+          "All inputs must inherit from {.cls DataVariable}.",
+          "i" = "Expected classes like {.cls NumericVariable} or {.cls NominalVariable}."
+        ))
       }
 
       var_names <- map_chr(vars, ~.x$name)
@@ -763,10 +758,7 @@ DataDictionary <- R6Class(
       if(!is_empty(unlabeled)){
 
         if(!quiet){
-          warning("Incomplete translate information for {",
-                  paste(unlabeled, collapse = ", "),
-                  "} : labels are missing.",
-                  call. = FALSE)
+          cli_warn("Incomplete translate information for {.val {unlabeled}}: labels are missing.")
         }
 
       }
@@ -799,9 +791,7 @@ DataDictionary <- R6Class(
         if(is.null(.labs)){
 
           if(!quiet){
-            warning("Translate information for variable {", name[i],
-                    "} is incomplete: labels are missing",
-                    call. = FALSE)
+            cli_warn("Translate information for variable {.val {name[i]}} is incomplete: labels are missing.")
           }
 
           next
@@ -838,9 +828,10 @@ DataDictionary <- R6Class(
       null_after <- quo_is_null(.after)
 
       if(!null_before && !null_after) {
-        warning("Only one of `.before` and `.after` can be specified.",
-                " The `.after` input will be ignored.",
-                call. = FALSE)
+        cli_warn(c(
+          "Only one of {.arg .before} and {.arg .after} can be specified.",
+          "i" = "The {.arg .after} input will be ignored."
+        ))
       }
 
       tmp_data <- matrix(data = 0,
@@ -988,13 +979,11 @@ DataDictionary <- R6Class(
       unmatched <- setdiff(x_uni, names(translater))
 
       if(!is_empty(unmatched) && warn_unmatched){
-        warn(
-          message = c(
-            "i" = "Unique values in `x` could not be matched with labels in `dictionary`:",
-            set_names(unmatched, "i"),
-            "i" = "To disable this warning, set `warn_unmatched = FALSE` in `translate()`."
-          )
-        )
+        cli_warn(c(
+          "i" = "Unique values in {.arg x} could not be matched with labels in {.arg dictionary}:",
+          set_names(unmatched, "i"),
+          "i" = "To disable this warning, set {.code warn_unmatched = FALSE} in {.fn translate}."
+        ))
       }
 
       if(to_factor){
@@ -1018,7 +1007,9 @@ DataDictionary <- R6Class(
 
         if(length(names) == 1) names <- rep(names, length(x))
 
-        stopifnot(length(names) == length(x))
+        if (length(names) != length(x)) {
+          cli_abort("{.arg names} must have the same length as {.arg x}.")
+        }
 
         single_name <- length(unique(names)) == 1
 
@@ -1174,11 +1165,10 @@ DataDictionary <- R6Class(
       }
 
       if(any(x_in_variable_levels & x_in_variable_names)){
-        stop("unique values of x were found to be present in ",
-             "both the variable labels and the category labels ",
-             "for the given dictionary. It is not clear which ",
-             "of these should be used to translate values of x.",
-             call. = FALSE)
+        cli_abort(c(
+          "Unique values of {.arg x} are present in both variable labels and category labels.",
+          "i" = "It is not clear which should be used to translate {.arg x}."
+        ))
       }
 
       if(any(x_in_variable_levels)){
@@ -1212,16 +1202,12 @@ DataDictionary <- R6Class(
                 (\(s) paste0("The level '", .x, "' maps to labels of ", s))()
             )
 
-          msg <- paste0(
-            "One or more levels in the dictionary map to multiple labels:\n\n",
-            paste("-", paste(dups_explained), collapse = "\n"),
-            "\n\n`translate()` can only map a level to one label, ",
-            "so only the first label will be used.\n",
-            "This issue can be fixed by changing levels of nominal variables ",
-            "or by using translate vectors for each variable, separately."
-          )
-
-          warning(msg, call. = FALSE)
+          cli_warn(c(
+            "One or more levels in the dictionary map to multiple labels:",
+            set_names(paste(dups_explained), "x"),
+            "i" = "{.fn translate} can only map a level to one label; only the first label will be used.",
+            "i" = "Fix this by changing levels of nominal variables or using per-variable translate vectors."
+          ))
 
         }
 
@@ -1249,13 +1235,11 @@ DataDictionary <- R6Class(
                                     names(level_translater)))
 
       if(!is_empty(leftovers) && warn_unmatched){
-        warn(
-          message = c(
-            "i" = "Unique values in x could not be matched with variable labels or variable level labels in the dictionary.",
-            "i" = glue("The x values that could not be matched are: {paste_collapse(leftovers)}"),
-            "i" = "To disable this warning, set `warn_unmatched = FALSE` in `translate()`."
-          )
-        )
+        cli_warn(c(
+          "i" = "Unique values in {.arg x} could not be matched with variable labels or level labels in the dictionary.",
+          "i" = "The {.arg x} values that could not be matched: {.val {leftovers}}",
+          "i" = "To disable this warning, set {.code warn_unmatched = FALSE} in {.fn translate}."
+        ))
       }
 
       # would not make sense to convert this to a factor
@@ -1271,7 +1255,7 @@ DataDictionary <- R6Class(
                                  warn_unmatched){
 
       if(!name %in% self$get_names_numeric()){
-        stop("name mis-match")
+        cli_abort("{.arg name} does not match any numeric variable in the dictionary.")
       }
 
       x

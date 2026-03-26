@@ -94,12 +94,12 @@ test_that(
 
     expect_warning(
       defs <- get_acronym_defs(dd_1, acronyms = "invalid"),
-      regexp = "No acronyms match names"
+      regexp = "No acronyms match"
     )
 
     expect_warning(
       get_acronym_defs(dd_1, acronyms = character(0L)),
-      regexp = "No acronyms match names"
+      regexp = "No acronyms match"
     )
 
     expect_identical(
