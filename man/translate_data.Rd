@@ -26,6 +26,7 @@ translate_names(
   units = "none",
   to_factor = FALSE,
   warn_unmatched = TRUE,
+  allow_duplicates = FALSE,
   drop_unused_levels = FALSE
 )
 
@@ -101,6 +102,11 @@ over the dictionary lookup (useful for ad-hoc overrides).}
 \item{to_factor}{Logical (default \code{TRUE}). If \code{TRUE},
 output will be converted to a factor with its level order determined
 using relevant information from \code{dictionary}.}
+
+\item{allow_duplicates}{a logical value indicating whether to allow
+a single label to be attached to multiple variable names. This is
+\code{FALSE} by default because allowing duplicate labels can cause unexpected
+errors in downstream applications. Use with caution.}
 
 \item{names}{For \code{translate_categories()}: optional character vector of
 variable names to translate (useful when \code{x} is a data frame or when

@@ -73,7 +73,6 @@ test_that("Using extra values in translate_names", code = {
 
 })
 
-
 test_that("Using extra values in translate_categories", code = {
 
   # an extra category mapping supplied in ...
@@ -126,8 +125,6 @@ test_that("Using extra values in translate_categories", code = {
 
 })
 
-
-
 test_that(
   "Using translate_categories with duplicated labels",
   code = {
@@ -163,6 +160,39 @@ test_that(
                                       names = c("htn", "htn", "age"),
                                       dictionary = dd),
                  c("Nope", "hypertension", "50-65"))
+
+
+  }
+)
+
+test_that(
+  "Using translate_names with duplicated labels",
+  code = {
+
+    dd <- data_dictionary(
+      nominal_variable('htn_acc_aha', 'Hypertension',
+                       category_levels = c('no', 'yes'),
+                       category_labels = c("No", "Yes")),
+      nominal_variable('htn_jnc7', 'Hypertension',
+                       category_levels = c('no', 'yes'),
+                       category_labels = c("No", "Yes"))
+    )
+
+    # default is to say no to dups
+    expect_error(
+      translate_names(c('htn_acc_aha', 'htn_jnc7'),
+                      dictionary = dd),
+      regexp = "one-to-many relationship between labels and names"
+    )
+
+    # but if you really want them...
+    expect_equal(
+      translate_names(c('htn_acc_aha', 'htn_jnc7'),
+                      dictionary = dd,
+                      allow_duplicates = TRUE),
+      c("Hypertension", "Hypertension")
+    )
+
 
 
   }
