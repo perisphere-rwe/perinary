@@ -77,7 +77,7 @@ messages consistent and informative within the package.
 \section{Conventions}{
 
 \itemize{
-\item Errors use \code{rlang::abort()} with a bulleted message (via \code{glue}).
+\item Errors use \code{cli::cli_abort()} with a bulleted message.
 \item Messages reference variable names and fields explicitly (e.g.,
 \code{`date_measure`}).
 \item Helpers do not modify inputs; they only validate and signal.

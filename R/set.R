@@ -94,7 +94,8 @@ dd_set <- function(dictionary, ..., .list, field){
 #' @importFrom checkmate assert_class
 #' @importFrom dplyr mutate
 #' @importFrom purrr map map_lgl
-#' @importFrom rlang abort set_names
+#' @importFrom cli cli_abort
+#' @importFrom rlang set_names
 #' @importFrom tibble enframe
 #'
 #' @export
@@ -123,15 +124,14 @@ set_category_labels <- function(dictionary, ..., .list = NULL){
 
       highlight <- names(current_cats[match(.dots[[i]], current_cats)])
 
-      abort(
-        message = c(
+      cli_abort(
+        c(
           glue("Invalid assignment of label \'{.dots[[i]]}\' to \\
                category \'{levels_to_modify}\' of variable `{i}`"),
           i = glue("This label is already assigned to category \\
                    \'{highlight}\' of variable `{i}`"),
           i = "category labels must be unique within variables"
-        ),
-        call = NULL
+        )
       )
 
     }
@@ -148,15 +148,14 @@ set_category_labels <- function(dictionary, ..., .list = NULL){
       paste_named_vec() |>
       set_names(nm = "x")
 
-    abort(
-      message = c(
+    cli_abort(
+      c(
         "Inputs in `...` must be name-value pairs",
-        "i" = "for `set_category_labels()`, values must also be named vectors",
+        "i" = "for {.fn set_category_labels}, values must also be named vectors",
         ">" = "problematic inputs are:",
         problems,
         "v" = "To fix: replace MISSING_NAME with an existing level in the given variable"
-      ),
-      call = NULL
+      )
     )
 
   }
@@ -479,10 +478,10 @@ set_description_templates <- function(dictionary,
 #' @param field character; the field of the data dictionary that will receive
 #'   the templates. Either "label" or "description".
 #'
-#' @importFrom cli cli_abort
+#' @importFrom cli cli_abort cli_warn
 #' @importFrom glue glue
 #' @importFrom purrr map map_chr map_lgl
-#' @importFrom rlang expr set_names warn
+#' @importFrom rlang expr set_names
 #' @importFrom tidyselect eval_select
 #'
 #' @noRd
@@ -583,11 +582,10 @@ set_templates <- function(dictionary,
       duped_vars <- paste(duped_vars, collapse = ", ")
     }
 
-    warn(
-      message = paste0(
-        "Multiple templates specified for the following variables: ",
-        duped_vars,
-        ". The last template specified for each variable will be used."
+    cli_warn(
+      c(
+        paste0("Multiple templates specified for the following variables: ", duped_vars),
+        "i" = "The last template specified for each variable will be used."
       )
     )
   }
@@ -653,8 +651,7 @@ set_templates <- function(dictionary,
 #'
 #' @export
 #'
-#' @importFrom cli cli_abort
-#' @importFrom rlang abort warn
+#' @importFrom cli cli_abort cli_warn
 #'
 #' @examples
 #' dd <- as_data_dictionary(iris)
@@ -671,7 +668,7 @@ set_acronyms <- function(dictionary,
                          .list = NULL,
                          show_warnings = TRUE) {
   if (!is.logical(show_warnings) && length(show_warnings) == 1L) {
-    stop("show_warnings must be TRUE or FALSE.")
+    cli_abort("{.arg show_warnings} must be {.code TRUE} or {.code FALSE}.")
   }
 
   assert_valid_dotdot(..., .list = .list, names_required = TRUE)
@@ -681,9 +678,7 @@ set_acronyms <- function(dictionary,
 
   if (length(dots) == 0L) {
     if (show_warnings) {
-      warn(
-        message = "No acronyms provided. Returning the original dictionary."
-      )
+      cli_warn("No acronyms provided. Returning the original dictionary.")
     }
 
     return(dictionary)

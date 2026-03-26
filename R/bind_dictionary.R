@@ -89,6 +89,7 @@ right_bind <- function(..., .list = NULL,
 
 }
 
+#' @importFrom cli cli_warn
 #' @importFrom purrr is_empty
 .bind_dictionary <- function(x, y,
                              conflict_preference = NULL,
@@ -100,12 +101,11 @@ right_bind <- function(..., .list = NULL,
   dupes <- intersect(names(vars_x), names(vars_y))
 
   if (!is_empty(dupes) && is.null(conflict_preference)) {
-    warning("Overlapping variable names in dictionaries:\n\n",
-            paste(paste("-",dupes), collapse = "\n"),
-            "\n\nVariable definitions from the `x` dictionary are ",
-            "preferred by default. Use `conflict_preference` to ",
-            "modify this pattern (and to quiet this warning message).",
-            call. = FALSE)
+    cli_warn(c(
+      "Overlapping variable name{?s} in dictionaries: {.val {dupes}}",
+      "i" = "Variable definitions from the {.code x} dictionary are preferred by default.",
+      "i" = "Use {.arg conflict_preference} to modify this pattern (and to quiet this warning message)."
+    ))
   }
 
   vars_x_unmatched <- setdiff(names(vars_x), names(vars_y))
