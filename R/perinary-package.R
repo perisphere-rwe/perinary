@@ -12,7 +12,6 @@ utils::globalVariables(
 )
 
 ## usethis namespace: start
-#' @importFrom magrittr %<>%
 #' @import R6
 ## usethis namespace: end
 NULL

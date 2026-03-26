@@ -25,12 +25,12 @@
 #'
 #' @examples
 #'
-#' dd <- as_data_dictionary(data.frame(a = 1, b = "cat", id = 1)) %>%
-#'  set_identifiers(id) %>%
-#'  set_labels(a = "numeric example", b = "categorical example") %>%
-#'  set_units(a = "years") %>%
-#'  set_divby_modeling(a = 10) %>%
-#'  set_descriptions(a = "A variable used for examples") %>%
+#' dd <- as_data_dictionary(data.frame(a = 1, b = "cat", id = 1)) |>
+#'  set_identifiers(id) |>
+#'  set_labels(a = "numeric example", b = "categorical example") |>
+#'  set_units(a = "years") |>
+#'  set_divby_modeling(a = 10) |>
+#'  set_descriptions(a = "A variable used for examples") |>
 #'  set_category_labels(b = c("cat" = "A small lion"))
 #'
 #' dd
@@ -79,7 +79,7 @@ dd_set <- function(dictionary, ..., .list, field){
   assert_valid_dotdot(..., .list = .list)
 
   # capture input and plug in templates from dictionary
-  .dots <- infer_dotdot(..., .list = .list) %>%
+  .dots <- infer_dotdot(..., .list = .list) |>
     infer_templates(dictionary, field = field)
 
   if(is_empty(.dots)) return(dictionary)
@@ -107,7 +107,7 @@ set_category_labels <- function(dictionary, ..., .list = NULL){
 
   assert_class(dictionary, "DataDictionary")
 
-  input_frame <- enframe(.dots) %>%
+  input_frame <- enframe(.dots) |>
     mutate(inputs = map(value, names))
 
   dictionary <- dd_set_prep(dictionary, .dots, field = 'category_label')
@@ -116,8 +116,8 @@ set_category_labels <- function(dictionary, ..., .list = NULL){
 
     levels_to_modify <- names(.dots[[i]])
 
-    current_cats <- dictionary$get_category_translater(i) %>%
-      .[-which(names(.) %in% levels_to_modify)]
+    .temp_cats <- dictionary$get_category_translater(i)
+    current_cats <- .temp_cats[-which(names(.temp_cats) %in% levels_to_modify)]
 
     if(any(.dots[[i]] %in% current_cats)){
 
@@ -138,14 +138,14 @@ set_category_labels <- function(dictionary, ..., .list = NULL){
   }
 
 
-  missing_level_names <- input_frame$value %>%
-    map_lgl(.f = ~ "" %in% names(.x)) %>%
+  missing_level_names <- input_frame$value |>
+    map_lgl(.f = ~ "" %in% names(.x)) |>
     which()
 
   if(!is_empty(missing_level_names)){
 
-    problems <- .dots[missing_level_names] %>%
-      paste_named_vec() %>%
+    problems <- .dots[missing_level_names] |>
+      paste_named_vec() |>
       set_names(nm = "x")
 
     abort(
@@ -162,12 +162,13 @@ set_category_labels <- function(dictionary, ..., .list = NULL){
   }
 
 
-  input_frame %<>% mutate(
-    choices = map(
-      name,
-      ~dictionary$variables[[.x]]$get_category_levels()
+  input_frame <- input_frame |>
+    mutate(
+      choices = map(
+        name,
+        ~dictionary$variables[[.x]]$get_category_levels()
+      )
     )
-  )
 
   # check with a for-loop so we don't
   # trigger purrr-specific error message
@@ -253,8 +254,8 @@ set_category_labels <- function(dictionary, ..., .list = NULL){
 #'
 #' @examples
 #'
-#' dd_ordered <- as_data_dictionary(iris) %>%
-#'   set_variable_order(Species, .before = Sepal.Length) %>%
+#' dd_ordered <- as_data_dictionary(iris) |>
+#'   set_variable_order(Species, .before = Sepal.Length) |>
 #'   set_variable_order(ends_with("Length"), .after = Petal.Width)
 #'
 #' set_default_dictionary(dd_ordered)
@@ -264,10 +265,10 @@ set_category_labels <- function(dictionary, ..., .list = NULL){
 #' # this also respects the ordering of categories within variables,
 #' # which is not straightforward to do with the usual dplyr::arrange()
 #'
-#' lm(Sepal.Length ~ ., data = iris) %>%
-#'   broom::tidy() %>%
-#'   dplyr::filter(term != "(Intercept)") %>%
-#'   append_term_key() %>%
+#' lm(Sepal.Length ~ ., data = iris) |>
+#'   broom::tidy() |>
+#'   dplyr::filter(term != "(Intercept)") |>
+#'   append_term_key() |>
 #'   index_terms()
 #'
 #'
@@ -308,15 +309,15 @@ set_category_order <- function(dictionary, ..., .list = NULL){
 
   if(is_empty(.dots)) return(dictionary)
 
-  input_frame <- enframe(.dots) %>%
+  input_frame <- enframe(.dots) |>
     mutate(
       inputs = map(value, names),
       choices = map(name, ~dictionary$get_category_levels(name = .x))
     )
 
-  .check <- input_frame %>%
-    mutate(value = map2(value, choices, union)) %>%
-    select(name, value) %>%
+  .check <- input_frame |>
+    mutate(value = map2(value, choices, union)) |>
+    select(name, value) |>
     deframe()
 
   dictionary$check_modify_call(.check, field = "category_label")
@@ -343,13 +344,13 @@ set_category_order <- function(dictionary, ..., .list = NULL){
     current_lvls <- dictionary$variables[[i]]$get_category_levels()
     unused_lvls <- setdiff(current_lvls, inputs[[1]])
 
-    inputs[[1]] %<>% append(unused_lvls)
+    inputs[[1]] <- append(inputs[[1]], unused_lvls)
 
     dictionary$modify_dictionary(inputs, field = 'category_levels')
 
     if(!is.null(dictionary$variables[[i]]$category_labels)){
 
-      current_labs <- dictionary$variables[[i]]$get_category_labels() %>%
+      current_labs <- dictionary$variables[[i]]$get_category_labels() |>
         set_names(current_lvls)
 
       input_labs <- inputs
@@ -386,8 +387,7 @@ set_identifiers <- function(dictionary, ...){
 
   dictionary <- dictionary$clone(deep = dictionary$copy_on_modify)
 
-  input_strings <- sapply(substitute(list(...)), deparse)[-1] %>%
-    gsub("\"", "", .)
+  input_strings <- gsub("\"", "", sapply(substitute(list(...)), deparse)[-1])
 
   dictionary$set_identifiers(input_strings)
 
@@ -494,10 +494,6 @@ set_templates <- function(dictionary,
 
   field <- match.arg(field, choices = c("template_label",
                                         "template_description"))
-
-  if (!is.logical(show_warnings) && length(show_warnings) == 1L) {
-    stop("show_warnings must be TRUE or FALSE.")
-  }
 
   dots <- c(...)
 

@@ -33,11 +33,11 @@
 #'
 #' # label isn't returned in the output because it is specified (known)
 #' get_unknowns(data_dictionary(nominal_variable("b", label = 'example')))
-#' dd <- as_data_dictionary(iris) %>%
+#' dd <- as_data_dictionary(iris) |>
 #'   set_labels(Sepal.Length = "Sepal length",
 #'             Sepal.Width = "Sepal width",
-#'             Species = "Flower species") %>%
-#'   set_descriptions(Species = "The species are all subtypes of iris") %>%
+#'             Species = "Flower species") |>
+#'   set_descriptions(Species = "The species are all subtypes of iris") |>
 #'   set_units(Sepal.Length = "cm")
 #'
 #' # as_request = TRUE returns this information in a shareable format
@@ -60,15 +60,15 @@ get_unknowns <- function(dictionary = NULL,
          call. = FALSE)
   }
 
-  data_unknowns <- dictionary$dictionary %>%
-    mutate(type = map_chr(dictionary$variables, "type"), .after = 1) %>%
-    rename(variable = name) %>%
+  data_unknowns <- dictionary$dictionary |>
+    mutate(type = map_chr(dictionary$variables, "type"), .after = 1) |>
+    rename(variable = name) |>
     mutate(
       category_labels = if_else(category_labels==category_levels,
                                 true = 'none',
                                 false = category_labels)
-    ) %>%
-    pivot_longer(cols = -c(variable, type)) %>%
+    ) |>
+    pivot_longer(cols = -c(variable, type)) |>
     filter(
       case_when(
         name %in% c("label", "description") ~ value == 'none',
@@ -77,16 +77,16 @@ get_unknowns <- function(dictionary = NULL,
         type == "Nominal" ~ value == "none" & name %in% c("category_levels",
                                                           "category_labels")
       )
-    ) %>%
+    ) |>
     mutate(name = factor(name,
                          levels = c("label", "category_labels",
                                     "units", "divby_modeling",
-                                    "description"))) %>%
+                                    "description"))) |>
     arrange(name)
 
   if(!show_optional){
-    data_unknowns <- data_unknowns %>%
-      filter(name %in% c("label", "units", "category_labels")) %>%
+    data_unknowns <- data_unknowns |>
+      filter(name %in% c("label", "units", "category_labels")) |>
       droplevels()
   }
 
@@ -94,7 +94,7 @@ get_unknowns <- function(dictionary = NULL,
 
   if(as_request){
 
-    out <- split(data_unknowns, data_unknowns$name) %>%
+    out <- split(data_unknowns, data_unknowns$name) |>
       map_chr(
         .f = ~ {
 
@@ -124,15 +124,15 @@ get_unknowns <- function(dictionary = NULL,
 
           if(.x$name[1] == 'category_labels'){
 
-            text_mid <- map_chr(
+            .parts <- map_chr(
               .x = .x$variable,
               .f = function(..x){
                 paste(dictionary$variables[[..x]]$category_levels,
                       '= ?',
                       collapse = ";  ")
               }
-            ) %>%
-              paste0(": ", .)
+            )
+            text_mid <- paste0(": ", .parts)
 
           }
 
@@ -140,7 +140,7 @@ get_unknowns <- function(dictionary = NULL,
                  paste0("  - ", .x$variable, text_mid, collapse = '\n'))
 
         }
-      ) %>%
+      ) |>
       paste(collapse = "\n\n")
 
   }
@@ -151,7 +151,7 @@ get_unknowns <- function(dictionary = NULL,
       paste(rep(" ", times = n), collapse = "")
     }
 
-    out <- split(data_unknowns, data_unknowns$name) %>%
+    out <- split(data_unknowns, data_unknowns$name) |>
       map_chr(
         .f = ~ {
 
@@ -176,8 +176,8 @@ get_unknowns <- function(dictionary = NULL,
             arg_placeholder <- " = \"\""
           }
 
-          .args <- .x$variable %>%
-            paste(arg_placeholder) %>%
+          .args <- .x$variable |>
+            paste(arg_placeholder) |>
             paste(collapse = .collapse)
 
 
@@ -198,7 +198,7 @@ get_unknowns <- function(dictionary = NULL,
 
                 glue("{..x} = c({..args})")
               }
-            ) %>%
+            ) |>
               paste(collapse = .collapse)
 
           }
@@ -206,8 +206,8 @@ get_unknowns <- function(dictionary = NULL,
           glue("{.fun}({.args})")
 
         }
-      ) %>%
-      paste(collapse = " %>% \n")
+      ) |>
+      paste(collapse = " |> \n")
   }
 
   cat(out, "\n")
@@ -251,7 +251,7 @@ get_term_key <- function(dictionary,
                          term_separator = "",
                          term_colname = 'term'){
 
-  out <- dictionary$category_key %>%
+  out <- dictionary$category_key |>
     mutate(
       term_levels = paste(name, level, sep = term_separator),
       term_labels = if_else(
@@ -259,12 +259,12 @@ get_term_key <- function(dictionary,
         true = NA_character_,
         false = paste(name, label, sep = term_separator)
       )
-    ) %>%
+    ) |>
     pivot_longer(cols = starts_with('term_'),
                  values_to = 'term',
                  names_to = 'category_type',
-                 names_prefix = 'term_') %>%
-    drop_na(term) %>%
+                 names_prefix = 'term_') |>
+    drop_na(term) |>
     rename_with(.fn = ~ term_colname, .cols = term)
 
   if(is.null(adjust_to)) return(out)
@@ -280,12 +280,12 @@ get_term_key <- function(dictionary,
                         adjust_to,
                         by = term_colname)
 
-  out %>%
-    filter(name %in% overlap$name) %>%
+  out |>
+    filter(name %in% overlap$name) |>
     # drop the labels or levels, depending on which is in terms
     filter(any(term %in% adjust_to[[term_colname]]),
-           .by = c(name, category_type)) %>%
-    select(-category_type) %>%
+           .by = c(name, category_type)) |>
+    select(-category_type) |>
     # drop any levels that aren't in terms and aren't references
     filter(reference | term %in% adjust_to[[term_colname]])
 
@@ -408,13 +408,13 @@ get_dictionary <- function(dictionary,
 #' @noRd
 .get_dictionary_as_code <- function(dictionary) {
   # Extract list columns
-  temp <- .get_dictionary(dictionary) %>%
+  temp <- .get_dictionary(dictionary) |>
     select(name, category_levels, category_labels)
 
-  dd <- dictionary$dictionary %>%
+  dd <- dictionary$dictionary |>
     # Replace category_levels/_labels by the list columns from temp
-    select(-c(category_levels, category_labels)) %>%
-    left_join(temp, by = "name") %>%
+    select(-c(category_levels, category_labels)) |>
+    left_join(temp, by = "name") |>
     mutate(
       # Create category_levels_char and category_labels_char columns
       across(
@@ -428,7 +428,7 @@ get_dictionary <- function(dictionary,
     )
 
   # String containing code needed to reconstruct the dictionary
-  out <- dd %>%
+  out <- dd |>
     mutate(
       across(
         .cols = c(description, label, units),
@@ -480,8 +480,8 @@ get_dictionary <- function(dictionary,
         ),
         code
       )
-    ) %>%
-    pull(code) %>%
+    ) |>
+    pull(code) |>
     paste(collapse = ",")
 
   out <- sprintf("data_dictionary(.list = list(%s))", out)

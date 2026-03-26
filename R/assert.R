@@ -53,7 +53,8 @@ assert_valid_field <- function(name, type, field, suggest = NULL){
   )
 
   if(!is.null(suggest)){
-    msg %<>% c(
+    msg <- c(
+      msg,
       "i" = glue(
         "`{field}` may be specified for {paste_collapse(suggest)} variables."
       )
@@ -196,8 +197,8 @@ assert_named_dots <- function(...) {
   if (!is_empty(unnamed_idx)) {
 
     n <- length(unnamed_idx)
-    nm <- .dots[unnamed_idx] %>%
-      map_chr(as_label) %>%
+    nm <- .dots[unnamed_idx] |>
+      map_chr(as_label) |>
       paste_collapse(as_code = TRUE)
 
     cli_abort(
@@ -230,13 +231,13 @@ assert_named_list <- function(x) {
       n <- length(unnamed_idx)
 
       # Try to give a friendly representation of each bad element
-      nm <- x[unnamed_idx] %>%
-        map_chr( ~ {
-        if (is.atomic(.x) && length(.x) == 1)
-          as.character(.x)
-        else
-          paste0("<", typeof(.x), ">")
-      }) %>%
+      nm <- x[unnamed_idx] |>
+        map_chr(\(.x) {
+          if (is.atomic(.x) && length(.x) == 1)
+            as.character(.x)
+          else
+            paste0("<", typeof(.x), ">")
+        }) |>
         paste_collapse(as_code = TRUE)
 
       cli_abort(
@@ -261,18 +262,18 @@ assert_named_list <- function(x) {
 #' @importFrom tibble enframe
 #'
 #' @noRd
-assert_inputs_unique <- function(key, dup_label = "input name(s)"){
+assert_inputs_unique <- function(key){
 
-  duplicated_inputs <- table(key) %>%
-    enframe() %>%
-    mutate(value = as.numeric(value)) %>%
-    filter(value > 1) %>%
+  duplicated_inputs <- table(names(key)) |>
+    enframe() |>
+    mutate(value = as.numeric(value)) |>
+    filter(value > 1) |>
     pull(name)
 
   if(!is_empty(duplicated_inputs)){
-    warning("duplicated ", dup_label, ": \n\n",
+    warning("duplicated input name(s): \n\n",
             paste(paste("-", duplicated_inputs), collapse = "\n"),
-            "\n\nInputs should only be specified once.",
+            "\n\nInputs should only need to be specified once.",
             call. = FALSE
     )
   }

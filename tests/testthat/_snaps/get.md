@@ -59,7 +59,7 @@
                  logical  = "",
                  character  = "",
                  factor  = "",
-                 date  = "") %>% 
+                 date  = "") |> 
       set_category_labels(character = c(a = "",
                                         b = "",
                                         c = "",
@@ -69,7 +69,7 @@
                                      g = "",
                                      h = "",
                                      i = "",
-                                     j = "")) %>% 
+                                     j = "")) |> 
       set_units(number  = "",
                 integer  = "") 
 

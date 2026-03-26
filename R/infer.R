@@ -84,7 +84,7 @@ infer_templates <- function(.dots, dictionary, field){
     .x = .dots[template_vars],
     .y = templates,
     .f = ~setdiff(names(.x), infer_curlies(.y))
-  ) %>%
+  ) |>
     discard(.p = is_empty)
 
   if (!is_empty(invalid_binds)) {
@@ -101,7 +101,7 @@ infer_templates <- function(.dots, dictionary, field){
         ", but supplied bindings included ",
         paste_collapse(invalid_binds[[.x]], as_code = TRUE)
       )
-    ) %>%
+    ) |>
       set_names("i")
 
     cli_abort(
@@ -219,10 +219,10 @@ infer_meta <- function(dictionary){
 
 infer_overlapping_variables <- function(dictionary, data, warn_unmatched){
 
-  overlapping_variables <- names(data) %>%
+  overlapping_variables <- names(data) |>
     intersect(dictionary$get_names())
 
-  unmatched_variables <- names(data) %>%
+  unmatched_variables <- names(data) |>
     setdiff(overlapping_variables)
 
   if(!is_empty(unmatched_variables) && warn_unmatched){
