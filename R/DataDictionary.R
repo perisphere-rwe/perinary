@@ -396,14 +396,14 @@ NominalVariable <- R6Class(
 
           dups <- value_tbl[value_tbl > 1]
 
-          dups_explained <- dups %>%
+          dups_explained <- dups |>
             imap_chr(
-              ~ names(value)[value==.y] %>%
-                paste_quotes() %>%
-                paste_collapse() %>%
-                paste("you are assigning levels", ., "to the label",
-                      paste_quotes(.y))
-            ) %>%
+              \(.x, .y) names(value)[value==.y] |>
+                paste_quotes() |>
+                paste_collapse() |>
+                (\(s) paste("you are assigning levels", s, "to the label",
+                            paste_quotes(.y)))()
+            ) |>
             set_names(nm = "x")
 
           cli_abort(
@@ -598,7 +598,6 @@ is_data_dictionary <- function(x){
 #' @importFrom cli cli_abort cli_warn
 #' @importFrom dplyr arrange filter first group_by mutate pull relocate recode
 #'   select ungroup
-#' @importFrom magrittr divide_by
 #' @importFrom purrr compact discard imap_dfr map map2 map_chr map_lgl reduce
 #' @importFrom rlang !!! is_empty quo_is_null set_names warn
 #' @importFrom stats na.omit
@@ -756,7 +755,7 @@ DataDictionary <- R6Class(
       output <- map(
         .x = set_names(.name),
         .f = ~ self$get_label(.x, units)
-      ) %>%
+      ) |>
         compact()
 
       unlabeled <- setdiff(.name, names(output))
@@ -780,9 +779,9 @@ DataDictionary <- R6Class(
 
       assert_character(name, null.ok = TRUE)
 
-      choices <- self$variables %>%
-        map_lgl(~.x$type == "Nominal") %>%
-        which() %>%
+      choices <- self$variables |>
+        map_lgl(~.x$type == "Nominal") |>
+        which() |>
         names()
 
       # give back all the translaters if no name is specified
@@ -809,7 +808,8 @@ DataDictionary <- R6Class(
 
         }
 
-        output %<>% append(
+        output <- append(
+          output,
           values = set_names(
             x = self$variables[[ name[i] ]]$category_labels,
             nm = self$variables[[ name[i] ]]$category_levels
@@ -847,7 +847,7 @@ DataDictionary <- R6Class(
                          nrow = 1,
                          ncol = length(self$variables),
                          dimnames = list(rows=NULL,
-                                         cols = names(self$variables))) %>%
+                                         cols = names(self$variables))) |>
         as_tibble()
 
       if(!null_before){
@@ -875,7 +875,7 @@ DataDictionary <- R6Class(
                           levels = union(self$dictionary$name,
                                          unique(data[[names]])))
 
-      split(data, f = name_sort, drop = FALSE) %>%
+      split(data, f = name_sort, drop = FALSE) |>
         imap_dfr(
           .f = ~ {
 
@@ -887,7 +887,7 @@ DataDictionary <- R6Class(
 
                 .levels <- self$variables[[.y]]$get_category_levels()
 
-                out <- .x %>%
+                out <- .x |>
                   arrange(
                     factor(.data[[levels]], levels = .levels)
                   )
@@ -912,13 +912,13 @@ DataDictionary <- R6Class(
                               nominals_to_factor,
                               drop_unused_levels){
 
-      overlapping_variables <- self %>%
+      overlapping_variables <- self |>
         infer_overlapping_variables(x, warn_unmatched)
 
-      unit_variables <- overlapping_variables %>%
+      unit_variables <- overlapping_variables |>
         intersect(self$get_names_with_units())
 
-      nominal_variables <- overlapping_variables %>%
+      nominal_variables <- overlapping_variables |>
         intersect(self$get_names_nominal())
 
       for(i in overlapping_variables){
@@ -934,12 +934,12 @@ DataDictionary <- R6Class(
 
           if(units == 'model'){
 
-            x[[i]] %<>% divide_by(.divby)
-            .label %<>% paste0(", per ", .divby, " ", .unit)
+            x[[i]] <- x[[i]] / .divby
+            .label <- paste0(.label, ", per ", .divby, " ", .unit)
 
           } else if(units == 'descriptive') {
 
-            .label %<>% paste0(", ", .unit)
+            .label <- paste0(.label, ", ", .unit)
 
           }
 
@@ -948,13 +948,13 @@ DataDictionary <- R6Class(
         if(i %in% nominal_variables){
 
           if(apply_category_labels){
-            x[[i]] %<>%
-              self$translate_categories(names = i,
-                                        to_factor = nominals_to_factor,
-                                        drop_unused_levels = drop_unused_levels)
+            x[[i]] <- self$translate_categories(x[[i]],
+                                                names = i,
+                                                to_factor = nominals_to_factor,
+                                                drop_unused_levels = drop_unused_levels)
           } else if (nominals_to_factor) {
-            x[[i]] %<>%
-              factor(levels = self$variables[[i]]$get_category_levels())
+            x[[i]] <- factor(x[[i]],
+                             levels = self$variables[[i]]$get_category_levels())
           }
 
         }
@@ -983,7 +983,7 @@ DataDictionary <- R6Class(
 
       translater <- self$get_name_translater(quiet = TRUE, units = units)
 
-      if(!is_empty(.list)) translater %<>% c(.list)
+      if(!is_empty(.list)) translater <- c(translater, .list)
 
       unmatched <- setdiff(x_uni, names(translater))
 
@@ -1037,9 +1037,9 @@ DataDictionary <- R6Class(
         }
 
         return(
-          tibble(x = x, name = names) %>%
-            group_by(name) %>%
-            nest(data = c(x)) %>%
+          tibble(x = x, name = names) |>
+            group_by(name) |>
+            nest(data = c(x)) |>
             mutate(
               out = map2(
                 .x = data,
@@ -1051,7 +1051,7 @@ DataDictionary <- R6Class(
                     translater <- self$get_category_translater(
                       name = .y,
                       quiet = TRUE
-                    ) %>%
+                    ) |>
                       private$bind_list_to_translater(
                         .list = .list,
                         add_leftovers = single_name
@@ -1070,7 +1070,7 @@ DataDictionary <- R6Class(
 
                   }
 
-                  unmatched <- unique(na.omit(.x$x)) %>%
+                  unmatched <- unique(na.omit(.x$x)) |>
                     setdiff(names(translater))
 
                   if(to_factor){
@@ -1083,8 +1083,8 @@ DataDictionary <- R6Class(
 
                 }
               )
-            ) %>%
-            unnest(cols = c(data, out)) %>%
+            ) |>
+            unnest(cols = c(data, out)) |>
             pull(out)
         )
 
@@ -1093,7 +1093,7 @@ DataDictionary <- R6Class(
       x_uni <- unique(na.omit(x))
 
       translater <-
-        self$get_category_translater(name = names, quiet = TRUE) %>%
+        self$get_category_translater(name = names, quiet = TRUE) |>
         private$bind_list_to_translater(.list = .list)
 
 
@@ -1107,24 +1107,23 @@ DataDictionary <- R6Class(
       # it map to X and when should it map to Y? We can't tell if
       # we only see "yes"'s in the vector that we are trying to translate.
 
-      dup_problems <- names(translater)[dup_levels] %>%
+      dup_problems <- names(translater)[dup_levels] |>
         # mapping multiple levels to the same label is okay.
         # e.g., mapping levels of X and Y to the label of "yes"? no problem.
         # this step removed those.
-        setdiff(names(translater)[dup_labels]) %>%
+        setdiff(names(translater)[dup_labels]) |>
         # this step makes it so we only throw warnings if the duplicates
         # are actually in the input vector
         intersect(x)
 
       if(!is_empty(dup_problems)){
 
-        dups_explained <- dup_problems %>%
+        dups_explained <- dup_problems |>
           map_chr(
-            ~ translater[names(translater) %in% .x] %>%
-              paste0("'", ., "'") %>%
-              paste(collapse = ' and ') %>%
-              paste0("The category '", .x, "' maps to labels of ", .)
-          ) %>%
+            \(.x) paste0("'", translater[names(translater) %in% .x], "'") |>
+              paste(collapse = ' and ') |>
+              (\(s) paste0("The category '", .x, "' maps to labels of ", s))()
+          ) |>
           set_names(nm = 'x')
 
         cli_abort(
@@ -1139,7 +1138,7 @@ DataDictionary <- R6Class(
       }
 
       # don't let these be recoded to NA if returning output as factor
-      unmatched <- x_uni %>%
+      unmatched <- x_uni |>
         setdiff(names(translater))
 
       if(to_factor){
@@ -1170,8 +1169,8 @@ DataDictionary <- R6Class(
       x_in_variable_levels <- x_uni %in% names(level_translater)
 
       if(!is_empty(list(...))){
-        name_translater %<>% c(list(...))
-        level_translater %<>% c(list(...))
+        name_translater <- c(name_translater, list(...))
+        level_translater <- c(level_translater, list(...))
       }
 
       if(any(x_in_variable_levels & x_in_variable_names)){
@@ -1194,24 +1193,23 @@ DataDictionary <- R6Class(
         # it map to X and when should it map to Y? We can't tell if
         # we only see "yes"'s in the vector that we are trying to translate.
 
-        dup_problems <- names(level_translater)[dup_levels] %>%
+        dup_problems <- names(level_translater)[dup_levels] |>
           # mapping multiple levels to the same label is okay.
           # e.g., mapping levels of X and Y to the label of "yes"? no problem.
           # this step removed those.
-          setdiff(names(level_translater)[dup_labels]) %>%
+          setdiff(names(level_translater)[dup_labels]) |>
           # this step makes it so we only throw warnings if the duplicates
           # are actually in the input vector
           intersect(x)
 
         if(!is_empty(dup_problems)){
 
-          dups_explained <- dup_problems %>%
-            set_names() %>%
+          dups_explained <- dup_problems |>
+            set_names() |>
             map(
-              ~ level_translater[names(level_translater) %in% .x] %>%
-                paste0("'", ., "'") %>%
-                paste(collapse = ' and ') %>%
-                paste0("The level '", .x, "' maps to labels of ", .)
+              \(.x) paste0("'", level_translater[names(level_translater) %in% .x], "'") |>
+                paste(collapse = ' and ') |>
+                (\(s) paste0("The level '", .x, "' maps to labels of ", s))()
             )
 
           msg <- paste0(
@@ -1376,15 +1374,15 @@ DataDictionary <- R6Class(
 
     create_category_key = function(vars){
 
-      enframe(vars, name = 'name') %>%
-        mutate(type = map_chr(value, "type")) %>%
-        filter(type == "Nominal") %>%
+      enframe(vars, name = 'name') |>
+        mutate(type = map_chr(value, "type")) |>
+        filter(type == "Nominal") |>
         mutate(level = map(value, ~.x$category_levels),
-               label = map(value, ~.x$category_labels)) %>%
-        select(name, level, label) %>%
-        unnest(cols = c(level, label)) %>%
-        group_by(name) %>%
-        mutate(reference = level == first(level)) %>%
+               label = map(value, ~.x$category_labels)) |>
+        select(name, level, label) |>
+        unnest(cols = c(level, label)) |>
+        group_by(name) |>
+        mutate(reference = level == first(level)) |>
         ungroup()
 
     },
@@ -1439,23 +1437,22 @@ DataDictionary <- R6Class(
       # - replace existing categories if needed
       # - add the leftovers to translater
 
-      .list_split <- enframe(.list) %>%
+      .list_split <- enframe(.list) |>
         mutate(in_translater = factor(name %in% names(translater),
                                       levels = c(FALSE, TRUE),
                                       labels = c("leftover",
-                                                 "replace"))) %>%
-        split(f = .$in_translater, drop = FALSE) %>%
-        map( ~ .x %>%
-               select(name, value) %>%
-               deframe() %>%
-               unlist())
+                                                 "replace")))
+      .list_split <- split(.list_split,
+                           f = .list_split$in_translater,
+                           drop = FALSE) |>
+        map(\(.x) .x |> select(name, value) |> deframe() |> unlist())
 
       if(!is_empty(.list_split$replace) && add_replacements){
         translater[names(.list_split$replace)] <- .list_split$replace
       }
 
       if(!is_empty(.list_split$leftover) && add_leftovers){
-        translater %<>% c(.list_split$leftover)
+        translater <- c(translater, .list_split$leftover)
       }
 
       translater
@@ -1467,8 +1464,8 @@ DataDictionary <- R6Class(
                                 unmatched = NULL,
                                 drop_unused_levels = FALSE){
 
-      x <- x %>%
-        recode(!!!translater) %>%
+      x <- x |>
+        recode(!!!translater) |>
         factor(levels = c(translater, unmatched))
 
       if (drop_unused_levels) {
@@ -1481,7 +1478,7 @@ DataDictionary <- R6Class(
 
     recode_as_character = function(x, translater){
 
-      as.character(x) %>%
+      as.character(x) |>
         recode(!!!translater)
 
     }

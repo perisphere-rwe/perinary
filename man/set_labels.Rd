@@ -45,12 +45,12 @@ Set metadata in a \code{DataDictionary} object.
 }
 \examples{
 
-dd <- as_data_dictionary(data.frame(a = 1, b = "cat", id = 1)) \%>\%
- set_identifiers(id) \%>\%
- set_labels(a = "numeric example", b = "categorical example") \%>\%
- set_units(a = "years") \%>\%
- set_divby_modeling(a = 10) \%>\%
- set_descriptions(a = "A variable used for examples") \%>\%
+dd <- as_data_dictionary(data.frame(a = 1, b = "cat", id = 1)) |>
+ set_identifiers(id) |>
+ set_labels(a = "numeric example", b = "categorical example") |>
+ set_units(a = "years") |>
+ set_divby_modeling(a = 10) |>
+ set_descriptions(a = "A variable used for examples") |>
  set_category_labels(b = c("cat" = "A small lion"))
 
 dd

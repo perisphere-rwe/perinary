@@ -66,25 +66,26 @@ append_term_key <- function(data,
     )
   }
 
-  append_instructions <- key %>%
-    rename(term = !!term_colname) %>%
-    mutate(order = match(term, term_order) - 1) %>%
-    fill(order, .direction = 'up') %>%
-    filter(reference) %>%
+  append_instructions <- key |>
+    rename(term = !!term_colname) |>
+    mutate(order = match(term, term_order) - 1) |>
+    fill(order, .direction = 'up') |>
+    filter(reference) |>
     arrange(desc(order))
 
   for(i in seq_len(nrow(append_instructions))){
 
-    term_order %<>% append(values = append_instructions$term[i],
-                           after = append_instructions$order[i])
+    term_order <- append(term_order,
+                        values = append_instructions$term[i],
+                        after = append_instructions$order[i])
 
   }
 
-  key %>%
-    full_join(data, by = term_colname) %>%
-    mutate(name = if_else(is.na(name), term, name)) %>%
-    mutate(term = factor(term, levels = term_order)) %>%
-    arrange(term) %>%
+  key |>
+    full_join(data, by = term_colname) |>
+    mutate(name = if_else(is.na(name), term, name)) |>
+    mutate(term = factor(term, levels = term_order)) |>
+    arrange(term) |>
     mutate(
       term = as.character(term),
       reference = if_else(is.na(reference), FALSE, reference)
