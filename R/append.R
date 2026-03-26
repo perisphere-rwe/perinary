@@ -27,7 +27,8 @@
 #'   appended reference rows (if missing).
 #'
 #' @importFrom dplyr arrange desc filter full_join if_else mutate rename
-#' @importFrom rlang !! abort set_names
+#' @importFrom cli cli_abort
+#' @importFrom rlang !! set_names
 #' @importFrom tidyr fill
 #'
 #' @export
@@ -58,33 +59,35 @@ append_term_key <- function(data,
   refs_in_terms <- refs[which(refs %in% term_order)]
 
   if (!is_empty(refs_in_terms)){
-    abort(
-      message = c("Reference category detected in model terms",
-                  set_names(refs_in_terms, "x"),
-                  "i" = "Use `translate_data()` on your data before modeling"),
-      call = NULL
+    cli_abort(
+      c(
+        "Reference category detected in model terms",
+        set_names(refs_in_terms, "x"),
+        "i" = "Use {.fn translate_data} on your data before modeling"
+      )
     )
   }
 
-  append_instructions <- key %>%
-    rename(term = !!term_colname) %>%
-    mutate(order = match(term, term_order) - 1) %>%
-    fill(order, .direction = 'up') %>%
-    filter(reference) %>%
+  append_instructions <- key |>
+    rename(term = !!term_colname) |>
+    mutate(order = match(term, term_order) - 1) |>
+    fill(order, .direction = 'up') |>
+    filter(reference) |>
     arrange(desc(order))
 
   for(i in seq_len(nrow(append_instructions))){
 
-    term_order %<>% append(values = append_instructions$term[i],
-                           after = append_instructions$order[i])
+    term_order <- append(term_order,
+                        values = append_instructions$term[i],
+                        after = append_instructions$order[i])
 
   }
 
-  key %>%
-    full_join(data, by = term_colname) %>%
-    mutate(name = if_else(is.na(name), term, name)) %>%
-    mutate(term = factor(term, levels = term_order)) %>%
-    arrange(term) %>%
+  key |>
+    full_join(data, by = term_colname) |>
+    mutate(name = if_else(is.na(name), term, name)) |>
+    mutate(term = factor(term, levels = term_order)) |>
+    arrange(term) |>
     mutate(
       term = as.character(term),
       reference = if_else(is.na(reference), FALSE, reference)

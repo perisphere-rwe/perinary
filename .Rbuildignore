@@ -5,3 +5,5 @@
 ^\.github$
 ^img$
 ^sandbox$
+^\.positai$
+^\.claude$

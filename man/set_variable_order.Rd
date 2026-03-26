@@ -27,8 +27,8 @@ examples.)
 }
 \examples{
 
-dd_ordered <- as_data_dictionary(iris) \%>\%
-  set_variable_order(Species, .before = Sepal.Length) \%>\%
+dd_ordered <- as_data_dictionary(iris) |>
+  set_variable_order(Species, .before = Sepal.Length) |>
   set_variable_order(ends_with("Length"), .after = Petal.Width)
 
 set_default_dictionary(dd_ordered)
@@ -38,10 +38,10 @@ set_default_dictionary(dd_ordered)
 # this also respects the ordering of categories within variables,
 # which is not straightforward to do with the usual dplyr::arrange()
 
-lm(Sepal.Length ~ ., data = iris) \%>\%
-  broom::tidy() \%>\%
-  dplyr::filter(term != "(Intercept)") \%>\%
-  append_term_key() \%>\%
+lm(Sepal.Length ~ ., data = iris) |>
+  broom::tidy() |>
+  dplyr::filter(term != "(Intercept)") |>
+  append_term_key() |>
   index_terms()
 
 

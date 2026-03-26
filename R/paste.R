@@ -37,7 +37,7 @@ paste_collapse <- function(x, as_code=FALSE){
 
   if(is.null(x)) return("none")
 
-  if(as_code) x %<>% paste_ticks()
+  if(as_code) x <- paste_ticks(x)
 
   if(length(x) == 1) return(as.character(x))
 
@@ -76,7 +76,7 @@ paste_named_vec <- function(x, name_fill = "MISSING_NAME"){
 
   if(is.list(x)){
     return(
-      map(x, paste_named_vec, name_fill = name_fill) %>%
+      map(x, paste_named_vec, name_fill = name_fill) |>
         imap_chr(
           .f = function(.x, .n){
             .n <- .n %||% name_fill

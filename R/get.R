@@ -19,6 +19,7 @@
 #'   a [tibble][tibble::tibble-package] is returned.
 #'   If `as_request = TRUE` or `as_code = TRUE`, text is returned.
 #'
+#' @importFrom cli cli_abort
 #' @importFrom dplyr arrange case_when filter if_else mutate rename
 #' @importFrom glue glue
 #' @importFrom purrr map_chr
@@ -33,11 +34,11 @@
 #'
 #' # label isn't returned in the output because it is specified (known)
 #' get_unknowns(data_dictionary(nominal_variable("b", label = 'example')))
-#' dd <- as_data_dictionary(iris) %>%
+#' dd <- as_data_dictionary(iris) |>
 #'   set_labels(Sepal.Length = "Sepal length",
 #'             Sepal.Width = "Sepal width",
-#'             Species = "Flower species") %>%
-#'   set_descriptions(Species = "The species are all subtypes of iris") %>%
+#'             Species = "Flower species") |>
+#'   set_descriptions(Species = "The species are all subtypes of iris") |>
 #'   set_units(Sepal.Length = "cm")
 #'
 #' # as_request = TRUE returns this information in a shareable format
@@ -56,19 +57,18 @@ get_unknowns <- function(dictionary = NULL,
   dictionary <- dictionary %||% .perinary_internal$.dictionary
 
   if(as_request && as_code){
-    stop("Unknowns can be presented as request or code, but not both",
-         call. = FALSE)
+    cli_abort("{.arg as_request} and {.arg as_code} cannot both be {.code TRUE}.")
   }
 
-  data_unknowns <- dictionary$dictionary %>%
-    mutate(type = map_chr(dictionary$variables, "type"), .after = 1) %>%
-    rename(variable = name) %>%
+  data_unknowns <- dictionary$dictionary |>
+    mutate(type = map_chr(dictionary$variables, "type"), .after = 1) |>
+    rename(variable = name) |>
     mutate(
       category_labels = if_else(category_labels==category_levels,
                                 true = 'none',
                                 false = category_labels)
-    ) %>%
-    pivot_longer(cols = -c(variable, type)) %>%
+    ) |>
+    pivot_longer(cols = -c(variable, type)) |>
     filter(
       case_when(
         name %in% c("label", "description") ~ value == 'none',
@@ -77,16 +77,16 @@ get_unknowns <- function(dictionary = NULL,
         type == "Nominal" ~ value == "none" & name %in% c("category_levels",
                                                           "category_labels")
       )
-    ) %>%
+    ) |>
     mutate(name = factor(name,
                          levels = c("label", "category_labels",
                                     "units", "divby_modeling",
-                                    "description"))) %>%
+                                    "description"))) |>
     arrange(name)
 
   if(!show_optional){
-    data_unknowns <- data_unknowns %>%
-      filter(name %in% c("label", "units", "category_labels")) %>%
+    data_unknowns <- data_unknowns |>
+      filter(name %in% c("label", "units", "category_labels")) |>
       droplevels()
   }
 
@@ -94,7 +94,7 @@ get_unknowns <- function(dictionary = NULL,
 
   if(as_request){
 
-    out <- split(data_unknowns, data_unknowns$name) %>%
+    out <- split(data_unknowns, data_unknowns$name) |>
       map_chr(
         .f = ~ {
 
@@ -124,15 +124,15 @@ get_unknowns <- function(dictionary = NULL,
 
           if(.x$name[1] == 'category_labels'){
 
-            text_mid <- map_chr(
+            .parts <- map_chr(
               .x = .x$variable,
               .f = function(..x){
                 paste(dictionary$variables[[..x]]$category_levels,
                       '= ?',
                       collapse = ";  ")
               }
-            ) %>%
-              paste0(": ", .)
+            )
+            text_mid <- paste0(": ", .parts)
 
           }
 
@@ -140,7 +140,7 @@ get_unknowns <- function(dictionary = NULL,
                  paste0("  - ", .x$variable, text_mid, collapse = '\n'))
 
         }
-      ) %>%
+      ) |>
       paste(collapse = "\n\n")
 
   }
@@ -151,7 +151,7 @@ get_unknowns <- function(dictionary = NULL,
       paste(rep(" ", times = n), collapse = "")
     }
 
-    out <- split(data_unknowns, data_unknowns$name) %>%
+    out <- split(data_unknowns, data_unknowns$name) |>
       map_chr(
         .f = ~ {
 
@@ -176,8 +176,8 @@ get_unknowns <- function(dictionary = NULL,
             arg_placeholder <- " = \"\""
           }
 
-          .args <- .x$variable %>%
-            paste(arg_placeholder) %>%
+          .args <- .x$variable |>
+            paste(arg_placeholder) |>
             paste(collapse = .collapse)
 
 
@@ -198,7 +198,7 @@ get_unknowns <- function(dictionary = NULL,
 
                 glue("{..x} = c({..args})")
               }
-            ) %>%
+            ) |>
               paste(collapse = .collapse)
 
           }
@@ -206,8 +206,8 @@ get_unknowns <- function(dictionary = NULL,
           glue("{.fun}({.args})")
 
         }
-      ) %>%
-      paste(collapse = " %>% \n")
+      ) |>
+      paste(collapse = " |> \n")
   }
 
   cat(out, "\n")
@@ -251,7 +251,7 @@ get_term_key <- function(dictionary,
                          term_separator = "",
                          term_colname = 'term'){
 
-  out <- dictionary$category_key %>%
+  out <- dictionary$category_key |>
     mutate(
       term_levels = paste(name, level, sep = term_separator),
       term_labels = if_else(
@@ -259,12 +259,12 @@ get_term_key <- function(dictionary,
         true = NA_character_,
         false = paste(name, label, sep = term_separator)
       )
-    ) %>%
+    ) |>
     pivot_longer(cols = starts_with('term_'),
                  values_to = 'term',
                  names_to = 'category_type',
-                 names_prefix = 'term_') %>%
-    drop_na(term) %>%
+                 names_prefix = 'term_') |>
+    drop_na(term) |>
     rename_with(.fn = ~ term_colname, .cols = term)
 
   if(is.null(adjust_to)) return(out)
@@ -280,12 +280,12 @@ get_term_key <- function(dictionary,
                         adjust_to,
                         by = term_colname)
 
-  out %>%
-    filter(name %in% overlap$name) %>%
+  out |>
+    filter(name %in% overlap$name) |>
     # drop the labels or levels, depending on which is in terms
     filter(any(term %in% adjust_to[[term_colname]]),
-           .by = c(name, category_type)) %>%
-    select(-category_type) %>%
+           .by = c(name, category_type)) |>
+    select(-category_type) |>
     # drop any levels that aren't in terms and aren't references
     filter(reference | term %in% adjust_to[[term_colname]])
 
@@ -402,19 +402,19 @@ get_dictionary <- function(dictionary,
 }
 
 
+#' @importFrom cli cli_abort
 #' @importFrom dplyr across case_when left_join mutate pull select
-#' @importFrom rlang abort
 #'
 #' @noRd
 .get_dictionary_as_code <- function(dictionary) {
   # Extract list columns
-  temp <- .get_dictionary(dictionary) %>%
+  temp <- .get_dictionary(dictionary) |>
     select(name, category_levels, category_labels)
 
-  dd <- dictionary$dictionary %>%
+  dd <- dictionary$dictionary |>
     # Replace category_levels/_labels by the list columns from temp
-    select(-c(category_levels, category_labels)) %>%
-    left_join(temp, by = "name") %>%
+    select(-c(category_levels, category_labels)) |>
+    left_join(temp, by = "name") |>
     mutate(
       # Create category_levels_char and category_labels_char columns
       across(
@@ -428,7 +428,7 @@ get_dictionary <- function(dictionary,
     )
 
   # String containing code needed to reconstruct the dictionary
-  out <- dd %>%
+  out <- dd |>
     mutate(
       across(
         .cols = c(description, label, units),
@@ -475,13 +475,13 @@ get_dictionary <- function(dictionary,
         # Catch other variable types. This will be triggered once by
         # eval(parse(text = code))
         sprintf(
-          "abort(message = 'Invalid variable type(s): %s')",
+          "cli::cli_abort('Invalid variable type(s): %s')",
           paste(unique(type[code == "STOP"]), collapse = ", ")
         ),
         code
       )
-    ) %>%
-    pull(code) %>%
+    ) |>
+    pull(code) |>
     paste(collapse = ",")
 
   out <- sprintf("data_dictionary(.list = list(%s))", out)
@@ -494,16 +494,127 @@ get_dictionary <- function(dictionary,
     # If the dictionary is different, it indicates an error in the code;
     # nothing the user can do besides tell us to fix it. This is the last line
     # of defense if the unit tests do not catch any issues.
-    abort(
-      message = paste0(
-        "The input dictionary does not match the dictionary generated by ",
-        "evaluating the output string. Please open a new issue: ",
-        "https://github.com/perisphere-rwe/perinary/issues/new"
-      )
-    )
+    cli_abort(c(
+      "The input dictionary does not match the dictionary generated by evaluating the output string.",
+      "i" = "Please open a new issue: {.url https://github.com/perisphere-rwe/perinary/issues/new}"
+    ))
     # TODO return more specific information about the differences (e.g.,
     # missing columns)?
   }
+
+  return(out)
+}
+
+
+#' @title Get Acronym Definitions
+#'
+#' @description Get nicely formatted acronym definitions. Primarily intended for
+#'   use in footnotes.
+#'
+#' @param dictionary `r roxy_describe_dd()`
+#' @param acronyms `NULL` or a character vector of acronyms. One or more of
+#'   `names(dictionary$get_acronyms())`. If `NULL`, all acronyms in `dictionary`
+#'   will be selected.
+#' @param sep character; separator for the acronyms.
+#' @param sep_last `NULL` or character; the separator for the last two acronyms.
+#'   If `NULL`, `sep` will be used instead.
+#' @param show_warnings logical; whether to display warnings.
+#'
+#' @returns a character string of the form "acronym1 = acronym 1 description;
+#'   acronym2 = acronym 2 description."
+#'
+#' @author Tyler Sagendorf
+#'
+#' @export
+#'
+#' @importFrom cli cli_abort cli_warn
+#' @importFrom rlang set_names
+#'
+#' @examples
+#' dd <- as_data_dictionary(iris)
+#' dd$get_acronyms() # NULL
+#'
+#' dd <- set_acronyms(dictionary = dd,
+#'                    BP = "blood pressure",
+#'                    SBP = "systolic blood pressure",
+#'                    DBP = "diastolic blood pressure")
+#'
+#' dd$get_acronyms()
+#'
+#' get_acronym_defs(dd, acronyms = NULL) # use all acronyms (default)
+#' get_acronym_defs(dd, acronyms = c("DBP", "BP"))
+#'
+#' # Attempt to select an acronym that was not set
+#' get_acronym_defs(dd, acronyms = "FOO") # character(0L)
+#'
+get_acronym_defs <- function(dictionary,
+                             acronyms = NULL,
+                             sep = "; ",
+                             sep_last = NULL,
+                             show_warnings = TRUE) {
+  if (!is.character(sep) || length(sep) != 1L) {
+    cli_abort("{.arg sep} must be a length-1 character vector.")
+  }
+
+  if (!is.null(sep_last) && (!is.character(sep) || length(sep) != 1L)) {
+    cli_abort("{.arg sep_last} must be {.code NULL} or a length-1 character vector.")
+  }
+
+  if (!is.logical(show_warnings) && length(show_warnings) == 1L) {
+    cli_abort("{.arg show_warnings} must be {.code TRUE} or {.code FALSE}.")
+  }
+
+  if (!is.null(acronyms) && !is.vector(acronyms, mode = "character")) {
+    cli_abort("{.arg acronyms} must be {.code NULL} or a character vector.")
+  }
+
+  out <- dictionary$get_acronyms()
+
+  if (is.null(out)) {
+    cli_abort(
+      "No acronyms in dictionary. Use {.topic perinary::set_acronyms} to set the acronyms first."
+    )
+  }
+
+  if (is.null(acronyms)) {
+    acronyms <- names(out)
+  }
+
+  keep <- intersect(names(out), acronyms)
+
+  if (length(keep) == 0L) {
+    if (show_warnings) {
+      cli_warn("No acronyms match {.code names(dictionary$get_acronyms())}.")
+    }
+
+    return(character(0L))
+  }
+
+  if (show_warnings && length(keep) != length(acronyms)) {
+    missing_acronyms <- setdiff(acronyms, keep)
+
+    cli_warn(c(
+      "The following acronym{?s} {?is/are} not present in {.code names(dictionary$get_acronyms())}:",
+      set_names(missing_acronyms, "x")
+    ))
+  }
+
+  # Acronyms were already sorted by set_acronyms()
+  out <- out[keep]
+
+  out <- paste(names(out), out, sep = " = ")
+
+  sep_last <- sep_last %||% sep
+
+  if (length(out) > 1L) {
+    # Split into first n - 1 acronyms and the n-th acronym
+    out_head <- paste(setdiff(out, out[length(out)]), collapse = sep)
+    out_last <- out[length(out)]
+
+    out <- paste(out_head, out_last, sep = sep_last)
+  }
+
+  out <- paste0(out, ".")
 
   return(out)
 }

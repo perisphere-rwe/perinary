@@ -25,12 +25,12 @@
 #'
 #' @examples
 #'
-#' dd <- as_data_dictionary(data.frame(a = 1, b = "cat", id = 1)) %>%
-#'  set_identifiers(id) %>%
-#'  set_labels(a = "numeric example", b = "categorical example") %>%
-#'  set_units(a = "years") %>%
-#'  set_divby_modeling(a = 10) %>%
-#'  set_descriptions(a = "A variable used for examples") %>%
+#' dd <- as_data_dictionary(data.frame(a = 1, b = "cat", id = 1)) |>
+#'  set_identifiers(id) |>
+#'  set_labels(a = "numeric example", b = "categorical example") |>
+#'  set_units(a = "years") |>
+#'  set_divby_modeling(a = 10) |>
+#'  set_descriptions(a = "A variable used for examples") |>
 #'  set_category_labels(b = c("cat" = "A small lion"))
 #'
 #' dd
@@ -79,7 +79,7 @@ dd_set <- function(dictionary, ..., .list, field){
   assert_valid_dotdot(..., .list = .list)
 
   # capture input and plug in templates from dictionary
-  .dots <- infer_dotdot(..., .list = .list) %>%
+  .dots <- infer_dotdot(..., .list = .list) |>
     infer_templates(dictionary, field = field)
 
   if(is_empty(.dots)) return(dictionary)
@@ -94,7 +94,8 @@ dd_set <- function(dictionary, ..., .list, field){
 #' @importFrom checkmate assert_class
 #' @importFrom dplyr mutate
 #' @importFrom purrr map map_lgl
-#' @importFrom rlang abort set_names
+#' @importFrom cli cli_abort
+#' @importFrom rlang set_names
 #' @importFrom tibble enframe
 #'
 #' @export
@@ -107,7 +108,7 @@ set_category_labels <- function(dictionary, ..., .list = NULL){
 
   assert_class(dictionary, "DataDictionary")
 
-  input_frame <- enframe(.dots) %>%
+  input_frame <- enframe(.dots) |>
     mutate(inputs = map(value, names))
 
   dictionary <- dd_set_prep(dictionary, .dots, field = 'category_label')
@@ -116,58 +117,57 @@ set_category_labels <- function(dictionary, ..., .list = NULL){
 
     levels_to_modify <- names(.dots[[i]])
 
-    current_cats <- dictionary$get_category_translater(i) %>%
-      .[-which(names(.) %in% levels_to_modify)]
+    .temp_cats <- dictionary$get_category_translater(i)
+    current_cats <- .temp_cats[-which(names(.temp_cats) %in% levels_to_modify)]
 
     if(any(.dots[[i]] %in% current_cats)){
 
       highlight <- names(current_cats[match(.dots[[i]], current_cats)])
 
-      abort(
-        message = c(
+      cli_abort(
+        c(
           glue("Invalid assignment of label \'{.dots[[i]]}\' to \\
                category \'{levels_to_modify}\' of variable `{i}`"),
           i = glue("This label is already assigned to category \\
                    \'{highlight}\' of variable `{i}`"),
           i = "category labels must be unique within variables"
-        ),
-        call = NULL
+        )
       )
 
     }
   }
 
 
-  missing_level_names <- input_frame$value %>%
-    map_lgl(.f = ~ "" %in% names(.x)) %>%
+  missing_level_names <- input_frame$value |>
+    map_lgl(.f = ~ "" %in% names(.x)) |>
     which()
 
   if(!is_empty(missing_level_names)){
 
-    problems <- .dots[missing_level_names] %>%
-      paste_named_vec() %>%
+    problems <- .dots[missing_level_names] |>
+      paste_named_vec() |>
       set_names(nm = "x")
 
-    abort(
-      message = c(
+    cli_abort(
+      c(
         "Inputs in `...` must be name-value pairs",
-        "i" = "for `set_category_labels()`, values must also be named vectors",
+        "i" = "for {.fn set_category_labels}, values must also be named vectors",
         ">" = "problematic inputs are:",
         problems,
         "v" = "To fix: replace MISSING_NAME with an existing level in the given variable"
-      ),
-      call = NULL
+      )
     )
 
   }
 
 
-  input_frame %<>% mutate(
-    choices = map(
-      name,
-      ~dictionary$variables[[.x]]$get_category_levels()
+  input_frame <- input_frame |>
+    mutate(
+      choices = map(
+        name,
+        ~dictionary$variables[[.x]]$get_category_levels()
+      )
     )
-  )
 
   # check with a for-loop so we don't
   # trigger purrr-specific error message
@@ -253,8 +253,8 @@ set_category_labels <- function(dictionary, ..., .list = NULL){
 #'
 #' @examples
 #'
-#' dd_ordered <- as_data_dictionary(iris) %>%
-#'   set_variable_order(Species, .before = Sepal.Length) %>%
+#' dd_ordered <- as_data_dictionary(iris) |>
+#'   set_variable_order(Species, .before = Sepal.Length) |>
 #'   set_variable_order(ends_with("Length"), .after = Petal.Width)
 #'
 #' set_default_dictionary(dd_ordered)
@@ -264,10 +264,10 @@ set_category_labels <- function(dictionary, ..., .list = NULL){
 #' # this also respects the ordering of categories within variables,
 #' # which is not straightforward to do with the usual dplyr::arrange()
 #'
-#' lm(Sepal.Length ~ ., data = iris) %>%
-#'   broom::tidy() %>%
-#'   dplyr::filter(term != "(Intercept)") %>%
-#'   append_term_key() %>%
+#' lm(Sepal.Length ~ ., data = iris) |>
+#'   broom::tidy() |>
+#'   dplyr::filter(term != "(Intercept)") |>
+#'   append_term_key() |>
 #'   index_terms()
 #'
 #'
@@ -308,15 +308,15 @@ set_category_order <- function(dictionary, ..., .list = NULL){
 
   if(is_empty(.dots)) return(dictionary)
 
-  input_frame <- enframe(.dots) %>%
+  input_frame <- enframe(.dots) |>
     mutate(
       inputs = map(value, names),
       choices = map(name, ~dictionary$get_category_levels(name = .x))
     )
 
-  .check <- input_frame %>%
-    mutate(value = map2(value, choices, union)) %>%
-    select(name, value) %>%
+  .check <- input_frame |>
+    mutate(value = map2(value, choices, union)) |>
+    select(name, value) |>
     deframe()
 
   dictionary$check_modify_call(.check, field = "category_label")
@@ -343,13 +343,13 @@ set_category_order <- function(dictionary, ..., .list = NULL){
     current_lvls <- dictionary$variables[[i]]$get_category_levels()
     unused_lvls <- setdiff(current_lvls, inputs[[1]])
 
-    inputs[[1]] %<>% append(unused_lvls)
+    inputs[[1]] <- append(inputs[[1]], unused_lvls)
 
     dictionary$modify_dictionary(inputs, field = 'category_levels')
 
     if(!is.null(dictionary$variables[[i]]$category_labels)){
 
-      current_labs <- dictionary$variables[[i]]$get_category_labels() %>%
+      current_labs <- dictionary$variables[[i]]$get_category_labels() |>
         set_names(current_lvls)
 
       input_labs <- inputs
@@ -386,8 +386,7 @@ set_identifiers <- function(dictionary, ...){
 
   dictionary <- dictionary$clone(deep = dictionary$copy_on_modify)
 
-  input_strings <- sapply(substitute(list(...)), deparse)[-1] %>%
-    gsub("\"", "", .)
+  input_strings <- gsub("\"", "", sapply(substitute(list(...)), deparse)[-1])
 
   dictionary$set_identifiers(input_strings)
 
@@ -479,10 +478,10 @@ set_description_templates <- function(dictionary,
 #' @param field character; the field of the data dictionary that will receive
 #'   the templates. Either "label" or "description".
 #'
-#' @importFrom cli cli_abort
+#' @importFrom cli cli_abort cli_warn
 #' @importFrom glue glue
 #' @importFrom purrr map map_chr map_lgl
-#' @importFrom rlang expr set_names warn
+#' @importFrom rlang expr set_names
 #' @importFrom tidyselect eval_select
 #'
 #' @noRd
@@ -583,11 +582,10 @@ set_templates <- function(dictionary,
       duped_vars <- paste(duped_vars, collapse = ", ")
     }
 
-    warn(
-      message = paste0(
-        "Multiple templates specified for the following variables: ",
-        duped_vars,
-        ". The last template specified for each variable will be used."
+    cli_warn(
+      c(
+        paste0("Multiple templates specified for the following variables: ", duped_vars),
+        "i" = "The last template specified for each variable will be used."
       )
     )
   }
@@ -631,4 +629,119 @@ set_templates <- function(dictionary,
   )
 
   return(dictionary)
+}
+
+
+#' @title Set and Remove Acronyms
+#'
+#' @description Add acronyms and their descriptions to a `DataDictionary`.
+#'   Acronyms can also be removed if they are no longer used.
+#'
+#' @param dictionary `r roxy_describe_dd()`
+#' @param ... one or more comma-separated name-value pairs. Pairs are of the
+#'   form of `acronym = "spelled-out acronym"` or `"acronym" = "spelled-out
+#'   acronym"`.
+#' @param .list a list of name-value pairs. This argument is optional and
+#'   intended to be used in place of `...` for programmatic setting of acronyms.
+#' @param show_warnings logical; whether to display warnings.
+#'
+#' @returns A modified `dictionary`.
+#'
+#' @seealso \code{\link{get_acronym_defs}}
+#'
+#' @export
+#'
+#' @importFrom cli cli_abort cli_warn
+#'
+#' @examples
+#' dd <- as_data_dictionary(iris)
+#' dd$get_acronyms() # NULL
+#'
+#' dd <- set_acronyms(dictionary = dd,
+#'                    SBP = "systolic blood pressure",
+#'                    DBP = "diastolic blood pressure")
+#'
+#' dd$get_acronyms()
+
+set_acronyms <- function(dictionary,
+                         ...,
+                         .list = NULL,
+                         show_warnings = TRUE) {
+  if (!is.logical(show_warnings) && length(show_warnings) == 1L) {
+    cli_abort("{.arg show_warnings} must be {.code TRUE} or {.code FALSE}.")
+  }
+
+  assert_valid_dotdot(..., .list = .list, names_required = TRUE)
+
+  # capture input and plug in templates from dictionary
+  dots <- infer_dotdot(..., .list = .list)
+
+  if (length(dots) == 0L) {
+    if (show_warnings) {
+      cli_warn("No acronyms provided. Returning the original dictionary.")
+    }
+
+    return(dictionary)
+  }
+
+  throw_error <- map_lgl(dots, function(dot_i) {
+    !is.null(dot_i) && (
+      !is.vector(dot_i, mode = "character") ||
+        length(dot_i) != 1L
+    )
+  })
+
+  throw_error <- any(throw_error) || is.null(names(dots))
+
+  if (throw_error) {
+    cli_abort(
+      message = paste0(
+        "... must be one or more name = value pairs, where value is NULL or ",
+        "a length 1 character vector. Please see the examples section of ",
+        "{.topic perinary::set_acronyms} to learn more."
+      )
+    )
+  }
+
+  # NULL or a named character vector
+  acronyms <- dictionary$get_acronyms()
+
+  # If an acronym is set to NULL, remove it
+  null_types <- which(map_chr(dots, typeof) == "NULL")
+
+  if (length(acronyms) && length(null_types)) {
+    acronyms <- acronyms[!names(acronyms) %in% names(dots)[null_types]]
+  }
+
+  dots[null_types] <- NULL
+
+  empty_dots <- length(dots) == 0L
+
+  dots <- unlist(dots, recursive = FALSE, use.names = TRUE)
+
+  # Check for duplicate acronyms
+  if (show_warnings & !empty_dots) {
+    assert_inputs_unique(names(dots))
+  }
+
+  # Update/add acronyms
+  if (!empty_dots) {
+    # If there are any duplicates, the last description will be used
+    acronyms[names(dots)] <- dots
+  }
+
+  # Empty list should be NULL. This can happen if all acronyms were set to NULL
+  if (length(acronyms) == 0L) {
+    acronyms <- NULL
+  }
+
+  if (length(acronyms)) {
+    acronyms <- acronyms[order(names(acronyms))] # sort
+  }
+
+  out <- dictionary$clone(deep = dictionary$copy_on_modify)
+
+  out$acronyms <- acronyms
+
+  return(out)
 }
