@@ -51,9 +51,12 @@ character/factor.
 
 \item{...}{Additional arguments passed to the \code{translate} method.
 \itemize{
-\item For \code{translate_data}, nothing happens at the moment. Eventually
-this \code{...} will be used to select which columns to translate. The
-default will be \code{everything()}.
+\item For \code{translate_data}, \code{...} uses
+\href{https://tidyselect.r-lib.org/reference/language.html}{tidyselect}
+to choose which columns to translate. Any tidyselect expression is
+accepted (e.g., \code{starts_with("age")}, \code{c(sex, bmi)}). When \code{...} is
+empty the default is \code{everything()}, i.e. all columns in \code{x} are
+considered for translation.
 \item For \code{translate_names}, \code{...} must contain name-value pairs. The name can
 be any value in \code{x} and the corresponding value indicates what to
 translate \code{x} to. This can be used  to overrule the value that the
@@ -180,6 +183,14 @@ out2 <- translate_data(
 out2$age_years # now 5.5 (i.e., 55 / 10)
 
 attr(out2$age_years, "label") # "Age of participant, per 10 years"
+
+# Translate only the age_years column (gender left unchanged)
+out3 <- translate_data(
+  dat, dictionary = dd,
+  age_years
+)
+attr(out3$age_years, "label") # "Age of participant"
+attr(out3$gender, "label")    # NULL
 
 # Replace variable names with labels (useful after pivot_longer)
 translate_names(c("age_years", "gender"), dictionary = dd)

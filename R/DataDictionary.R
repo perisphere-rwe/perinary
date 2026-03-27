@@ -895,7 +895,7 @@ DataDictionary <- R6Class(
 
     },
 
-    translate_data = function(x, ...,
+    translate_data = function(x, .cols,
                               units,
                               warn_unmatched,
                               apply_variable_labels,
@@ -904,7 +904,7 @@ DataDictionary <- R6Class(
                               drop_unused_levels){
 
       overlapping_variables <- self |>
-        infer_overlapping_variables(x, warn_unmatched)
+        infer_overlapping_variables(x[.cols], warn_unmatched)
 
       unit_variables <- overlapping_variables |>
         intersect(self$get_names_with_units())
