@@ -515,39 +515,16 @@ fit
 #> 6 bill_depth_mm          440.     101.       4.35 1.83e- 5    241.       639.
 ```
 
-We use `append_term_key()` to add columns indicating variable name,
-category level, category label, and reference groups to the model output
-(a row is also added for each reference group).
+We use `index_terms()` to attach variable and category metadata from the
+dictionary and re-order the rows to match dictionary order. This is
+helpful when you want variables to be listed in a consistent order
+throughout your report. This is also where our earlier use of
+`set_variable_order()` has relevance — note how the variable ordering we
+set there is reflected in this table (i.e., species is first).
 
 ``` r
 
-fit_appended <- append_term_key(fit, dictionary = dd_peng)
-
-fit_appended
-#> # A tibble: 8 × 11
-#>   name        level label reference term  estimate std.error statistic   p.value
-#>   <chr>       <chr> <chr> <lgl>     <chr>    <dbl>     <dbl>     <dbl>     <dbl>
-#> 1 (Intercept) <NA>  <NA>  FALSE     (Int…    1036.     482.       2.15  3.24e- 2
-#> 2 sex         male  Male… TRUE      sexM…      NA       NA       NA    NA       
-#> 3 sex         fema… Fema… FALSE     sexF…    -437.      49.1     -8.90  3.84e-17
-#> 4 species     Chin… Chin… TRUE      spec…      NA       NA       NA    NA       
-#> 5 species     Adel… Adel… FALSE     spec…     245.      84.6      2.90  4.01e- 3
-#> 6 species     Gent… Gent… FALSE     spec…    1689.      82.2     20.5   8.99e-61
-#> 7 bill_lengt… <NA>  <NA>  FALSE     bill…     133.      36.2      3.66  2.90e- 4
-#> 8 bill_depth… <NA>  <NA>  FALSE     bill…     440.     101.       4.35  1.83e- 5
-#> # ℹ 2 more variables: conf.low <dbl>, conf.high <dbl>
-```
-
-Second, we use `index_terms` to re-order the rows of these data based on
-the order they appear in the dictionary. This is helpful when you want
-variables to be listed in consistent order throughout your report. This
-is also where our earlier use of `set_variable_order()` has relevance -
-note how the variable ordering we set there is reflected in this table
-(i.e., species is first).
-
-``` r
-
-fit_sorted <- index_terms(fit_appended, dictionary = dd_peng)
+fit_sorted <- index_terms(fit, dictionary = dd_peng)
 ```
 
 Third, we tabulate the results

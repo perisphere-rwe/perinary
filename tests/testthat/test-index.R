@@ -24,35 +24,46 @@ test_that(
 )
 
 test_that(
-  desc = "index_terms is deprecated and forwards to index_rows",
+  desc = "index_terms applies append_term_key then index_rows",
   code = {
 
-    dd_gender <- data_dictionary(
-      nominal_variable(
-        "gender",
-        label = "Gender",
-        category_levels = c("M", "F"),
-        category_labels = c("Male", "Female")
-      )
-    )
+    dd_iris <- as_data_dictionary(iris) %>%
+      set_category_order(Species = c("setosa")) %>%
+      set_category_labels(Species = c(versicolor = "Versi")) %>%
+      set_variable_order(Species, .before = 1) %>%
+      set_variable_order(ends_with("Length"), .after = Species)
 
-    df <- tibble::tibble(
-      name  = c("gender", "gender"),
-      level = c("F", "M"),
-      n     = c(12L, 18L)
-    )
+    fit <- lm(Sepal.Length ~ ., data = iris) %>% broom::tidy()
 
-    # Should emit a deprecation warning pointing to index_rows
-    expect_warning(
-      result <- index_terms(df, dictionary = dd_gender),
-      regexp = "index_rows"
-    )
+    # index_terms should produce the same result as the manual pipeline
+    result_shorthand <- index_terms(fit, dictionary = dd_iris)
 
-    # Output should be identical to index_rows
-    expect_equal(
-      result,
-      index_rows(df, dictionary = dd_gender)
-    )
+    result_manual <- fit %>%
+      append_term_key(dictionary = dd_iris) %>%
+      index_rows(dictionary = dd_iris)
+
+    expect_equal(result_shorthand, result_manual)
+
+  }
+)
+
+test_that(
+  desc = "index_terms output matches snapshot",
+  code = {
+
+    dd_iris <- as_data_dictionary(iris) %>%
+      set_category_order(Species = c("setosa")) %>%
+      set_category_labels(Species = c(versicolor = "Versi")) %>%
+      set_variable_order(Species, .before = 1) %>%
+      set_variable_order(ends_with("Length"), .after = Species)
+
+    set_default_dictionary(dd_iris)
+
+    fit_trafo <- lm(Sepal.Length ~ ., data = translate_data(iris)) %>%
+      broom::tidy() %>%
+      index_terms()
+
+    expect_snapshot(fit_trafo)
 
   }
 )

@@ -31,15 +31,7 @@
 #' @importFrom rlang !! set_names
 #' @importFrom tidyr fill
 #'
-#' @export
-#'
-#' @examples
-#'
-#' library(broom)
-#'
-#' fit <- tidy(lm(Sepal.Length ~ ., data = iris))
-#'
-#' append_term_key(fit, as_data_dictionary(iris))
+#' @keywords internal
 
 append_term_key <- function(data,
                             dictionary = NULL,

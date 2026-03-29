@@ -50,32 +50,63 @@ index_rows <- function(data,
 }
 
 
-#' Order rows by dictionary terms (deprecated)
+#' Order model terms by dictionary variables and category levels
 #'
-#' `r lifecycle::badge("deprecated")`
+#' A convenience wrapper for `broom::tidy()` output that attaches variable
+#' and category metadata from the dictionary, then sorts rows into dictionary
+#' order via [index_rows()].
 #'
-#' `index_terms()` has been renamed to [index_rows()] for consistency with
-#' [index_columns()]. Please update your code to use `index_rows()`.
+#' @param data A data frame of model output, typically from [broom::tidy()].
+#'   Must contain a column identifying model terms (see `term_colname`).
 #'
-#' @inheritParams index_rows
+#' @param dictionary `r roxy_describe_dd()`. `r roxy_default_dd()`.
 #'
-#' @returns The same type as `data`, with rows re-ordered. See [index_rows()].
+#' @param term_separator A string used to separate variable names and
+#'   category values when constructing or matching terms. Default is `""`
+#'   to match the default separator that most R modeling functions use.
 #'
-#' @importFrom lifecycle deprecate_warn
+#' @param term_colname Name of the column in `data` that contains term
+#'   identifiers. Default is `"term"`.
+#'
+#' @param names Character value giving the column name that stores the
+#'   variable name in the enriched output. Default is `"name"`.
+#'
+#' @param levels Character value giving the column name that stores the
+#'   category code/level in the enriched output. Default is `"level"`.
+#'
+#' @returns The same type as `data` (with term-key columns appended), rows
+#'   sorted to match the variable and category order defined in the dictionary.
+#'
+#' @examples
+#'
+#' library(broom)
+#'
+#' dd <- as_data_dictionary(iris) |>
+#'   set_variable_order(Species, .before = 1)
+#'
+#' fit <- tidy(lm(Sepal.Length ~ ., data = iris))
+#'
+#' index_terms(fit, dictionary = dd)
 #'
 #' @export
 index_terms <- function(data,
                         dictionary = NULL,
-                        names = 'name',
-                        levels = 'level'){
+                        term_separator = "",
+                        term_colname   = 'term',
+                        names          = 'name',
+                        levels         = 'level'){
 
-  deprecate_warn(
-    when    = "0.0.2",
-    what    = "index_terms()",
-    with    = "index_rows()"
-  )
-
-  index_rows(data, dictionary = dictionary, names = names, levels = levels)
+  data |>
+    append_term_key(
+      dictionary     = dictionary,
+      term_separator = term_separator,
+      term_colname   = term_colname
+    ) |>
+    index_rows(
+      dictionary = dictionary,
+      names      = names,
+      levels     = levels
+    )
 
 }
 
