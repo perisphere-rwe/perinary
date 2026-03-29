@@ -591,8 +591,8 @@ is_data_dictionary <- function(x){
 #' @importFrom checkmate assert_character assert_choice
 #' @importFrom cli cli_abort cli_warn
 #' @importFrom dplyr all_of arrange filter first group_by mutate pull relocate
-#'   recode select ungroup
-#' @importFrom purrr compact discard imap_dfr map map2 map_chr map_lgl reduce
+#'   select ungroup
+#' @importFrom purrr compact keep imap_dfr map map2 map_chr map_lgl reduce
 #' @importFrom rlang !!! is_empty quo_is_null set_names
 #' @importFrom stats na.omit
 #' @importFrom tibble as_tibble enframe tibble
@@ -726,11 +726,11 @@ DataDictionary <- R6Class(
     },
 
     get_names_with_units = function(){
-      names(discard(self$variables, ~is.null(.x$units)))
+      names(keep(self$variables, ~!is.null(.x$units)))
     },
 
     get_names_with_divby = function(){
-      names(discard(self$variables, ~is.null(.x$divby_modeling)))
+      names(keep(self$variables, ~!is.null(.x$divby_modeling)))
     },
 
     get_name_translater = function(name = NULL,
@@ -1131,25 +1131,7 @@ DataDictionary <- R6Class(
         self$get_category_translater(name = names, quiet = TRUE) |>
         private$bind_list_to_translater(.list = .list)
 
-
-      # the names of translater are levels
-      dup_levels <- duplicated(names(translater))
-      # the values of translater are labels
-      dup_labels <- duplicated(translater)
-
-      # mapping the same level to multiple labels causes a problem.
-      # e.g., mapping level of "yes" to labels of X and Y? When should
-      # it map to X and when should it map to Y? We can't tell if
-      # we only see "yes"'s in the vector that we are trying to translate.
-
-      dup_problems <- names(translater)[dup_levels] |>
-        # mapping multiple levels to the same label is okay.
-        # e.g., mapping levels of X and Y to the label of "yes"? no problem.
-        # this step removed those.
-        setdiff(names(translater)[dup_labels]) |>
-        # this step makes it so we only throw warnings if the duplicates
-        # are actually in the input vector
-        intersect(x)
+      dup_problems <- private$find_dup_problems(translater, x)
 
       if(!is_empty(dup_problems)){
 
@@ -1182,127 +1164,14 @@ DataDictionary <- R6Class(
         # appear more than once in the translater vector. Calling factor() with
         # a duplicated level will throw an error, so the translater is filtered
         # here by removing any items that have the exact same level and label.
+        dup_levels <- duplicated(names(translater))
+        dup_labels <- duplicated(translater)
         translater <- translater[!(dup_labels & dup_levels)]
 
         private$recode_as_factor(x, translater, unmatched, drop_unused_levels)
       } else {
         private$recode_as_character(x, translater)
       }
-
-    },
-
-    translate_nominal = function(x, ...,
-                                 units,
-                                 warn_unmatched){
-
-      x_uni <- unique(na.omit(x))
-
-      name_translater <- self$get_name_translater(quiet = TRUE, units = units)
-      level_translater <- self$get_category_translater(quiet = TRUE)
-
-      x_in_variable_names <- x_uni %in% names(name_translater)
-      x_in_variable_levels <- x_uni %in% names(level_translater)
-
-      if(!is_empty(list(...))){
-        name_translater <- c(name_translater, list(...))
-        level_translater <- c(level_translater, list(...))
-      }
-
-      if(any(x_in_variable_levels & x_in_variable_names)){
-        cli_abort(c(
-          "Unique values of {.arg x} are present in both variable labels and category labels.",
-          "i" = "It is not clear which should be used to translate {.arg x}."
-        ))
-      }
-
-      if(any(x_in_variable_levels)){
-
-        # the names of level_translater are levels
-        dup_levels <- duplicated(names(level_translater))
-        # the values of level_translater are labels
-        dup_labels <- duplicated(level_translater)
-
-        # mapping the same level to multiple labels causes a problem.
-        # e.g., mapping level of "yes" to labels of X and Y? When should
-        # it map to X and when should it map to Y? We can't tell if
-        # we only see "yes"'s in the vector that we are trying to translate.
-
-        dup_problems <- names(level_translater)[dup_levels] |>
-          # mapping multiple levels to the same label is okay.
-          # e.g., mapping levels of X and Y to the label of "yes"? no problem.
-          # this step removed those.
-          setdiff(names(level_translater)[dup_labels]) |>
-          # this step makes it so we only throw warnings if the duplicates
-          # are actually in the input vector
-          intersect(x)
-
-        if(!is_empty(dup_problems)){
-
-          dups_explained <- dup_problems |>
-            set_names() |>
-            map(
-              \(.x) paste0("'", level_translater[names(level_translater) %in% .x], "'") |>
-                paste(collapse = ' and ') |>
-                (\(s) paste0("The level '", .x, "' maps to labels of ", s))()
-            )
-
-          cli_warn(c(
-            "One or more levels in the dictionary map to multiple labels:",
-            set_names(paste(dups_explained), "x"),
-            "i" = "{.fn translate} can only map a level to one label; only the first label will be used.",
-            "i" = "Fix this by changing levels of nominal variables or using per-variable translate vectors."
-          ))
-
-        }
-
-      }
-
-      if(all(x_in_variable_levels)){
-
-        out <- private$recode_as_factor(x, level_translater)
-        # out <- recode(x, !!!level_translater)
-
-        return(out)
-
-      }
-
-      if(all(x_in_variable_names)){
-
-        out <- private$recode_as_factor(x, name_translater)
-        # out <- recode(x, !!!name_translater)
-
-        return(out)
-
-      }
-
-      leftovers <- setdiff(x_uni, c(names(name_translater),
-                                    names(level_translater)))
-
-      if(!is_empty(leftovers) && warn_unmatched){
-        cli_warn(c(
-          "i" = "Unique values in {.arg x} could not be matched with variable labels or level labels in the dictionary.",
-          "i" = "The {.arg x} values that could not be matched: {.val {leftovers}}",
-          "i" = "To disable this warning, set {.code warn_unmatched = FALSE} in {.fn translate}."
-        ))
-      }
-
-      # would not make sense to convert this to a factor
-      out <- recode(x, !!!c(name_translater, level_translater))
-
-      out
-
-    },
-
-    translate_numeric = function(x,
-                                 name,
-                                 units,
-                                 warn_unmatched){
-
-      if(!name %in% self$get_names_numeric()){
-        cli_abort("{.arg name} does not match any numeric variable in the dictionary.")
-      }
-
-      x
 
     },
 
@@ -1444,47 +1313,16 @@ DataDictionary <- R6Class(
       assert_inputs_unique(names(key))
     },
 
-    translate_categories_internal = function(x, .list, name){
-
-      if(name %in% self$get_names()){
-        translater <-
-          self$get_category_translater(name = name, quiet = TRUE)
-      } else {
-        translater <- .list
-      }
-
-      private$recode_as_factor(x, translater)
-
-    },
-
-    bind_list_to_translater = function(translater, .list,
-                                       add_replacements = TRUE,
-                                       add_leftovers = TRUE){
-
-      # let ... replace categories or add new ones
-      # - replace existing categories if needed
-      # - add the leftovers to translater
-
-      .list_split <- enframe(.list) |>
-        mutate(in_translater = factor(name %in% names(translater),
-                                      levels = c(FALSE, TRUE),
-                                      labels = c("leftover",
-                                                 "replace")))
-      .list_split <- split(.list_split,
-                           f = .list_split$in_translater,
-                           drop = FALSE) |>
-        map(\(.x) .x |> select(name, value) |> deframe() |> unlist())
-
-      if(!is_empty(.list_split$replace) && add_replacements){
-        translater[names(.list_split$replace)] <- .list_split$replace
-      }
-
-      if(!is_empty(.list_split$leftover) && add_leftovers){
-        translater <- c(translater, .list_split$leftover)
-      }
-
-      translater
-
+    # Recode a character/factor vector using a named translater.
+    # Names of translater are old values; values are new values.
+    # Unmatched elements are kept as-is.
+    # translater may be a named list or named character vector.
+    recode_chr = function(x, translater) {
+      translater <- unlist(translater)  # coerce list-form translaters
+      result <- as.character(x)
+      hits <- match(result, names(translater))
+      result[!is.na(hits)] <- translater[hits[!is.na(hits)]]
+      result
     },
 
     recode_as_factor = function(x,
@@ -1492,25 +1330,42 @@ DataDictionary <- R6Class(
                                 unmatched = NULL,
                                 drop_unused_levels = FALSE){
 
-      x <- x |>
-        recode(!!!translater) |>
-        # a duplicate level can occasionally squeak in but only if
-        # it is explicitly allowed by the user or if it is harmless
+      # a duplicate level can occasionally squeak in but only if
+      # it is explicitly allowed by the user or if it is harmless
+      x <- private$recode_chr(x, translater) |>
         factor(levels = unique(c(translater, unmatched)))
 
-      if (drop_unused_levels) {
-        x <- droplevels(x)
-      }
+      if (drop_unused_levels) x <- droplevels(x)
 
-      return(x)
+      x
 
     },
 
     recode_as_character = function(x, translater){
+      private$recode_chr(x, translater)
+    },
 
-      as.character(x) |>
-        recode(!!!translater)
+    # Identify translater keys that map to multiple labels and are present in x.
+    # Returns a character vector of problematic level names.
+    find_dup_problems = function(translater, x) {
+      dup_levels <- duplicated(names(translater))
+      dup_labels <- duplicated(translater)
+      # A level mapping to multiple labels is a problem;
+      # multiple levels mapping to the same label is fine.
+      names(translater)[dup_levels] |>
+        setdiff(names(translater)[dup_labels]) |>
+        intersect(x)
+    },
 
+    bind_list_to_translater = function(translater, .list,
+                                       add_replacements = TRUE,
+                                       add_leftovers = TRUE){
+      if (is_empty(.list)) return(translater)
+      .vec <- unlist(.list)
+      in_trans <- names(.vec) %in% names(translater)
+      if (add_replacements) translater[names(.vec)[ in_trans]] <- .vec[ in_trans]
+      if (add_leftovers)    translater <- c(translater, .vec[!in_trans])
+      translater
     },
 
     # Returns a list with two character vectors: `matched` (data columns present

@@ -53,8 +53,7 @@ get_unknowns <- function(dictionary = NULL,
                          as_code = FALSE,
                          show_optional = FALSE){
 
-
-  dictionary <- dictionary %||% .perinary_internal$.dictionary
+  dictionary <- infer_meta(dictionary)
 
   if(as_request && as_code){
     cli_abort("{.arg as_request} and {.arg as_code} cannot both be {.code TRUE}.")
@@ -238,8 +237,9 @@ get_unknowns <- function(dictionary = NULL,
 #'
 #' @export
 #'
-#' @importFrom dplyr filter if_else mutate rename_with right_join select
+#' @importFrom dplyr filter if_else mutate rename right_join select
 #'   starts_with
+#' @importFrom rlang sym `:=`
 #' @importFrom tidyr drop_na pivot_longer
 #'
 #' @examples
@@ -265,7 +265,7 @@ get_term_key <- function(dictionary,
                  names_to = 'category_type',
                  names_prefix = 'term_') |>
     drop_na(term) |>
-    rename_with(.fn = ~ term_colname, .cols = term)
+    rename(!!sym(term_colname) := term)
 
   if(is.null(adjust_to)) return(out)
 

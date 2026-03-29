@@ -224,30 +224,27 @@ assert_named_list <- function(x) {
   # Identify unnamed entries
   unnamed_idx <- which(is.null(nm) | nm == "" | is.na(nm))
 
-  if (length(unnamed_idx) > 0) {
+  if (!is_empty(unnamed_idx)) {
 
-    if (!is_empty(unnamed_idx)) {
+    n <- length(unnamed_idx)
 
-      n <- length(unnamed_idx)
+    # Try to give a friendly representation of each bad element
+    nm <- x[unnamed_idx] |>
+      map_chr(\(.x) {
+        if (is.atomic(.x) && length(.x) == 1)
+          as.character(.x)
+        else
+          paste0("<", typeof(.x), ">")
+      }) |>
+      paste_collapse(as_code = TRUE)
 
-      # Try to give a friendly representation of each bad element
-      nm <- x[unnamed_idx] |>
-        map_chr(\(.x) {
-          if (is.atomic(.x) && length(.x) == 1)
-            as.character(.x)
-          else
-            paste0("<", typeof(.x), ">")
-        }) |>
-        paste_collapse(as_code = TRUE)
-
-      cli_abort(
-        c(
-          "Unnamed inputs in {.var .list}",
-          "i" = paste("There {?is/are} {n} unnamed input{?s}:", nm),
-          "i" = "All items in {.var .list} must be named."
-        )
+    cli_abort(
+      c(
+        "Unnamed inputs in {.var .list}",
+        "i" = paste("There {?is/are} {n} unnamed input{?s}:", nm),
+        "i" = "All items in {.var .list} must be named."
       )
-    }
+    )
 
   }
 
@@ -258,25 +255,17 @@ assert_named_list <- function(x) {
 
 
 #' @importFrom cli cli_warn
-#' @importFrom dplyr mutate filter pull
 #' @importFrom rlang is_empty
-#' @importFrom tibble enframe
 #'
 #' @noRd
 assert_inputs_unique <- function(key){
-
-  duplicated_inputs <- table(names(key)) |>
-    enframe() |>
-    mutate(value = as.numeric(value)) |>
-    filter(value > 1) |>
-    pull(name)
-
-  if(!is_empty(duplicated_inputs)){
+  t <- table(names(key))
+  duplicated_inputs <- names(t[t > 1])
+  if (!is_empty(duplicated_inputs)){
     cli_warn(c(
       "Duplicated input name{?s}: {.val {duplicated_inputs}}",
       "i" = "Inputs should only need to be specified once."
     ))
   }
-
 }
 
