@@ -1,0 +1,76 @@
+url: https://perisphere-rwe.github.io/perinary
+
+template:
+  bootstrap: 5
+
+home:
+  title: "perinary: Data Dictionaries"
+  description: >
+    A lightweight R package for managing data dictionaries — storing and
+    applying variable metadata (labels, descriptions, units, and category
+    information) to datasets in a maintainable way.
+
+navbar:
+  structure:
+    left: [intro, reference, news]
+    right: [search, github]
+  components:
+    github:
+      icon: fab fa-github
+      href: https://github.com/perisphere-rwe/perinary
+      aria-label: GitHub
+
+reference:
+  - title: "Creating dictionaries"
+    desc: >
+      Functions for creating and combining `DataDictionary` objects.
+    contents:
+      - data_dictionary
+      - as_data_dictionary
+      - bind_dictionary
+
+  - title: "Variable types"
+    desc: >
+      Constructor functions for specifying the type of each variable in a
+      dictionary.
+    contents:
+      - variable_constructors
+
+  - title: "Getting information"
+    desc: >
+      Functions for extracting information from a `DataDictionary`.
+    contents:
+      - get_unknowns
+      - get_term_key
+      - get_dictionary
+      - get_acronym_defs
+
+  - title: "Setting metadata"
+    desc: >
+      Functions for adding or updating metadata in a `DataDictionary`. All
+      functions accept a `dictionary` as their first argument and can be
+      chained with `|>`.
+    contents:
+      - set_labels
+      - set_variable_order
+      - set_identifiers
+      - set_default_dictionary
+      - set_templates
+      - set_acronyms
+
+  - title: "Translating data"
+    desc: >
+      Functions for applying a `DataDictionary` to a dataset by renaming
+      columns, recoding category values, or combining both operations.
+    contents:
+      - translate_data
+      - use_template
+
+  - title: "Indexing columns and rows"
+    desc: >
+      Functions for reordering rows or columns in a data frame using
+      dictionary metadata.
+    contents:
+      - index_columns
+      - index_rows
+      - index_terms
