@@ -226,3 +226,69 @@ test_that(
   }
 )
 
+test_that(
+  "translate_data column selection with ...",
+  code = {
+
+    # Single column selected: only that column gets translated
+    out <- translate_data(data_test, number, dictionary = dd_test_filled)
+
+    expect_equal(attr(out$number, "label"), "A number")
+    expect_null(attr(out$integer, "label"))
+    expect_null(attr(out$character, "label"))
+
+    # Two columns selected: only those columns translated
+    out2 <- translate_data(
+      data_test,
+      number, character,
+      dictionary = dd_test_filled
+    )
+
+    expect_equal(attr(out2$number, "label"), "A number")
+    expect_equal(attr(out2$character, "label"), "A character")
+    expect_null(attr(out2$integer, "label"))
+    expect_null(attr(out2$factor, "label"))
+
+    # Selected column data (character) is recoded; unselected (factor) is not
+    expect_equal(levels(out2$character), dd_test_filled$get_category_labels("character"))
+    # factor column was not translated: its levels are the original input levels
+    expect_equal(levels(out2$factor), levels(data_test$factor))
+
+    # tidyselect helpers work (starts_with)
+    out3 <- translate_data(
+      data_test,
+      starts_with("num"),
+      dictionary = dd_test_filled
+    )
+
+    expect_equal(attr(out3$number, "label"), "A number")
+    expect_null(attr(out3$integer, "label"))
+
+    # Empty ... defaults to everything(): all columns translated
+    out_all <- translate_data(data_test, dictionary = dd_test_filled)
+
+    expect_equal(
+      purrr::map_chr(out_all, ~ attr(.x, "label")),
+      c(
+        number = "A number",
+        integer = "An integer",
+        logical = "A logical",
+        character = "A character",
+        factor = "A factor",
+        date = "A date"
+      )
+    )
+
+    # warn_unmatched only fires for selected columns, not unselected ones
+    expect_no_warning(
+      translate_data(
+        data_test,
+        number,
+        dictionary = dd_test_filled,
+        warn_unmatched = TRUE
+      )
+    )
+
+  }
+)
+

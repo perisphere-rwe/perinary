@@ -24,9 +24,12 @@
 #'
 #' @param ... Additional arguments passed to the `translate` method.
 #'
-#' - For `translate_data`, nothing happens at the moment. Eventually
-#'   this `...` will be used to select which columns to translate. The
-#'   default will be `everything()`.
+#' - For `translate_data`, `...` uses
+#'   [tidyselect](https://tidyselect.r-lib.org/reference/language.html)
+#'   to choose which columns to translate. Any tidyselect expression is
+#'   accepted (e.g., `starts_with("age")`, `c(sex, bmi)`). When `...` is
+#'   empty the default is `everything()`, i.e. all columns in `x` are
+#'   considered for translation.
 #'
 #' - For `translate_names`, `...` must contain name-value pairs. The name can
 #'   be any value in `x` and the corresponding value indicates what to
@@ -125,6 +128,14 @@
 #'
 #' attr(out2$age_years, "label") # "Age of participant, per 10 years"
 #'
+#' # Translate only the age_years column (gender left unchanged)
+#' out3 <- translate_data(
+#'   dat, dictionary = dd,
+#'   age_years
+#' )
+#' attr(out3$age_years, "label") # "Age of participant"
+#' attr(out3$gender, "label")    # NULL
+#'
 #' # Replace variable names with labels (useful after pivot_longer)
 #' translate_names(c("age_years", "gender"), dictionary = dd)
 #'
@@ -135,6 +146,8 @@
 #' [data_dictionary()], [as_data_dictionary()], [set_default_dictionary()]
 #'
 #' @importFrom checkmate assert_character assert_choice assert_logical
+#' @importFrom rlang expr
+#' @importFrom tidyselect eval_select
 #'
 #' @export
 #'
@@ -154,8 +167,15 @@ translate_data <- function(x, ...,
   assert_logical(apply_variable_labels, len = 1)
   assert_logical(apply_category_labels, len = 1)
 
+  .cols <- if (...length() == 0L) {
+    names(x)
+  } else {
+    names(eval_select(expr(c(...)), data = x))
+  }
+
   infer_meta(dictionary)$translate_data(
-    x = x, ...,
+    x = x,
+    .cols = .cols,
     units = units,
     warn_unmatched = warn_unmatched,
     apply_variable_labels = apply_variable_labels,
