@@ -1,4 +1,4 @@
-# index outputs
+# index_rows output matches snapshot
 
     Code
       fit_trafo

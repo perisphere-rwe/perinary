@@ -590,8 +590,8 @@ is_data_dictionary <- function(x){
 
 #' @importFrom checkmate assert_character assert_choice
 #' @importFrom cli cli_abort cli_warn
-#' @importFrom dplyr arrange filter first group_by mutate pull relocate recode
-#'   select ungroup
+#' @importFrom dplyr all_of arrange filter first group_by mutate pull relocate
+#'   recode select ungroup
 #' @importFrom purrr compact discard imap_dfr map map2 map_chr map_lgl reduce
 #' @importFrom rlang !!! is_empty quo_is_null set_names
 #' @importFrom stats na.omit
@@ -860,7 +860,7 @@ DataDictionary <- R6Class(
 
     },
 
-    index = function(data, names = 'name', levels = 'level'){
+    index_rows = function(data, names = 'name', levels = 'level'){
 
       name_sort <- factor(data[[names]],
                           levels = union(self$dictionary$name,
@@ -892,6 +892,20 @@ DataDictionary <- R6Class(
           }
 
         )
+
+    },
+
+    index_columns = function(data, keep_unmatched = TRUE) {
+
+      cols <- private$split_columns(data)
+
+      selected <- if (keep_unmatched) {
+        c(cols$matched, cols$unmatched)
+      } else {
+        cols$matched
+      }
+
+      select(data, all_of(selected))
 
     },
 
@@ -1497,6 +1511,16 @@ DataDictionary <- R6Class(
       as.character(x) |>
         recode(!!!translater)
 
+    },
+
+    # Returns a list with two character vectors: `matched` (data columns present
+    # in the dictionary, in dictionary order) and `unmatched` (data columns
+    # absent from the dictionary, in their original order).
+    split_columns = function(data) {
+      list(
+        matched   = intersect(self$get_names(), names(data)),
+        unmatched = setdiff(names(data), self$get_names())
+      )
     }
 
   )

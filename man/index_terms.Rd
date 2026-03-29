@@ -2,7 +2,7 @@
 % Please edit documentation in R/index.R
 \name{index_terms}
 \alias{index_terms}
-\title{Order rows by dictionary terms}
+\title{Order rows by dictionary terms (deprecated)}
 \usage{
 index_terms(data, dictionary = NULL, names = "name", levels = "level")
 }
@@ -19,32 +19,12 @@ variable name in \code{data}. Default is \code{"name"}.}
 category code/level in \code{data}. Default is \code{"level"}.}
 }
 \value{
-The same type as \code{data}, with rows re-ordered to match the
-order of variables in the dictionary and, within nominal variables,
-the order of categories.
+The same type as \code{data}, with rows re-ordered. See \code{\link[=index_rows]{index_rows()}}.
 }
 \description{
-Reorders a data frame so that rows associated with nominal variables
-follow the order defined in a \code{DataDictionary}. This is useful when
-you want multiple outputs to present variables in a consistent order.
+\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}}
 }
-\examples{
-
-dd <- data_dictionary(
-  nominal_variable(
-    "gender",
-    label = "Gender",
-    category_levels = c("M", "F"),
-    category_labels = c("Male", "Female")
-  )
-)
-
-df <- tibble::tibble(
-  name = c("gender", "gender"),
-  level = c("F", "M"),
-  n = c(12, 18)
-)
-
-index_terms(df, dictionary = dd)
-
+\details{
+\code{index_terms()} has been renamed to \code{\link[=index_rows]{index_rows()}} for consistency with
+\code{\link[=index_columns]{index_columns()}}. Please update your code to use \code{index_rows()}.
 }
