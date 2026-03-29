@@ -41,7 +41,6 @@ set_default_dictionary(dd_ordered)
 lm(Sepal.Length ~ ., data = iris) |>
   broom::tidy() |>
   dplyr::filter(term != "(Intercept)") |>
-  append_term_key() |>
   index_terms()
 
 

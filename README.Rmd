@@ -275,21 +275,11 @@ fit
 
 ```
 
-We use `append_term_key()` to add columns indicating variable name, category level, category label, and reference groups to the model output (a row is also added for each reference group).
+We use `index_terms()` to attach variable and category metadata from the dictionary and re-order the rows to match dictionary order. This is helpful when you want variables to be listed in a consistent order throughout your report. This is also where our earlier use of `set_variable_order()` has relevance — note how the variable ordering we set there is reflected in this table (i.e., species is first).
 
 ```{r}
 
-fit_appended <- append_term_key(fit, dictionary = dd_peng)
-
-fit_appended
-
-```
-
-Second, we use `index_terms` to re-order the rows of these data based on the order they appear in the dictionary. This is helpful when you want variables to be listed in consistent order throughout your report. This is also where our earlier use of `set_variable_order()` has relevance - note how the variable ordering we set there is reflected in this table (i.e., species is first).
-
-```{r}
-
-fit_sorted <- index_terms(fit_appended, dictionary = dd_peng)
+fit_sorted <- index_terms(fit, dictionary = dd_peng)
 
 ```
 

@@ -41,11 +41,4 @@ input \code{data} to match with a term key derived from the dictionary.
 The final output includes a \code{variable} column and preserves term order,
 appending reference terms (if needed) for completeness.
 }
-\examples{
-
-library(broom)
-
-fit <- tidy(lm(Sepal.Length ~ ., data = iris))
-
-append_term_key(fit, as_data_dictionary(iris))
-}
+\keyword{internal}

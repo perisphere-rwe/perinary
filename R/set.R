@@ -267,7 +267,6 @@ set_category_labels <- function(dictionary, ..., .list = NULL){
 #' lm(Sepal.Length ~ ., data = iris) |>
 #'   broom::tidy() |>
 #'   dplyr::filter(term != "(Intercept)") |>
-#'   append_term_key() |>
 #'   index_terms()
 #'
 #'

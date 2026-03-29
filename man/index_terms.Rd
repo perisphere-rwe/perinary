@@ -2,49 +2,54 @@
 % Please edit documentation in R/index.R
 \name{index_terms}
 \alias{index_terms}
-\title{Order rows by dictionary terms}
+\title{Order model terms by dictionary variables and category levels}
 \usage{
-index_terms(data, dictionary = NULL, names = "name", levels = "level")
+index_terms(
+  data,
+  dictionary = NULL,
+  term_separator = "",
+  term_colname = "term",
+  names = "name",
+  levels = "level"
+)
 }
 \arguments{
-\item{data}{A data frame or tibble containing rows to order. Must
-include columns that identify the variable name and category level.}
+\item{data}{A data frame of model output, typically from \code{\link[broom:reexports]{broom::tidy()}}.
+Must contain a column identifying model terms (see \code{term_colname}).}
 
 \item{dictionary}{A \link[=data_dictionary]{data dictionary} object. If \code{NULL}, uses the default dictionary set via \code{\link[=set_default_dictionary]{set_default_dictionary()}}.}
 
+\item{term_separator}{A string used to separate variable names and
+category values when constructing or matching terms. Default is \code{""}
+to match the default separator that most R modeling functions use.}
+
+\item{term_colname}{Name of the column in \code{data} that contains term
+identifiers. Default is \code{"term"}.}
+
 \item{names}{Character value giving the column name that stores the
-variable name in \code{data}. Default is \code{"name"}.}
+variable name in the enriched output. Default is \code{"name"}.}
 
 \item{levels}{Character value giving the column name that stores the
-category code/level in \code{data}. Default is \code{"level"}.}
+category code/level in the enriched output. Default is \code{"level"}.}
 }
 \value{
-The same type as \code{data}, with rows re-ordered to match the
-order of variables in the dictionary and, within nominal variables,
-the order of categories.
+The same type as \code{data} (with term-key columns appended), rows
+sorted to match the variable and category order defined in the dictionary.
 }
 \description{
-Reorders a data frame so that rows associated with nominal variables
-follow the order defined in a \code{DataDictionary}. This is useful when
-you want multiple outputs to present variables in a consistent order.
+A convenience wrapper for \code{broom::tidy()} output that attaches variable
+and category metadata from the dictionary, then sorts rows into dictionary
+order via \code{\link[=index_rows]{index_rows()}}.
 }
 \examples{
 
-dd <- data_dictionary(
-  nominal_variable(
-    "gender",
-    label = "Gender",
-    category_levels = c("M", "F"),
-    category_labels = c("Male", "Female")
-  )
-)
+library(broom)
 
-df <- tibble::tibble(
-  name = c("gender", "gender"),
-  level = c("F", "M"),
-  n = c(12, 18)
-)
+dd <- as_data_dictionary(iris) |>
+  set_variable_order(Species, .before = 1)
 
-index_terms(df, dictionary = dd)
+fit <- tidy(lm(Sepal.Length ~ ., data = iris))
+
+index_terms(fit, dictionary = dd)
 
 }
