@@ -195,24 +195,6 @@ set_category_labels <- function(dictionary, ..., .list = NULL){
     current_lvls <- dictionary$variables[[i]]$get_category_levels()
     current_labs <- dictionary$variables[[i]]$fetch_category_labels()
 
-    # I am taking this out b/c why have this feature when I already
-    # have a function for setting category order. It just confuses
-    # the user. That being said, keeping the commented code here
-    # in case people end up asking for this feature.
-    # # modify both the labels and the order of the levels
-    # if(modify_order){
-    #
-    #   unused_lvls <- setdiff(current_lvls, input_lvls[[1]])
-    #   unused_labs <- current_labs[current_lvls %in% unused_lvls]
-    #
-    #   input_lvls[[1]] %<>% append(unused_lvls)
-    #   input_labs[[1]] %<>% append(unused_labs)
-    #
-    #   dictionary$modify_dictionary(input_lvls, field = 'category_levels')
-    #   dictionary$modify_dictionary(input_labs, field = 'category_labels')
-    #
-    # } else {
-
     # put the inputs into the existing labels.
     input_key <- set_names(input_labs[[1]], input_lvls[[1]])
 
@@ -223,8 +205,6 @@ set_category_labels <- function(dictionary, ..., .list = NULL){
     input_labs[[1]] <- set_names(updated_key, NULL)
 
     dictionary$modify_dictionary(input_labs, field = 'category_labels')
-
-    # }
 
   }
 

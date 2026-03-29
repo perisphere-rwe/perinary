@@ -5,9 +5,9 @@
 
 <!-- badges: start -->
 
-[![R-CMD-check](https://github.com/bcjaeger/perinary/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/bcjaeger/perinary/actions/workflows/R-CMD-check.yaml)
+[![R-CMD-check](https://github.com/perisphere-rwe/perinary/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/perisphere-rwe/perinary/actions/workflows/R-CMD-check.yaml)
 [![Codecov test
-coverage](https://codecov.io/gh/bcjaeger/perinary/graph/badge.svg)](https://app.codecov.io/gh/bcjaeger/perinary)
+coverage](https://codecov.io/gh/perisphere-rwe/perinary/graph/badge.svg)](https://app.codecov.io/gh/perisphere-rwe/perinary)
 <!-- badges: end -->
 
 **Why make this?** Data dictionaries (referred to as “dictionaries” from
