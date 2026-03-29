@@ -1317,7 +1317,7 @@ DataDictionary <- R6Class(
     # Names of translater are old values; values are new values.
     # Unmatched elements are kept as-is.
     # translater may be a named list or named character vector.
-    recode_chr = function(x, translater) {
+    recode_with_translater = function(x, translater) {
       translater <- unlist(translater)  # coerce list-form translaters
       result <- as.character(x)
       hits <- match(result, names(translater))
@@ -1332,7 +1332,7 @@ DataDictionary <- R6Class(
 
       # a duplicate level can occasionally squeak in but only if
       # it is explicitly allowed by the user or if it is harmless
-      x <- private$recode_chr(x, translater) |>
+      x <- private$recode_with_translater(x, translater) |>
         factor(levels = unique(c(translater, unmatched)))
 
       if (drop_unused_levels) x <- droplevels(x)
@@ -1342,7 +1342,7 @@ DataDictionary <- R6Class(
     },
 
     recode_as_character = function(x, translater){
-      private$recode_chr(x, translater)
+      private$recode_with_translater(x, translater)
     },
 
     # Identify translater keys that map to multiple labels and are present in x.
