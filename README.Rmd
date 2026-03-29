@@ -239,25 +239,7 @@ data_peng %>%
 
 ## Model output and dictionaries
 
-If you are using a package like `gtsummary`, which incorporates variable labels automatically, `translate()` is probably all you need from `perinary`. In the example below, we translate our data with `units` set to `"model"`, which additionally preps continuous variables by dividing them by their modeling unit and (e.g., bill length is modeled per 10 mm) and updates labels accordingly. 
-
-```{r, eval = FALSE}
-
-library(gtsummary)
-
-data_peng %>% 
-  translate_data(units = 'model', dictionary = dd_peng) %>% 
-  lm(formula = body_mass_g ~ sex + species + bill_length_mm + bill_depth_mm, 
-     data = .) %>% 
-  tbl_regression()
-
-```
-
-```{r}
-knitr::include_graphics('img/screen-regression_table.png')
-```
-
-In rare cases, `gtsummary` may not provide tools to tabulate our regression results. In those cases, we can use functions from the `append` and `index` class.
+If you are using a package like `gtsummary`, which incorporates variable labels automatically, `translate()` is probably all you need from `perinary`. In rare cases, `gtsummary` may not provide tools to tabulate our modeling results, and in those circumstances we recommend using `broom::tidy` followed by `index_terms` to set up your data for tabulating.
 
 Let's start with tidied model output from `broom`:
 
@@ -287,10 +269,10 @@ Third, we tabulate the results
 
 ```{r}
 
-library(gt)
+library(flextable)
 library(table.glue)
 
-data_gt <- fit_sorted %>% 
+data_ft <- fit_sorted %>% 
   filter(name != "(Intercept)") %>% 
   # push labels for continuous bill variables into the label column
   mutate(
@@ -316,16 +298,19 @@ data_gt <- fit_sorted %>%
     p.value = table_pvalue(p.value)
   )
 
-gt(data_gt, groupname_col = 'name', rowname_col = 'label') %>% 
-  tab_style(
-    style = cell_text(indent = px(16)),           
-    locations = cells_stub()
+data_ft %>% 
+  as_grouped_data(groups = 'name') %>% 
+  as_flextable(hide_grouplabel = TRUE) %>% 
+  theme_box() %>% 
+  set_header_labels(
+    label = "Characteristic",
+    estimate = "Estimated body mass\ndifference, grams (95% CI)", 
+    p.value = "P-value"
   ) %>% 
-  cols_align('center', columns = c(estimate, p.value)) %>% 
-  cols_label(estimate = md("Estimated body mass<br/>difference, grams (95% CI)"), 
-             p.value = "P-value") %>% 
-  tab_stubhead(label = md("**Characteristic**")) %>% 
-  tab_options(table.width = pct(80))
+  autofit() %>% 
+  padding(i = ~ is.na(name), j = 1, padding.left = 15) %>% 
+  align(j = c(2, 3), align = 'center', part = 'all')
+
 ```
 
 
