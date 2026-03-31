@@ -77,6 +77,7 @@
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># install.packages("pak")</span></span>
 <span><span class="fu">pak</span><span class="fu">::</span><span class="fu"><a href="https://pak.r-lib.org/reference/pak.html" class="external-link">pak</a></span><span class="op">(</span><span class="st">"perisphere-rwe/perinary"</span><span class="op">)</span></span></code></pre></div>
+<p><strong>Important</strong>: If you update <code>perinary</code>, be sure to re-create any existing dictionaries in your workflows with the newly installed <code>perinary</code> package. Because <code>perinary</code> uses <code>R6</code>, which attaches functions to objects, dictionaries made using older versions of <code>perinary</code> will contain functions that are incompatible with newer versions of <code>perinary</code>.</p>
 </div>
 <div class="section level2">
 <h2 id="data-dictionaries">Data dictionaries<a class="anchor" aria-label="anchor" href="#data-dictionaries"></a>
