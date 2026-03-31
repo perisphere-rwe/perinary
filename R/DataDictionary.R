@@ -1003,7 +1003,10 @@ DataDictionary <- R6Class(
 
       overlapped <- intersect(x_uni, names(translater))
 
-      dups <- translater[duplicated(translater[overlapped])]
+      # any duplicates in the dictionary appear here
+      dups <- translater[duplicated(translater)]
+      # duplicates relevant to the current translate input are kept here
+      dups <- dups[names(dups) %in% overlapped]
 
       if(!is_empty(dups)){
 

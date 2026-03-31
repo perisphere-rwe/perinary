@@ -173,6 +173,9 @@ test_that(
       nominal_variable('htn_acc_aha', 'Hypertension',
                        category_levels = c('no', 'yes'),
                        category_labels = c("No", "Yes")),
+      nominal_variable('something_else', "something else",
+                       category_levels = c("no", "yes"),
+                       category_labels = c("no", "yes")),
       nominal_variable('htn_jnc7', 'Hypertension',
                        category_levels = c('no', 'yes'),
                        category_labels = c("No", "Yes"))
@@ -185,7 +188,14 @@ test_that(
       regexp = "one-to-many relationship between labels and names"
     )
 
-    # but if you really want them...
+    # if input don't cause dups, don't get upset
+    expect_equal(
+      translate_names(c('htn_acc_aha', 'something_else'),
+                      dictionary = dd),
+      c("Hypertension", "something else")
+    )
+
+    # but if you really want the dups...
     expect_equal(
       translate_names(c('htn_acc_aha', 'htn_jnc7'),
                       dictionary = dd,
