@@ -43,6 +43,13 @@ You can install the development version of `perinary` from
 pak::pak("perisphere-rwe/perinary")
 ```
 
+**Important**: If you update `perinary`, be sure to re-create any
+existing dictionaries in your workflows with the newly installed
+`perinary` package. Because `perinary` uses `R6`, which attaches
+functions to objects, dictionaries made using older versions of
+`perinary` will contain functions that are incompatible with newer
+versions of `perinary`.
+
 ## Data dictionaries
 
 Data dictionaries help organize meta data about variables, storing
