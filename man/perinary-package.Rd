@@ -11,6 +11,7 @@ Keeps labels and other relevant information about variables in a lightweight cla
 \seealso{
 Useful links:
 \itemize{
+  \item \url{https://perisphere-rwe.github.io/perinary}
   \item \url{https://github.com/perisphere-rwe/perinary}
   \item Report bugs at \url{https://github.com/perisphere-rwe/perinary/issues}
 }

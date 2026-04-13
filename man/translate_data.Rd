@@ -27,7 +27,8 @@ translate_names(
   to_factor = FALSE,
   warn_unmatched = TRUE,
   allow_duplicates = FALSE,
-  drop_unused_levels = FALSE
+  drop_unused_levels = FALSE,
+  use_acronyms = FALSE
 )
 
 translate_categories(
@@ -110,6 +111,9 @@ using relevant information from \code{dictionary}.}
 a single label to be attached to multiple variable names. This is
 \code{FALSE} by default because allowing duplicate labels can cause unexpected
 errors in downstream applications. Use with caution.}
+
+\item{use_acronyms}{a logical value indicating whether names should be
+replaced with their acronyms.}
 
 \item{names}{For \code{translate_categories()}: optional character vector of
 variable names to translate (useful when \code{x} is a data frame or when
