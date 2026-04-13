@@ -21,9 +21,9 @@ test_that("Using extra values in translate_names", code = {
                                 warn_unmatched = FALSE)
 
   expect_equal(
-   levels(translated),
-   c("A number", "An integer", "A logical", "A character", "A factor", "A date",
-     "Extra 1", "extra_2")
+    levels(translated),
+    c("A number", "An integer", "A logical", "A character", "A factor", "A date",
+      "Extra 1", "extra_2")
   )
 
   # simple recode when to_factor is false
@@ -47,7 +47,7 @@ test_that("Using extra values in translate_names", code = {
                     dictionary = dd_test_filled,
                     extra_2 = "Extra 2",
                     extra_1 = "Extra 1"
-                    ) %>%
+    ) %>%
       levels(),
     c(translate_names(dd_test_filled$get_names(),
                       to_factor = FALSE,
@@ -302,3 +302,38 @@ test_that(
   }
 )
 
+
+test_that(
+  "translate_names with use_acronyms = TRUE",
+  code = {
+
+    dd <- data.frame(
+      ckd = 1
+    ) %>%
+      as_data_dictionary() %>%
+      set_labels(
+        ckd = "CKD"
+      ) %>%
+      set_acronyms(
+        CKD = "chronic kidney disease"
+      )
+
+    expect_identical(
+      translate_names(
+        x = "ckd",
+        dictionary = dd,
+        use_acronyms = FALSE # default
+      ),
+      "CKD"
+    )
+
+    expect_identical(
+      translate_names(
+        x = "ckd",
+        dictionary = dd,
+        use_acronyms = TRUE
+      ),
+      "chronic kidney disease"
+    )
+  }
+)

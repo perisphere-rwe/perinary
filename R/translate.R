@@ -195,6 +195,8 @@ translate_data <- function(x, ...,
 #'  a single label to be attached to multiple variable names. This is
 #'  `FALSE` by default because allowing duplicate labels can cause unexpected
 #'  errors in downstream applications. Use with caution.
+#' @param use_acronyms a logical value indicating whether names should be
+#'   replaced with their acronyms.
 #'
 #'
 #' @importFrom checkmate assert_character assert_choice assert_list
@@ -208,7 +210,8 @@ translate_names <- function(x, ...,
                             to_factor = FALSE,
                             warn_unmatched = TRUE,
                             allow_duplicates = FALSE,
-                            drop_unused_levels = FALSE){
+                            drop_unused_levels = FALSE,
+                            use_acronyms = FALSE){
 
   assert_character(units, len = 1, any.missing = FALSE)
   assert_choice(units, choices=c('none','descriptive','model'))
@@ -224,7 +227,8 @@ translate_names <- function(x, ...,
     to_factor = to_factor,
     warn_unmatched = warn_unmatched,
     allow_duplicates = allow_duplicates,
-    drop_unused_levels = drop_unused_levels
+    drop_unused_levels = drop_unused_levels,
+    use_acronyms = use_acronyms
   )
 
 }
