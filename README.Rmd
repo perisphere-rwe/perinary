@@ -269,7 +269,7 @@ fit_sorted <- index_terms(fit, dictionary = dd_peng)
 
 Third, we tabulate the results
 
-```{r}
+```{r regression-table, fig.alt = "A formatted regression table showing estimated body mass differences (grams, 95% CI, and p-value) for penguin characteristics including species, sex, and bill dimensions."}
 
 library(flextable)
 library(table.glue)
