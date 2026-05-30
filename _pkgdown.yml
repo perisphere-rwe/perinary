@@ -2,6 +2,11 @@ url: https://perisphere-rwe.github.io/perinary
 
 template:
   bootstrap: 5
+  bslib:
+    primary:      "#006FBE"
+    base_font:    {google: "Source Sans Pro"}
+    heading_font: {google: "Source Sans Pro"}
+    code_font:    {google: "Source Code Pro"}
 
 home:
   title: "perinary: Data Dictionaries"
@@ -9,6 +14,15 @@ home:
     A lightweight R package for managing data dictionaries — storing and
     applying variable metadata (labels, descriptions, units, and category
     information) to datasets in a maintainable way.
+
+footer:
+  structure:
+    left: developed_by
+    right: built_with
+  components:
+    developed_by: >
+      Developed by [Perisphere RWE](https://www.perisphere-rwe.com/) —
+      health outcomes, epidemiology and biostatistics consulting.
 
 navbar:
   structure:
@@ -28,6 +42,7 @@ reference:
       - data_dictionary
       - as_data_dictionary
       - bind_dictionary
+      - bind_variables
 
   - title: "Variable types"
     desc: >

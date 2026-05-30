@@ -1,0 +1,35 @@
+/* ── Navbar ────────────────────────────────────────────────────────────── */
+.navbar {
+  background-color: #006FBE !important;
+}
+
+.navbar .nav-link,
+.navbar .nav-link:hover,
+.navbar .nav-link:focus,
+.navbar-brand,
+.navbar-brand:hover,
+.navbar small.nav-text {
+  color: #FFFFFF !important;
+}
+
+.navbar .nav-link.active {
+  color: #F5D67A !important;   /* peripal yellow — active page indicator */
+}
+
+/* ── Headings ──────────────────────────────────────────────────────────── */
+h1, h2, h3 {
+  color: #006FBE;
+}
+
+h4, h5, h6 {
+  color: #37BEB3;
+}
+
+/* ── Links ─────────────────────────────────────────────────────────────── */
+a {
+  color: #006FBE;
+}
+
+a:hover {
+  color: #37BEB3;
+}
