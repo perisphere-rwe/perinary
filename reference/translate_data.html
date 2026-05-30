@@ -83,7 +83,8 @@ category labels and enforces category order specified in <code>dictionary</code>
 <span>  to_factor <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  warn_unmatched <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  allow_duplicates <span class="op">=</span> <span class="cn">FALSE</span>,</span>
-<span>  drop_unused_levels <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span>  drop_unused_levels <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  use_acronyms <span class="op">=</span> <span class="cn">FALSE</span></span>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu">translate_categories</span><span class="op">(</span></span>
@@ -187,6 +188,13 @@ a single label to be attached to multiple variable names. This is
 errors in downstream applications. Use with caution.</p></dd>
 
 
+<dt id="arg-use-acronyms">use_acronyms<a class="anchor" aria-label="anchor" href="#arg-use-acronyms"></a></dt>
+<dd><p><code>TRUE</code> or <code>FALSE</code> (default). When <code>TRUE</code>, any label
+returned by <code>translate_names()</code> that contains a spelled-out acronym
+description stored in <code>dictionary</code> will have that phrase replaced by the
+corresponding acronym abbreviation.</p></dd>
+
+
 <dt id="arg-names">names<a class="anchor" aria-label="anchor" href="#arg-names"></a></dt>
 <dd><p>For <code>translate_categories()</code>: optional character vector of
 variable names to translate (useful when <code>x</code> is a data frame or when
@@ -207,6 +215,9 @@ corresponding to input levels.</p></li>
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p>Transfer variable labels/units and category labels/order into a vector
 or data frame.</p>
+<p>When <code>use_acronyms = TRUE</code>, acronym substitution is applied longest-first.
+This prevents a shorter acronym that is a substring of a longer one (e.g.,
+"BP" inside "SBP") from being applied before the longer one.</p>
 <p>With the choice <code>units = "model"</code>, any numeric variable in
 <code>dictionary</code> that has a <code>divby_modeling</code> value will be modified in the
 data, specifically by being divided by <code>divby_modeling</code>. This transform

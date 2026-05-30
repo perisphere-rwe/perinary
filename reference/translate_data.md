@@ -36,7 +36,8 @@ translate_names(
   to_factor = FALSE,
   warn_unmatched = TRUE,
   allow_duplicates = FALSE,
-  drop_unused_levels = FALSE
+  drop_unused_levels = FALSE,
+  use_acronyms = FALSE
 )
 
 translate_categories(
@@ -152,6 +153,13 @@ translate_categories(
   because allowing duplicate labels can cause unexpected errors in
   downstream applications. Use with caution.
 
+- use_acronyms:
+
+  `TRUE` or `FALSE` (default). When `TRUE`, any label returned by
+  `translate_names()` that contains a spelled-out acronym description
+  stored in `dictionary` will have that phrase replaced by the
+  corresponding acronym abbreviation.
+
 - names:
 
   For `translate_categories()`: optional character vector of variable
@@ -173,6 +181,11 @@ translate_categories(
 
 Transfer variable labels/units and category labels/order into a vector
 or data frame.
+
+When `use_acronyms = TRUE`, acronym substitution is applied
+longest-first. This prevents a shorter acronym that is a substring of a
+longer one (e.g., "BP" inside "SBP") from being applied before the
+longer one.
 
 With the choice `units = "model"`, any numeric variable in `dictionary`
 that has a `divby_modeling` value will be modified in the data,
