@@ -981,7 +981,8 @@ DataDictionary <- R6Class(
                                to_factor = FALSE,
                                warn_unmatched = TRUE,
                                allow_duplicates = FALSE,
-                               drop_unused_levels = FALSE){
+                               drop_unused_levels = FALSE,
+                               use_acronyms = FALSE){
 
       x_uni <- unique(na.omit(x))
 
@@ -1034,9 +1035,10 @@ DataDictionary <- R6Class(
       }
 
       if(to_factor){
-        private$recode_as_factor(x, translater, unmatched, drop_unused_levels)
+        private$recode_as_factor(x, translater, unmatched, drop_unused_levels,
+                                 use_acronyms)
       } else {
-        private$recode_as_character(x, translater)
+        private$recode_as_character(x, translater, use_acronyms)
       }
 
     },
@@ -1331,7 +1333,8 @@ DataDictionary <- R6Class(
     recode_as_factor = function(x,
                                 translater,
                                 unmatched = NULL,
-                                drop_unused_levels = FALSE){
+                                drop_unused_levels = FALSE,
+                                use_acronyms = FALSE){
 
       # a duplicate level can occasionally squeak in but only if
       # it is explicitly allowed by the user or if it is harmless
@@ -1340,12 +1343,50 @@ DataDictionary <- R6Class(
 
       if (drop_unused_levels) x <- droplevels(x)
 
-      x
+      if (use_acronyms) {
+        acronyms <- self$get_acronyms()
 
+        # Sort acronyms in descending order by length to avoid problems when one
+        # acronym is a subset of another.
+        o <- order(nchar(names(acronyms)), decreasing = TRUE)
+
+        acronyms <- acronyms[o]
+
+        for (i in seq_along(acronyms)) {
+          # Do not ignore case
+          levels(x) <- gsub(
+            names(acronyms[i]),
+            acronyms[i],
+            x = levels(x),
+            fixed = TRUE
+          )
+        }
+      }
+
+      return(x)
     },
 
-    recode_as_character = function(x, translater){
-      private$recode_with_translater(x, translater)
+    recode_as_character = function(x,
+                                   translater,
+                                   use_acronyms = FALSE){
+      x <- private$recode_with_translater(x, translater)
+
+      if (use_acronyms) {
+        acronyms <- self$get_acronyms()
+
+        # Sort acronyms in descending order by length to avoid problems when one
+        # acronym is a subset of another.
+        o <- order(nchar(names(acronyms)), decreasing = TRUE)
+
+        acronyms <- acronyms[o]
+
+        for (i in seq_along(acronyms)) {
+          # Do not ignore case
+          x <- gsub(names(acronyms[i]), acronyms[i], x = x, fixed = TRUE)
+        }
+      }
+
+      return(x)
     },
 
     # Identify translater keys that map to multiple labels and are present in x.

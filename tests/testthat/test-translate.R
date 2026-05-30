@@ -21,9 +21,9 @@ test_that("Using extra values in translate_names", code = {
                                 warn_unmatched = FALSE)
 
   expect_equal(
-   levels(translated),
-   c("A number", "An integer", "A logical", "A character", "A factor", "A date",
-     "Extra 1", "extra_2")
+    levels(translated),
+    c("A number", "An integer", "A logical", "A character", "A factor", "A date",
+      "Extra 1", "extra_2")
   )
 
   # simple recode when to_factor is false
@@ -47,7 +47,7 @@ test_that("Using extra values in translate_names", code = {
                     dictionary = dd_test_filled,
                     extra_2 = "Extra 2",
                     extra_1 = "Extra 1"
-                    ) %>%
+    ) %>%
       levels(),
     c(translate_names(dd_test_filled$get_names(),
                       to_factor = FALSE,
@@ -302,3 +302,92 @@ test_that(
   }
 )
 
+
+test_that(
+  "translate_names with use_acronyms = TRUE",
+  code = {
+
+    dd <- data.frame(
+      ckd = 1
+    ) %>%
+      as_data_dictionary() %>%
+      set_labels(
+        ckd = "CKD"
+      ) %>%
+      set_acronyms(
+        CKD = "chronic kidney disease"
+      )
+
+    expect_identical(
+      translate_names(
+        x = "ckd",
+        dictionary = dd,
+        use_acronyms = FALSE # default
+      ),
+      "CKD"
+    )
+
+    expect_identical(
+      translate_names(
+        x = "ckd",
+        dictionary = dd,
+        use_acronyms = TRUE
+      ),
+      "chronic kidney disease"
+    )
+  }
+)
+
+test_that(
+  "translate_names with use_acronyms = TRUE, extended cases",
+  code = {
+
+    dd <- data.frame(
+      ckd = 1
+    ) %>%
+      as_data_dictionary() %>%
+      set_labels(
+        ckd = "CKD"
+      ) %>%
+      set_acronyms(
+        CKD = "chronic kidney disease"
+      )
+
+    # to_factor = TRUE: acronym substitution applies to factor levels
+    result_factor <- translate_names(
+      x = "ckd",
+      dictionary = dd,
+      to_factor = TRUE,
+      use_acronyms = TRUE
+    )
+    expect_s3_class(result_factor, "factor")
+    expect_identical(levels(result_factor), "chronic kidney disease")
+
+    # Ordering guarantee: "BP" is a substring of "SBP". Without longest-first
+    # sorting, replacing "BP" first would corrupt "SBP" into "SBlood Pressure".
+    # The label here is "SBP" and should expand to "Systolic Blood Pressure".
+    dd2 <- data.frame(sbp = 1) |>
+      as_data_dictionary() |>
+      set_labels(sbp = "SBP") |>
+      set_acronyms(
+        SBP = "Systolic Blood Pressure",
+        BP  = "Blood Pressure"
+      )
+
+    expect_identical(
+      translate_names("sbp", dictionary = dd2, use_acronyms = TRUE),
+      "Systolic Blood Pressure"
+    )
+
+    # Graceful no-op when the dictionary has no acronyms defined
+    dd3 <- data.frame(x = 1) |>
+      as_data_dictionary() |>
+      set_labels(x = "Some Label")
+
+    expect_identical(
+      translate_names("x", dictionary = dd3, use_acronyms = TRUE),
+      "Some Label"
+    )
+
+  }
+)

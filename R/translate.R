@@ -75,6 +75,10 @@
 #'
 #' @details
 #'
+#' When `use_acronyms = TRUE`, acronym substitution is applied longest-first.
+#' This prevents a shorter acronym that is a substring of a longer one (e.g.,
+#' "BP" inside "SBP") from being applied before the longer one.
+#'
 #' With the choice `units = "model"`, any numeric variable in
 #' `dictionary` that has a `divby_modeling` value will be modified in the
 #' data, specifically by being divided by `divby_modeling`. This transform
@@ -195,7 +199,10 @@ translate_data <- function(x, ...,
 #'  a single label to be attached to multiple variable names. This is
 #'  `FALSE` by default because allowing duplicate labels can cause unexpected
 #'  errors in downstream applications. Use with caution.
-#'
+#' @param use_acronyms `TRUE` or `FALSE` (default). When `TRUE`, any label
+#'   returned by `translate_names()` that contains a spelled-out acronym
+#'   description stored in `dictionary` will have that phrase replaced by the
+#'   corresponding acronym abbreviation.
 #'
 #' @importFrom checkmate assert_character assert_choice assert_list
 #'   assert_logical
@@ -208,12 +215,14 @@ translate_names <- function(x, ...,
                             to_factor = FALSE,
                             warn_unmatched = TRUE,
                             allow_duplicates = FALSE,
-                            drop_unused_levels = FALSE){
+                            drop_unused_levels = FALSE,
+                            use_acronyms = FALSE){
 
   assert_character(units, len = 1, any.missing = FALSE)
   assert_choice(units, choices=c('none','descriptive','model'))
   assert_logical(warn_unmatched, len = 1)
   assert_logical(allow_duplicates, len = 1)
+  assert_logical(use_acronyms, len = 1)
   assert_list(.list, types='character', names='named', null.ok=TRUE)
 
   infer_meta(dictionary)$translate_names(
@@ -224,7 +233,8 @@ translate_names <- function(x, ...,
     to_factor = to_factor,
     warn_unmatched = warn_unmatched,
     allow_duplicates = allow_duplicates,
-    drop_unused_levels = drop_unused_levels
+    drop_unused_levels = drop_unused_levels,
+    use_acronyms = use_acronyms
   )
 
 }

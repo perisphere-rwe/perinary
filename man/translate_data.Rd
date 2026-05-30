@@ -27,7 +27,8 @@ translate_names(
   to_factor = FALSE,
   warn_unmatched = TRUE,
   allow_duplicates = FALSE,
-  drop_unused_levels = FALSE
+  drop_unused_levels = FALSE,
+  use_acronyms = FALSE
 )
 
 translate_categories(
@@ -111,6 +112,11 @@ a single label to be attached to multiple variable names. This is
 \code{FALSE} by default because allowing duplicate labels can cause unexpected
 errors in downstream applications. Use with caution.}
 
+\item{use_acronyms}{\code{TRUE} or \code{FALSE} (default). When \code{TRUE}, any label
+returned by \code{translate_names()} that contains a spelled-out acronym
+description stored in \code{dictionary} will have that phrase replaced by the
+corresponding acronym abbreviation.}
+
 \item{names}{For \code{translate_categories()}: optional character vector of
 variable names to translate (useful when \code{x} is a data frame or when
 disambiguation is needed).}
@@ -140,6 +146,10 @@ category labels and enforces category order specified in \code{dictionary}.
 \details{
 Transfer variable labels/units and category labels/order into a vector
 or data frame.
+
+When \code{use_acronyms = TRUE}, acronym substitution is applied longest-first.
+This prevents a shorter acronym that is a substring of a longer one (e.g.,
+"BP" inside "SBP") from being applied before the longer one.
 
 With the choice \code{units = "model"}, any numeric variable in
 \code{dictionary} that has a \code{divby_modeling} value will be modified in the
