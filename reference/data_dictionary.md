@@ -45,6 +45,7 @@ Only one of `...` and `.list` should be specified.
 ## Examples
 
 ``` r
+
 age_years <- numeric_variable(
   name = "age",
   label = "Age of participant",

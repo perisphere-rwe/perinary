@@ -43,6 +43,7 @@ categories.
 ## Examples
 
 ``` r
+
 dd <- data_dictionary(
   nominal_variable(
     "gender",

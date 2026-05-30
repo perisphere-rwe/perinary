@@ -12,6 +12,8 @@ Functions for creating and combining `DataDictionary` objects.
   [`left_bind()`](https://perisphere-rwe.github.io/perinary/reference/bind_dictionary.md)
   [`right_bind()`](https://perisphere-rwe.github.io/perinary/reference/bind_dictionary.md)
   : Bind Dictionaries Together
+- [`bind_variables()`](https://perisphere-rwe.github.io/perinary/reference/bind_variables.md)
+  : Bind Variables to a Dictionary
 
 ## Variable types
 

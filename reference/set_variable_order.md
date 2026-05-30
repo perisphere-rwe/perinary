@@ -40,6 +40,7 @@ examples.)
 ## Examples
 
 ``` r
+
 dd_ordered <- as_data_dictionary(iris) |>
   set_variable_order(Species, .before = Sepal.Length) |>
   set_variable_order(ends_with("Length"), .after = Petal.Width)

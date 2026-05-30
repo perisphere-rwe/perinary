@@ -58,6 +58,7 @@ object
 ## Examples
 
 ``` r
+
 dd_age_years <- data_dictionary(
   numeric_variable(
     name = "age_years",

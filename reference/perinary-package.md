@@ -9,6 +9,8 @@ code.
 
 Useful links:
 
+- <https://perisphere-rwe.github.io/perinary>
+
 - <https://github.com/perisphere-rwe/perinary>
 
 - Report bugs at <https://github.com/perisphere-rwe/perinary/issues>

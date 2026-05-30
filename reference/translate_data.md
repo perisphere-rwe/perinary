@@ -191,6 +191,7 @@ setting `units = "model"` will cause the `age` column to be divided by
 ## Examples
 
 ``` r
+
 age_years <- numeric_variable(
   name = "age_years",
   label = "Age of participant",

@@ -63,6 +63,7 @@ match the variable and category order defined in the dictionary.
 ## Examples
 
 ``` r
+
 library(broom)
 
 dd <- as_data_dictionary(iris) |>

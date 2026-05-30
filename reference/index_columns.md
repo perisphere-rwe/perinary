@@ -38,6 +38,7 @@ filtered) according to the dictionary.
 ## Examples
 
 ``` r
+
 dd <- data_dictionary(
   numeric_variable("bill_length_mm", label = "Bill length", units = "mm"),
   numeric_variable("bill_depth_mm",  label = "Bill depth",  units = "mm"),

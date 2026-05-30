@@ -49,6 +49,7 @@ returned. If `as_request = TRUE` or `as_code = TRUE`, text is returned.
 ## Examples
 
 ``` r
+
 # units isn't returned in the output because it is specified (known)
 get_unknowns(data_dictionary(numeric_variable("a", units = 'years')))
 #> # A tibble: 1 × 4

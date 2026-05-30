@@ -51,6 +51,7 @@ a modified `dictionary`
 ## Examples
 
 ``` r
+
 dd <- as_data_dictionary(data.frame(a = 1, b = "cat", id = 1)) |>
  set_identifiers(id) |>
  set_labels(a = "numeric example", b = "categorical example") |>
