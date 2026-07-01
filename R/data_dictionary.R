@@ -5,8 +5,9 @@
 #' Variables should be made using [numeric_variable()] or [nominal_variable()]
 #' and passed directly as arguments.
 #'
-#' @param ... One or more objects inheriting from `r roxy_describe_numeric()`
-#'   or `r roxy_describe_nominal()`.
+#' @param ... Zero or more objects inheriting from `r roxy_describe_numeric()`
+#'   or `r roxy_describe_nominal()`. If neither `...` nor `.list` is supplied,
+#'   an empty `DataDictionary` is created.
 #'
 #' @param .list A list of data variables. `r roxy_dotlist("data_dictionary")`
 #'
@@ -17,7 +18,9 @@
 #'
 #' @return `r roxy_describe_dd()`
 #'
-#' @details Only one of  `...` and `.list` should be specified.
+#' @details At most one of `...` and `.list` should be specified. Calling
+#'   `data_dictionary()` with no arguments creates an empty dictionary, which
+#'   can be populated later with [bind_variables()].
 #'
 #' @export
 #'
@@ -42,9 +45,13 @@
 #' dd <- data_dictionary(.list = list(age_years, gender))
 #' print(dd)
 #'
+#' # An empty dictionary can also be created and populated later
+#' dd_empty <- data_dictionary()
+#' print(dd_empty)
+#'
 data_dictionary <- function(..., .list = NULL, copy_on_modify = TRUE){
 
-  assert_valid_dotdot(..., .list = .list, names_required = FALSE)
+  assert_valid_dotdot(..., .list = .list, names_required = FALSE, empty_ok = TRUE)
   .dots <- infer_dotdot(..., .list = .list)
   DataDictionary$new(.dots, copy_on_modify = copy_on_modify)
 

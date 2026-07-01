@@ -13,7 +13,8 @@ knitr::opts_chunk$set(
 )
 ```
 
-# perinary
+# perinary <a href="https://perisphere-rwe.github.io/perinary"><img src="man/figures/logo.png" align="right" height="120" alt="perinary website" /></a>
+
 
 <!-- badges: start -->
 [![R-CMD-check](https://github.com/perisphere-rwe/perinary/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/perisphere-rwe/perinary/actions/workflows/R-CMD-check.yaml)

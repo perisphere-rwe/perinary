@@ -621,10 +621,6 @@ DataDictionary <- R6Class(
     initialize = function(vars, copy_on_modify = TRUE) {
 
       # Validate that all are instances of DataVariable or its children
-      if (length(vars) == 0) {
-        cli_abort("At least one variable must be provided to create a {.cls DataDictionary}.")
-      }
-
       if (!all(map_lgl(vars, ~ inherits(.x, "DataVariable")))) {
         cli_abort(c(
           "All inputs must inherit from {.cls DataVariable}.",

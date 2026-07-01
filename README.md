@@ -1,7 +1,7 @@
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
-# perinary
+# perinary <a href="https://perisphere-rwe.github.io/perinary"><img src="man/figures/logo.png" align="right" height="120" alt="perinary website" /></a>
 
 <!-- badges: start -->
 
@@ -567,4 +567,4 @@ data_ft %>%
   align(j = c(2, 3), align = 'center', part = 'all')
 ```
 
-<img src="man/figures/README-unnamed-chunk-19-1.png" width="100%" />
+<img src="man/figures/README-regression-table-1.png" alt="A formatted regression table showing estimated body mass differences (grams, 95% CI, and p-value) for penguin characteristics including species, sex, and bill dimensions." width="100%" />

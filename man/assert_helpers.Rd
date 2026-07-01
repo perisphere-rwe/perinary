@@ -17,7 +17,7 @@ assert_in_set(
   variable = NULL
 )
 
-assert_valid_dotdot(..., .list, names_required = TRUE)
+assert_valid_dotdot(..., .list, names_required = TRUE, empty_ok = FALSE)
 }
 \arguments{
 \item{name}{Character scalar. Variable name being validated.}
@@ -47,6 +47,9 @@ by the caller). Intended to be mutually exclusive with \code{.list}.}
 
 \item{.list}{Optional pre-assembled list of inputs. Intended to be
 mutually exclusive with \code{...}.}
+
+\item{empty_ok}{Logical. If \code{TRUE}, no warning is emitted when both \code{...}
+and \code{.list} are empty. Defaults to \code{FALSE}.}
 }
 \value{
 \code{assert_valid_field()} returns \code{NULL} invisibly on success; otherwise
@@ -57,7 +60,8 @@ it aborts with an informative message.
 the recognized set.
 
 \code{assert_valid_dotdot()} returns \code{NULL} invisibly; it aborts if both
-\code{...} and \code{.list} are supplied, and it warns if both are empty.
+\code{...} and \code{.list} are supplied, and (unless \code{empty_ok = TRUE}) warns
+if both are empty.
 }
 \description{
 Lightweight assertions used across \code{perinary} to provide clear,

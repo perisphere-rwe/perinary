@@ -117,12 +117,16 @@ assert_in_set <- function(values, choices,
 #'
 #' @returns
 #' `assert_valid_dotdot()` returns `NULL` invisibly; it aborts if both
-#' `...` and `.list` are supplied, and it warns if both are empty.
+#' `...` and `.list` are supplied, and (unless `empty_ok = TRUE`) warns
+#' if both are empty.
+#'
+#' @param empty_ok Logical. If `TRUE`, no warning is emitted when both `...`
+#'   and `.list` are empty. Defaults to `FALSE`.
 #'
 #' @importFrom cli cli_abort cli_warn
 #' @importFrom glue glue
 
-assert_valid_dotdot <- function(..., .list, names_required = TRUE){
+assert_valid_dotdot <- function(..., .list, names_required = TRUE, empty_ok = FALSE){
 
   empty_dots <- is_empty(list(...))
   empty_list <- is_empty(.list)
@@ -139,7 +143,7 @@ assert_valid_dotdot <- function(..., .list, names_required = TRUE){
     )
   }
 
-  if(empty_dots && empty_list){
+  if(empty_dots && empty_list && !empty_ok){
     cli_warn(
       c(
         i = glue("`...` is empty and so is `.list`. No action can \\

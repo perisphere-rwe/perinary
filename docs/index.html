@@ -6,6 +6,11 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <title>perinary: Data Dictionaries • perinary</title>
+<!-- favicons --><link rel="icon" type="image/png" sizes="96x96" href="favicon-96x96.png">
+<link rel="icon" type="”image/svg+xml”" href="favicon.svg">
+<link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+<link rel="icon" sizes="any" href="favicon.ico">
+<link rel="manifest" href="site.webmanifest">
 <script src="deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <link href="deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
 <script src="deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="deps/Source_Sans_Pro-0.4.10/font.css" rel="stylesheet">
@@ -18,6 +23,7 @@
 ">
 <meta property="og:description" content="A lightweight R package for managing data dictionaries — storing and applying variable metadata (labels, descriptions, units, and category information) to datasets in a maintainable way.
 ">
+<meta property="og:image" content="https://perisphere-rwe.github.io/perinary/logo.png">
 </head>
 <body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
@@ -51,8 +57,11 @@
 </nav><div class="container template-home">
 <div class="row">
   <main id="main" class="col-md-9"><div class="section level1">
-<div class="page-header"><h1 id="perinary">perinary<a class="anchor" aria-label="anchor" href="#perinary"></a>
-</h1></div>
+<div class="page-header">
+<img src="logo.png" class="logo" alt=""><h1 id="perinary-">perinary 
+<a class="anchor" aria-label="anchor" href="#perinary-"></a>
+</h1>
+</div>
 <!-- badges: start -->
 
 <p><strong>Why make this?</strong> Data dictionaries (referred to as “dictionaries” from here) are often developed outside of a computing session and stored as a static file. Dictionaries are helpful in large projects with many outputs, providing a central resource for consistent and accurate annotation of tables and figures. However, the process of making and using dictionaries is tedious, so <code>perinary</code> was developed to reduce friction.</p>
@@ -505,7 +514,7 @@
 <span>  <span class="fu"><a href="https://davidgohel.github.io/flextable/reference/autofit.html" class="external-link">autofit</a></span><span class="op">(</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span> </span>
 <span>  <span class="fu"><a href="https://davidgohel.github.io/flextable/reference/padding.html" class="external-link">padding</a></span><span class="op">(</span>i <span class="op">=</span> <span class="op">~</span> <span class="fu"><a href="https://rdrr.io/r/base/NA.html" class="external-link">is.na</a></span><span class="op">(</span><span class="va">name</span><span class="op">)</span>, j <span class="op">=</span> <span class="fl">1</span>, padding.left <span class="op">=</span> <span class="fl">15</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span> </span>
 <span>  <span class="fu"><a href="https://davidgohel.github.io/flextable/reference/align.html" class="external-link">align</a></span><span class="op">(</span>j <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2</span>, <span class="fl">3</span><span class="op">)</span>, align <span class="op">=</span> <span class="st">'center'</span>, part <span class="op">=</span> <span class="st">'all'</span><span class="op">)</span></span></code></pre></div>
-<p><img src="reference/figures/README-unnamed-chunk-19-1.png" width="100%"></p>
+<p><img src="reference/figures/README-regression-table-1.png" alt="A formatted regression table showing estimated body mass differences (grams, 95% CI, and p-value) for penguin characteristics including species, sex, and bill dimensions." width="100%"></p>
 </div>
 </div>
   </main><aside class="col-md-3"><div class="links">

@@ -7,8 +7,9 @@
 data_dictionary(..., .list = NULL, copy_on_modify = TRUE)
 }
 \arguments{
-\item{...}{One or more objects inheriting from A \link[=numeric_variable]{numeric variable}
-or A \link[=nominal_variable]{nominal variable}.}
+\item{...}{Zero or more objects inheriting from A \link[=numeric_variable]{numeric variable}
+or A \link[=nominal_variable]{nominal variable}. If neither \code{...} nor \code{.list} is supplied,
+an empty \code{DataDictionary} is created.}
 
 \item{.list}{A list of data variables. This argument allows \code{data_dictionary} to be used programmatically and is optional. It is intended to be used as an alternative to \code{...}.}
 
@@ -26,7 +27,9 @@ Variables should be made using \code{\link[=numeric_variable]{numeric_variable()
 and passed directly as arguments.
 }
 \details{
-Only one of  \code{...} and \code{.list} should be specified.
+At most one of \code{...} and \code{.list} should be specified. Calling
+\code{data_dictionary()} with no arguments creates an empty dictionary, which
+can be populated later with \code{\link[=bind_variables]{bind_variables()}}.
 }
 \examples{
 
@@ -48,5 +51,9 @@ print(dd)
 
 dd <- data_dictionary(.list = list(age_years, gender))
 print(dd)
+
+# An empty dictionary can also be created and populated later
+dd_empty <- data_dictionary()
+print(dd_empty)
 
 }

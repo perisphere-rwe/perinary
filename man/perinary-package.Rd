@@ -6,6 +6,8 @@
 \alias{perinary-package}
 \title{perinary: Data Dictionaries}
 \description{
+\if{html}{\figure{logo.png}{options: style='float: right' alt='logo' width='120'}}
+
 Keeps labels and other relevant information about variables in a lightweight class that can be applied to datasets in various ways, aiming to eliminate redundancies and promote readable, maintainable code.
 }
 \seealso{
