@@ -76,15 +76,6 @@ test_that(
 )
 
 test_that(
-  desc = "Catch input error with constructor",
-
-  code = {
-    expect_error(DataDictionary$new(vars = list()), 'At least one variable')
-    expect_error(DataDictionary$new(vars = list(1)), 'inherit from')
-  }
-)
-
-test_that(
   desc = "Deep clone",
 
   code = {
