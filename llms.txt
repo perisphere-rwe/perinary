@@ -593,7 +593,10 @@ data_ft %>%
   align(j = c(2, 3), align = 'center', part = 'all')
 ```
 
-![](reference/figures/README-unnamed-chunk-19-1.png)
+![A formatted regression table showing estimated body mass differences
+(grams, 95% CI, and p-value) for penguin characteristics including
+species, sex, and bill
+dimensions.](reference/figures/README-regression-table-1.png)
 
 # Package index
 

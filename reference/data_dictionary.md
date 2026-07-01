@@ -17,10 +17,12 @@ data_dictionary(..., .list = NULL, copy_on_modify = TRUE)
 
 - ...:
 
-  One or more objects inheriting from A [numeric
+  Zero or more objects inheriting from A [numeric
   variable](https://perisphere-rwe.github.io/perinary/reference/variable_constructors.md)
   or A [nominal
   variable](https://perisphere-rwe.github.io/perinary/reference/variable_constructors.md).
+  If neither `...` nor `.list` is supplied, an empty `DataDictionary` is
+  created.
 
 - .list:
 
@@ -40,7 +42,10 @@ A data dictionary object
 
 ## Details
 
-Only one of `...` and `.list` should be specified.
+At most one of `...` and `.list` should be specified. Calling
+`data_dictionary()` with no arguments creates an empty dictionary, which
+can be populated later with
+[`bind_variables()`](https://perisphere-rwe.github.io/perinary/reference/bind_variables.md).
 
 ## Examples
 
@@ -78,4 +83,13 @@ print(dd)
 #> 1 age    Numeric Age of partic… none        years none           none           
 #> 2 gender Nominal Gender of par… none        none  none           M and F        
 #> # ℹ 1 more variable: category_labels <chr>
+
+# An empty dictionary can also be created and populated later
+dd_empty <- data_dictionary()
+print(dd_empty)
+#> Data Dictionary:
+#> # A tibble: 0 × 8
+#> # ℹ 8 variables: name <chr>, type <chr>, label <chr>, description <chr>,
+#> #   units <chr>, divby_modeling <chr>, category_levels <chr>,
+#> #   category_labels <chr>
 ```

@@ -29,7 +29,7 @@ assert_in_set(
   variable = NULL
 )
 
-assert_valid_dotdot(..., .list, names_required = TRUE)
+assert_valid_dotdot(..., .list, names_required = TRUE, empty_ok = FALSE)
 ```
 
 ## Arguments
@@ -82,6 +82,11 @@ assert_valid_dotdot(..., .list, names_required = TRUE)
   Optional pre-assembled list of inputs. Intended to be mutually
   exclusive with `...`.
 
+- empty_ok:
+
+  Logical. If `TRUE`, no warning is emitted when both `...` and `.list`
+  are empty. Defaults to `FALSE`.
+
 ## Value
 
 `assert_valid_field()` returns `NULL` invisibly on success; otherwise it
@@ -92,7 +97,8 @@ aborts with an informative message.
 and the recognized set.
 
 `assert_valid_dotdot()` returns `NULL` invisibly; it aborts if both
-`...` and `.list` are supplied, and it warns if both are empty.
+`...` and `.list` are supplied, and (unless `empty_ok = TRUE`) warns if
+both are empty.
 
 ## Conventions
 
