@@ -895,16 +895,28 @@ DataDictionary <- R6Class(
       # group and sort correctly regardless of which representation
       # appears in the `names` column. Values absent from the
       # dictionary (e.g. "(Intercept)") pass through unchanged.
+      # `as.character()` guards against factor columns: indexing a
+      # named vector with a factor uses its integer codes rather than
+      # its labels, which would silently scramble the lookup.
       name_key <- self$get_variable_key()
 
-      raw_names <- data[[names]]
+      raw_names <- as.character(data[[names]])
       resolved_names <- unname(name_key[raw_names])
       unmatched <- is.na(resolved_names)
       resolved_names[unmatched] <- raw_names[unmatched]
 
-      name_sort <- factor(resolved_names,
-                          levels = union(self$dictionary$name,
-                                         unique(resolved_names)))
+      # Build a variable order that resorts dictionary-recognized names
+      # into dictionary order while anchoring unrecognized values (e.g.
+      # "(Intercept)") at their original position in the sequence, so
+      # rows for unmatched variables are neither reordered nor pulled
+      # away from where they appeared in the input.
+      unique_names <- unique(resolved_names)
+      is_matched   <- unique_names %in% self$dictionary$name
+
+      final_order <- unique_names
+      final_order[is_matched] <- self$dictionary$name[self$dictionary$name %in% unique_names]
+
+      name_sort <- factor(resolved_names, levels = final_order)
 
       split(data, f = name_sort, drop = FALSE) |>
         imap_dfr(
@@ -921,9 +933,9 @@ DataDictionary <- R6Class(
                 out <- .x |>
                   arrange(
                     if (is.null(.rank)) {
-                      factor(.data[[levels]])
+                      factor(as.character(.data[[levels]]))
                     } else {
-                      unname(.rank[.data[[levels]]])
+                      unname(.rank[as.character(.data[[levels]])])
                     }
                   )
 

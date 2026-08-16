@@ -16,8 +16,10 @@
 #'   both are matched against the dictionary. If a name and a label
 #'   happen to collide (the same string is one variable's name and
 #'   another variable's label), the name match takes priority. Values
-#'   that match neither (e.g. `"(Intercept)"`) are left as-is and sorted
-#'   after variables found in the dictionary.
+#'   that match neither (e.g. `"(Intercept)"`) are left as-is and stay
+#'   anchored at their original position in the row order; variables
+#'   found in the dictionary are resorted into dictionary order around
+#'   them.
 #'
 #' @param levels Character value giving the column name that stores the
 #'   category code/level in `data`. Default is `"level"`. Values in this

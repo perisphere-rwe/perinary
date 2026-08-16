@@ -265,10 +265,42 @@ test_that(
 
     result <- index_rows(df, dictionary = dd)
 
-    # dictionary order is age, smoking_status; unmatched terms like
-    # "(Intercept)" are untouched by the dictionary and sort last
-    expect_equal(result$name, c("age", "Smoking status", "Smoking status", "(Intercept)"))
-    expect_equal(result$level[2:3], c("N", "Current smoker"))
+    # "(Intercept)" is unrecognized and stays anchored at its original
+    # (first) position; the recognized names around it still sort into
+    # dictionary order (age before smoking_status)
+    expect_equal(result$name, c("(Intercept)", "age", "Smoking status", "Smoking status"))
+    expect_equal(result$level[3:4], c("N", "Current smoker"))
+
+  }
+)
+
+test_that(
+  desc = "index_rows anchors unmatched names in place rather than sorting them last",
+  code = {
+
+    dd <- data_dictionary(
+      numeric_variable("age", label = "Age"),
+      nominal_variable("grade", category_levels = c("A", "B", "C"),
+                        category_labels = c("Excellent", "Good", "Poor"))
+    )
+
+    # "grade" appears before "age" in the input, which is the opposite
+    # of dictionary order; "foo" and "bar" are unrecognized and should
+    # stay anchored exactly where they first appear, interleaved with
+    # the recognized variables rather than pushed to the end
+    df <- tibble::tibble(
+      name  = c("foo", "grade", "age", "bar"),
+      level = c(NA, "A", NA, NA),
+      n     = c(1, 2, 3, 4)
+    )
+
+    result <- index_rows(df, dictionary = dd)
+
+    # "foo" stays first (its original slot); "grade" and "age" swap
+    # into dictionary order (age, then grade) within their combined
+    # original slots; "bar" stays anchored last
+    expect_equal(result$name, c("foo", "age", "grade", "bar"))
+    expect_equal(result$n, c(1, 3, 2, 4))
 
   }
 )
@@ -290,6 +322,123 @@ test_that(
     result <- index_rows(df, dictionary = dd)
 
     expect_equal(result$name, c("a", "b"))
+
+  }
+)
+
+test_that(
+  desc = "index_rows orders correctly when the `level` column is a factor",
+  code = {
+
+    # Factor's *level order* deliberately does not match the
+    # dictionary's category order, to catch the case where a factor
+    # index gets silently treated as its underlying integer codes.
+    dd <- data_dictionary(
+      nominal_variable(
+        "grade",
+        category_levels = c("A", "B", "C"),
+        category_labels = c("Excellent", "Good", "Poor")
+      )
+    )
+
+    df <- tibble::tibble(
+      name  = c("grade", "grade", "grade"),
+      level = factor(c("C", "A", "B"), levels = c("C", "B", "A")),
+      n     = c(5, 10, 15)
+    )
+
+    result <- index_rows(df, dictionary = dd)
+
+    expect_equal(as.character(result$level), c("A", "B", "C"))
+    expect_equal(result$n, c(10, 15, 5))
+
+  }
+)
+
+test_that(
+  desc = "index_rows orders correctly when the `level` column is a label factor",
+  code = {
+
+    dd <- data_dictionary(
+      nominal_variable(
+        "grade",
+        category_levels = c("A", "B", "C"),
+        category_labels = c("Excellent", "Good", "Poor")
+      )
+    )
+
+    df <- tibble::tibble(
+      name  = c("grade", "grade", "grade"),
+      level = factor(c("Poor", "Excellent", "Good"),
+                     levels = c("Poor", "Good", "Excellent")),
+      n     = c(5, 10, 15)
+    )
+
+    result <- index_rows(df, dictionary = dd)
+
+    expect_equal(as.character(result$level), c("Excellent", "Good", "Poor"))
+    expect_equal(result$n, c(10, 15, 5))
+
+  }
+)
+
+test_that(
+  desc = "index_rows groups correctly when the `name` column is a factor",
+  code = {
+
+    dd <- data_dictionary(
+      numeric_variable("age", label = "Age"),
+      nominal_variable(
+        "grade",
+        category_levels = c("A", "B", "C"),
+        category_labels = c("Excellent", "Good", "Poor")
+      )
+    )
+
+    # Factor level order deliberately scrambled relative to dictionary
+    # order, and includes a value absent from the dictionary.
+    df <- tibble::tibble(
+      name  = factor(c("grade", "grade", "grade", "(Intercept)"),
+                     levels = c("grade", "(Intercept)", "age")),
+      level = c("C", "A", "B", NA),
+      n     = c(5, 10, 15, 1)
+    )
+
+    result <- index_rows(df, dictionary = dd)
+
+    expect_equal(as.character(result$name),
+                c("grade", "grade", "grade", "(Intercept)"))
+    expect_equal(result$level[1:3], c("A", "B", "C"))
+    expect_equal(result$n, c(10, 15, 5, 1))
+
+  }
+)
+
+test_that(
+  desc = "index_rows groups correctly when the `name` column is a variable-label factor",
+  code = {
+
+    dd <- data_dictionary(
+      numeric_variable("age", label = "Age", units = "years"),
+      nominal_variable(
+        "smoking_status",
+        label = "Smoking status",
+        category_levels = c("N", "F", "C"),
+        category_labels = c("Never smoked", "Former smoker", "Current smoker")
+      )
+    )
+
+    df <- tibble::tibble(
+      name  = factor(c("Smoking status", "Smoking status", "Smoking status", "Age"),
+                     levels = c("Age", "Smoking status")),
+      level = c("Current smoker", "Never smoked", "Former smoker", NA),
+      n     = c(42, 118, 65, NA)
+    )
+
+    result <- index_rows(df, dictionary = dd)
+
+    expect_equal(as.character(result$name), c("Age", rep("Smoking status", 3)))
+    expect_equal(result$level[-1], c("Never smoked", "Former smoker", "Current smoker"))
 
   }
 )
