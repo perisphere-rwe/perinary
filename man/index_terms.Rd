@@ -14,7 +14,7 @@ index_terms(
 )
 }
 \arguments{
-\item{data}{A data frame of model output, typically from \code{\link[broom:reexports]{broom::tidy()}}.
+\item{data}{A data frame of model output, typically from \code{\link[broom:tidy]{broom::tidy()}}.
 Must contain a column identifying model terms (see \code{term_colname}).}
 
 \item{dictionary}{A \link[=data_dictionary]{data dictionary} object. If \code{NULL}, uses the default dictionary set via \code{\link[=set_default_dictionary]{set_default_dictionary()}}.}

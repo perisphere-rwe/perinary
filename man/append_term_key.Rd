@@ -13,7 +13,7 @@ append_term_key(
 }
 \arguments{
 \item{data}{A data frame or tibble containing model output, typically
-from \code{\link[broom:reexports]{broom::tidy()}}. Must contain a column that identifies model terms.}
+from \code{\link[broom:tidy]{broom::tidy()}}. Must contain a column that identifies model terms.}
 
 \item{dictionary}{A \link[=data_dictionary]{data dictionary} object. If \code{NULL}, uses the default dictionary set via \code{\link[=set_default_dictionary]{set_default_dictionary()}}.}
 
