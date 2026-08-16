@@ -69,6 +69,124 @@ test_that(
 )
 
 
+test_that(
+  desc = "index_rows orders by category level (existing behavior)",
+  code = {
+
+    dd <- data_dictionary(
+      nominal_variable(
+        "gender",
+        category_levels = c("M", "F"),
+        category_labels = c("Male", "Female")
+      )
+    )
+
+    df <- tibble::tibble(name = c("gender", "gender"),
+                         level = c("F", "M"),
+                         n = c(12, 18))
+
+    result <- index_rows(df, dictionary = dd)
+
+    expect_equal(result$level, c("M", "F"))
+    expect_equal(result$n, c(18, 12))
+
+  }
+)
+
+test_that(
+  desc = "index_rows orders by category label",
+  code = {
+
+    dd <- data_dictionary(
+      nominal_variable(
+        "gender",
+        category_levels = c("M", "F"),
+        category_labels = c("Male", "Female")
+      )
+    )
+
+    df <- tibble::tibble(name = c("gender", "gender"),
+                         level = c("Female", "Male"),
+                         n = c(12, 18))
+
+    result <- index_rows(df, dictionary = dd)
+
+    expect_equal(result$level, c("Male", "Female"))
+    expect_equal(result$n, c(18, 12))
+
+  }
+)
+
+test_that(
+  desc = "index_rows orders correctly with a mix of levels and labels",
+  code = {
+
+    dd <- data_dictionary(
+      nominal_variable(
+        "gender",
+        category_levels = c("M", "F"),
+        category_labels = c("Male", "Female")
+      )
+    )
+
+    df <- tibble::tibble(name = c("gender", "gender"),
+                         level = c("Female", "M"),
+                         n = c(12, 18))
+
+    result <- index_rows(df, dictionary = dd)
+
+    expect_equal(result$level, c("M", "Female"))
+    expect_equal(result$n, c(18, 12))
+
+  }
+)
+
+test_that(
+  desc = "index_rows gives precedence to a level over a colliding label",
+  code = {
+
+    # Category "A" has level "A" and label "B"; category "B" has level "B"
+    # and label "Z". The literal value "B" is ambiguous: it is category
+    # A's label and category B's level. Levels should win the tie-break.
+    dd <- data_dictionary(
+      nominal_variable(
+        "grp",
+        category_levels = c("A", "B"),
+        category_labels = c("B", "Z")
+      )
+    )
+
+    df <- tibble::tibble(name = c("grp", "grp"),
+                         level = c("B", "A"),
+                         n = c(1, 2))
+
+    result <- index_rows(df, dictionary = dd)
+
+    # "B" is interpreted as the level of category B (rank 2), not the
+    # label of category A (rank 1), so it sorts after "A".
+    expect_equal(result$level, c("A", "B"))
+
+  }
+)
+
+test_that(
+  desc = "index_rows falls back to default ordering when categories are undefined",
+  code = {
+
+    dd <- data_dictionary(nominal_variable("grp"))
+
+    df <- tibble::tibble(name = c("grp", "grp"),
+                         level = c("b", "a"),
+                         n = c(1, 2))
+
+    result <- index_rows(df, dictionary = dd)
+
+    expect_equal(result$level, c("a", "b"))
+
+  }
+)
+
+
 # ── index_columns ─────────────────────────────────────────────────────────────
 
 # Shared dictionary for index_columns tests: 4 variables in a known order.

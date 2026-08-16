@@ -237,8 +237,7 @@ get_unknowns <- function(dictionary = NULL,
 #'
 #' @export
 #'
-#' @importFrom dplyr filter if_else mutate rename right_join select
-#'   starts_with
+#' @importFrom dplyr filter if_else mutate rename right_join select starts_with
 #' @importFrom rlang sym `:=`
 #' @importFrom tidyr drop_na pivot_longer
 #'

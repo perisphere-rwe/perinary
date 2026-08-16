@@ -14,7 +14,11 @@
 #'   variable name in `data`. Default is `"name"`.
 #'
 #' @param levels Character value giving the column name that stores the
-#'   category code/level in `data`. Default is `"level"`.
+#'   category code/level in `data`. Default is `"level"`. Values in this
+#'   column may be either category levels or category labels (or a mix
+#'   of both); both are matched against the dictionary. If a level and
+#'   a label happen to collide (the same string is one category's level
+#'   and another category's label), the level match takes priority.
 #'
 #' @returns The same type as `data`, with rows re-ordered to match the
 #'   order of variables in the dictionary and, within nominal variables,
@@ -38,6 +42,15 @@
 #' )
 #'
 #' index_rows(df, dictionary = dd)
+#'
+#' # Works the same when the column holds category labels instead
+#' df_labels <- tibble::tibble(
+#'   name = c("gender", "gender"),
+#'   level = c("Female", "Male"),
+#'   n = c(12, 18)
+#' )
+#'
+#' index_rows(df_labels, dictionary = dd)
 #'
 #' @export
 index_rows <- function(data,
