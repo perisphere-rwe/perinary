@@ -68,6 +68,35 @@ test_that(
   }
 )
 
+test_that(
+  desc = "index_terms orders rows correctly regardless of levels vs labels in model terms",
+  code = {
+
+    # append_term_key() always resolves model terms back to the
+    # dictionary's canonical variable name and category level, so
+    # index_rows() sees the same name/level values whether the model
+    # was fit on raw data or label-translated data. This pins down
+    # that invariant: both pipelines should sort identically.
+    dd_iris <- as_data_dictionary(iris) %>%
+      set_category_order(Species = c("setosa")) %>%
+      set_category_labels(Species = c(versicolor = "Versi")) %>%
+      set_variable_order(Species, .before = 1) %>%
+      set_variable_order(ends_with("Length"), .after = Species)
+
+    fit_plain  <- lm(Sepal.Length ~ ., data = iris) %>% broom::tidy()
+    fit_labels <- lm(Sepal.Length ~ ., data = translate_data(iris, dictionary = dd_iris)) %>%
+      broom::tidy()
+
+    result_plain  <- index_terms(fit_plain,  dictionary = dd_iris)
+    result_labels <- index_terms(fit_labels, dictionary = dd_iris)
+
+    expect_equal(result_plain$name,  result_labels$name)
+    expect_equal(result_plain$level, result_labels$level)
+    expect_equal(result_plain$estimate, result_labels$estimate)
+
+  }
+)
+
 
 test_that(
   desc = "index_rows orders by category level (existing behavior)",
@@ -182,6 +211,85 @@ test_that(
     result <- index_rows(df, dictionary = dd)
 
     expect_equal(result$level, c("a", "b"))
+
+  }
+)
+
+test_that(
+  desc = "index_rows groups and orders rows when `names` holds variable labels",
+  code = {
+
+    dd <- data_dictionary(
+      numeric_variable("age", label = "Age", units = "years"),
+      nominal_variable(
+        "smoking_status",
+        label = "Smoking status",
+        category_levels = c("N", "F", "C"),
+        category_labels = c("Never smoked", "Former smoker", "Current smoker")
+      )
+    )
+
+    df <- tibble::tibble(
+      name  = c("Smoking status", "Smoking status", "Smoking status", "Age"),
+      level = c("Current smoker", "Never smoked", "Former smoker", NA),
+      n     = c(42, 118, 65, NA)
+    )
+
+    result <- index_rows(df, dictionary = dd)
+
+    expect_equal(result$name, c("Age", rep("Smoking status", 3)))
+    expect_equal(result$level[-1], c("Never smoked", "Former smoker", "Current smoker"))
+
+  }
+)
+
+test_that(
+  desc = "index_rows works with a mix of variable names, labels, and unmatched terms",
+  code = {
+
+    dd <- data_dictionary(
+      numeric_variable("age", label = "Age", units = "years"),
+      nominal_variable(
+        "smoking_status",
+        label = "Smoking status",
+        category_levels = c("N", "F", "C"),
+        category_labels = c("Never smoked", "Former smoker", "Current smoker")
+      )
+    )
+
+    df <- tibble::tibble(
+      name  = c("(Intercept)", "age", "Smoking status", "Smoking status"),
+      level = c(NA, NA, "Current smoker", "N"),
+      n     = c(1, 2, 3, 4)
+    )
+
+    result <- index_rows(df, dictionary = dd)
+
+    # dictionary order is age, smoking_status; unmatched terms like
+    # "(Intercept)" are untouched by the dictionary and sort last
+    expect_equal(result$name, c("age", "Smoking status", "Smoking status", "(Intercept)"))
+    expect_equal(result$level[2:3], c("N", "Current smoker"))
+
+  }
+)
+
+test_that(
+  desc = "index_rows gives precedence to a variable name over a colliding label",
+  code = {
+
+    # Variable "b" has label "a"; variable "a" has label "z". The
+    # literal value "a" is ambiguous: it is variable b's label and
+    # variable a's name. Names should win the tie-break.
+    dd <- data_dictionary(
+      numeric_variable("a", label = "z"),
+      numeric_variable("b", label = "a")
+    )
+
+    df <- tibble::tibble(name = c("a", "b"), n = c(1, 2))
+
+    result <- index_rows(df, dictionary = dd)
+
+    expect_equal(result$name, c("a", "b"))
 
   }
 )

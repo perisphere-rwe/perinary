@@ -13,7 +13,13 @@ include columns that identify the variable name and category level.}
 \item{dictionary}{A \link[=data_dictionary]{data dictionary} object. If \code{NULL}, uses the default dictionary set via \code{\link[=set_default_dictionary]{set_default_dictionary()}}.}
 
 \item{names}{Character value giving the column name that stores the
-variable name in \code{data}. Default is \code{"name"}.}
+variable name in \code{data}. Default is \code{"name"}. Values in this column
+may be either variable names or variable labels (or a mix of both);
+both are matched against the dictionary. If a name and a label
+happen to collide (the same string is one variable's name and
+another variable's label), the name match takes priority. Values
+that match neither (e.g. \code{"(Intercept)"}) are left as-is and sorted
+after variables found in the dictionary.}
 
 \item{levels}{Character value giving the column name that stores the
 category code/level in \code{data}. Default is \code{"level"}. Values in this
@@ -59,5 +65,14 @@ df_labels <- tibble::tibble(
 )
 
 index_rows(df_labels, dictionary = dd)
+
+# The `names` column can hold variable labels too
+df_var_labels <- tibble::tibble(
+  name = c("Gender", "Gender"),
+  level = c("Female", "Male"),
+  n = c(12, 18)
+)
+
+index_rows(df_var_labels, dictionary = dd)
 
 }

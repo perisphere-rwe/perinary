@@ -11,7 +11,13 @@
 #' @param dictionary `r roxy_describe_dd()`. `r roxy_default_dd()`.
 #'
 #' @param names Character value giving the column name that stores the
-#'   variable name in `data`. Default is `"name"`.
+#'   variable name in `data`. Default is `"name"`. Values in this column
+#'   may be either variable names or variable labels (or a mix of both);
+#'   both are matched against the dictionary. If a name and a label
+#'   happen to collide (the same string is one variable's name and
+#'   another variable's label), the name match takes priority. Values
+#'   that match neither (e.g. `"(Intercept)"`) are left as-is and sorted
+#'   after variables found in the dictionary.
 #'
 #' @param levels Character value giving the column name that stores the
 #'   category code/level in `data`. Default is `"level"`. Values in this
@@ -51,6 +57,15 @@
 #' )
 #'
 #' index_rows(df_labels, dictionary = dd)
+#'
+#' # The `names` column can hold variable labels too
+#' df_var_labels <- tibble::tibble(
+#'   name = c("Gender", "Gender"),
+#'   level = c("Female", "Male"),
+#'   n = c(12, 18)
+#' )
+#'
+#' index_rows(df_var_labels, dictionary = dd)
 #'
 #' @export
 index_rows <- function(data,

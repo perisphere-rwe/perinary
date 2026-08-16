@@ -719,6 +719,21 @@ DataDictionary <- R6Class(
       names(self$variables)
     },
 
+    # Named character vector mapping each variable's name *and* label to
+    # its canonical (dictionary) name, so callers can identify a variable
+    # by either representation. Names take priority over labels on
+    # collision, mirroring the level/label precedence used for
+    # categories (see `NominalVariable$get_category_rank()`).
+    get_variable_key = function(){
+
+      nms  <- self$get_names()
+      labs <- map_chr(self$variables, ~ .x$get_label() %||% NA_character_)
+
+      key <- c(set_names(nms, nms), set_names(nms, labs))
+      key[!is.na(names(key))]
+
+    },
+
     get_names_nominal = function(){
       private$get_names_by_type("Nominal")
     },
@@ -876,9 +891,20 @@ DataDictionary <- R6Class(
 
     index_rows = function(data, names = 'name', levels = 'level'){
 
-      name_sort <- factor(data[[names]],
+      # Resolve variable labels back to their canonical name so rows
+      # group and sort correctly regardless of which representation
+      # appears in the `names` column. Values absent from the
+      # dictionary (e.g. "(Intercept)") pass through unchanged.
+      name_key <- self$get_variable_key()
+
+      raw_names <- data[[names]]
+      resolved_names <- unname(name_key[raw_names])
+      unmatched <- is.na(resolved_names)
+      resolved_names[unmatched] <- raw_names[unmatched]
+
+      name_sort <- factor(resolved_names,
                           levels = union(self$dictionary$name,
-                                         unique(data[[names]])))
+                                         unique(resolved_names)))
 
       split(data, f = name_sort, drop = FALSE) |>
         imap_dfr(
