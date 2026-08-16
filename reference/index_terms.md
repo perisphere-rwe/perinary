@@ -24,7 +24,7 @@ index_terms(
 - data:
 
   A data frame of model output, typically from
-  [`broom::tidy()`](https://broom.tidymodels.org/reference/reexports.html).
+  [`broom::tidy()`](https://generics.r-lib.org/reference/tidy.html).
   Must contain a column identifying model terms (see `term_colname`).
 
 - dictionary:

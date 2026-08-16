@@ -20,6 +20,11 @@ Useful links:
 **Maintainer**: Byron Jaeger <bcjaeger@perisphere-rwe.com>
 ([ORCID](https://orcid.org/0000-0001-7399-2299))
 
+Authors:
+
+- Byron Jaeger <bcjaeger@perisphere-rwe.com>
+  ([ORCID](https://orcid.org/0000-0001-7399-2299))
+
 Other contributors:
 
 - Tyler Sagendorf \[contributor\]
