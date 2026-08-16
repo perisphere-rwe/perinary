@@ -12,13 +12,13 @@
 Source:
 [`DESCRIPTION`](https://github.com/perisphere-rwe/perinary/blob/main/DESCRIPTION)
 
-Jaeger B (2026). *perinary: Data Dictionaries*. R package version 0.0.2,
+Jaeger B (2026). *perinary: Data Dictionaries*. R package version 0.1.0,
 <https://perisphere-rwe.github.io/perinary>.
 
     @Manual{,
       title = {perinary: Data Dictionaries},
       author = {Byron Jaeger},
       year = {2026},
-      note = {R package version 0.0.2},
+      note = {R package version 0.1.0},
       url = {https://perisphere-rwe.github.io/perinary},
     }

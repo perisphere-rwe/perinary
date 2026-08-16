@@ -11,7 +11,7 @@ you want multiple outputs to present variables in a consistent order."><meta pro
 
     <a class="navbar-brand me-2" href="../index.html">perinary</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.2</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -20,6 +20,7 @@ you want multiple outputs to present variables in a consistent order."><meta pro
 
     <div id="navbar" class="collapse navbar-collapse ms-3">
       <ul class="navbar-nav me-auto"><li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
+<li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
  <input class="form-control" type="search" name="search-input" id="search-input" autocomplete="off" aria-label="Search site" placeholder="Search for" data-search-index="../search.json"></form></li>
 <li class="nav-item"><a class="external-link nav-link" href="https://github.com/perisphere-rwe/perinary" aria-label="GitHub"><span class="fa fab fa-github"></span></a></li>
@@ -66,8 +67,10 @@ may be either variable names or variable labels (or a mix of both);
 both are matched against the dictionary. If a name and a label
 happen to collide (the same string is one variable's name and
 another variable's label), the name match takes priority. Values
-that match neither (e.g. <code>"(Intercept)"</code>) are left as-is and sorted
-after variables found in the dictionary.</p></dd>
+that match neither (e.g. <code>"(Intercept)"</code>) are left as-is and stay
+anchored at their original position in the row order; variables
+found in the dictionary are resorted into dictionary order around
+them.</p></dd>
 
 
 <dt id="arg-levels">levels<a class="anchor" aria-label="anchor" href="#arg-levels"></a></dt>
