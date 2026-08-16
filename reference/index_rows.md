@@ -27,7 +27,13 @@ index_rows(data, dictionary = NULL, names = "name", levels = "level")
 - names:
 
   Character value giving the column name that stores the variable name
-  in `data`. Default is `"name"`.
+  in `data`. Default is `"name"`. Values in this column may be either
+  variable names or variable labels (or a mix of both); both are matched
+  against the dictionary. If a name and a label happen to collide (the
+  same string is one variable's name and another variable's label), the
+  name match takes priority. Values that match neither (e.g.
+  `"(Intercept)"`) are left as-is and sorted after variables found in
+  the dictionary.
 
 - levels:
 
@@ -83,4 +89,18 @@ index_rows(df_labels, dictionary = dd)
 #>   <chr>  <chr>  <dbl>
 #> 1 gender Male      18
 #> 2 gender Female    12
+
+# The `names` column can hold variable labels too
+df_var_labels <- tibble::tibble(
+  name = c("Gender", "Gender"),
+  level = c("Female", "Male"),
+  n = c(12, 18)
+)
+
+index_rows(df_var_labels, dictionary = dd)
+#> # A tibble: 2 × 3
+#>   name   level      n
+#>   <chr>  <chr>  <dbl>
+#> 1 Gender Male      18
+#> 2 Gender Female    12
 ```
