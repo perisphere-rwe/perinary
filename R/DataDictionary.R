@@ -440,6 +440,25 @@ NominalVariable <- R6Class(
 
     },
 
+    # Named integer vector mapping each category's level *and* label to
+    # its ordinal position, so callers can order data by either
+    # representation. When both sets are present and happen to collide
+    # (a level equal to another category's label), levels take priority:
+    # subsetting a named vector by name (`x["name"]`) returns the first
+    # match, so levels are listed first.
+    get_category_rank = function() {
+
+      lvls <- self$get_category_levels()
+
+      if (is.null(lvls)) return(NULL)
+
+      labs <- self$fetch_category_labels()
+      rank <- seq_along(lvls)
+
+      c(set_names(rank, lvls), set_names(rank, labs))
+
+    },
+
     # Overriding print method to include category information
     print = function(...) {
 
@@ -590,8 +609,7 @@ is_data_dictionary <- function(x){
 
 #' @importFrom checkmate assert_character assert_choice
 #' @importFrom cli cli_abort cli_warn
-#' @importFrom dplyr all_of arrange filter first group_by mutate pull relocate
-#'   select ungroup
+#' @importFrom dplyr all_of arrange filter first group_by mutate pull relocate select ungroup
 #' @importFrom purrr compact keep imap_dfr map map2 map_chr map_lgl reduce
 #' @importFrom rlang !!! is_empty quo_is_null set_names
 #' @importFrom stats na.omit
@@ -872,11 +890,15 @@ DataDictionary <- R6Class(
 
               if(self$variables[[.y]]$type == "Nominal"){
 
-                .levels <- self$variables[[.y]]$get_category_levels()
+                .rank <- self$variables[[.y]]$get_category_rank()
 
                 out <- .x |>
                   arrange(
-                    factor(.data[[levels]], levels = .levels)
+                    if (is.null(.rank)) {
+                      factor(.data[[levels]])
+                    } else {
+                      unname(.rank[.data[[levels]]])
+                    }
                   )
 
               }

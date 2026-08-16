@@ -204,8 +204,7 @@ translate_data <- function(x, ...,
 #'   description stored in `dictionary` will have that phrase replaced by the
 #'   corresponding acronym abbreviation.
 #'
-#' @importFrom checkmate assert_character assert_choice assert_list
-#'   assert_logical
+#' @importFrom checkmate assert_character assert_choice assert_list assert_logical
 #'
 #' @export
 translate_names <- function(x, ...,

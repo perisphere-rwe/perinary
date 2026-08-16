@@ -16,7 +16,11 @@ include columns that identify the variable name and category level.}
 variable name in \code{data}. Default is \code{"name"}.}
 
 \item{levels}{Character value giving the column name that stores the
-category code/level in \code{data}. Default is \code{"level"}.}
+category code/level in \code{data}. Default is \code{"level"}. Values in this
+column may be either category levels or category labels (or a mix
+of both); both are matched against the dictionary. If a level and
+a label happen to collide (the same string is one category's level
+and another category's label), the level match takes priority.}
 }
 \value{
 The same type as \code{data}, with rows re-ordered to match the
@@ -46,5 +50,14 @@ df <- tibble::tibble(
 )
 
 index_rows(df, dictionary = dd)
+
+# Works the same when the column holds category labels instead
+df_labels <- tibble::tibble(
+  name = c("gender", "gender"),
+  level = c("Female", "Male"),
+  n = c(12, 18)
+)
+
+index_rows(df_labels, dictionary = dd)
 
 }
