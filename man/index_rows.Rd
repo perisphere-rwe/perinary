@@ -21,7 +21,10 @@ another variable's label), the name match takes priority. Values
 that match neither (e.g. \code{"(Intercept)"}) are left as-is and stay
 anchored at their original position in the row order; variables
 found in the dictionary are resorted into dictionary order around
-them.}
+them. If two or more variables share the same label, that label
+cannot reliably identify a single variable; a warning is issued and
+values matching it are treated as unmatched (left as-is) rather
+than silently attributed to one of the colliding variables.}
 
 \item{levels}{Character value giving the column name that stores the
 category code/level in \code{data}. Default is \code{"level"}. Values in this

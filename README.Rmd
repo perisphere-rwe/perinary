@@ -186,6 +186,18 @@ dd_peng
 
 ```
 
+### Keep, drop, or reorder variables
+
+Sometimes a dictionary built with `as_data_dictionary()` includes more variables than you need for a particular dataset or output. `select_variables()` lets you keep, drop, or reorder variables using the same [tidyselect](https://tidyselect.r-lib.org/) syntax as `dplyr::select()`:
+
+```{r}
+
+dd_peng %>% 
+  select_variables(species, sex, body_mass_g)
+
+```
+
+This is also a convenient way to resolve two variables that happen to share the same label. Because `index_rows()` (described below) can match on either a variable's name or its label, two variables with the same label are ambiguous — `index_rows()` will warn you and leave any row matching that label untouched. Dropping one of the colliding variables with `select_variables()` removes the ambiguity.
 
 ## Modify objects using dictionaries
 
@@ -315,6 +327,25 @@ data_ft %>%
   align(j = c(2, 3), align = 'center', part = 'all')
 
 ```
+
+## Ordering rows directly with `index_rows()`
+
+`index_terms()` is a convenience wrapper around `index_rows()` for model output specifically. You can use `index_rows()` directly on any table that has columns identifying a variable name and (for nominal variables) a category value — for instance, a summary table you built by hand. The name/category columns can hold the dictionary's raw names and levels, their labels, or a mix of both, so this works even on tables that have already been translated for a report:
+
+```{r}
+
+peng_summary <- tibble(
+  name  = c("species", "species", "species", "sex", "sex"),
+  level = c("Gentoo", "Chinstrap", "Adelie", "Male penguins", "Female penguins"),
+  n     = c(124, 68, 152, 168, 165)
+)
+
+peng_summary %>% 
+  index_rows(dictionary = dd_peng)
+
+```
+
+Notice that `species` sorts before `sex` (matching `set_variable_order()`), `"Chinstrap"` sorts first within `species` (matching `set_category_order()`), and the `sex` rows are correctly ordered even though they're identified by label (`"Male penguins"`/`"Female penguins"`) rather than the raw level (`"male"`/`"female"`). Any row whose name or level doesn't match the dictionary is left untouched at its original position rather than being reordered.
 
 
 

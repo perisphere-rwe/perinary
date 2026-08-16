@@ -43,6 +43,7 @@ reference:
       - as_data_dictionary
       - bind_dictionary
       - bind_variables
+      - select_variables
 
   - title: "Variable types"
     desc: >

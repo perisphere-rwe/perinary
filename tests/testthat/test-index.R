@@ -306,6 +306,95 @@ test_that(
 )
 
 test_that(
+  desc = "index_rows warns and leaves values unmatched when a label is shared by multiple variables",
+  code = {
+
+    dd <- data_dictionary(
+      numeric_variable("age_baseline", label = "Age"),
+      numeric_variable("age_followup", label = "Age")
+    )
+
+    df <- tibble::tibble(name = c("Age", "Age"), n = c(1, 2))
+
+    expect_warning(
+      result <- index_rows(df, dictionary = dd),
+      regexp = "used by multiple variables"
+    )
+
+    # values matching the ambiguous label are left untouched, not
+    # silently attributed to one of the colliding variables
+    expect_equal(result$name, c("Age", "Age"))
+    expect_equal(result$n, c(1, 2))
+
+  }
+)
+
+test_that(
+  desc = "index_rows does not silently misattribute nominal category order for a colliding label",
+  code = {
+
+    # Two nominal variables share the label "Region" but define
+    # different, overlapping category codes/orders. Rows using the
+    # label "Region" must not be sorted using either variable's
+    # category order, since we cannot tell which one they belong to.
+    dd <- data_dictionary(
+      nominal_variable(
+        "region_v1", label = "Region",
+        category_levels = c("A", "B", "C"),
+        category_labels = c("Alpha", "Beta", "Gamma")
+      ),
+      nominal_variable(
+        "region_v2", label = "Region",
+        category_levels = c("C", "B", "A"),
+        category_labels = c("Gamma2", "Beta2", "Alpha2")
+      )
+    )
+
+    df <- tibble::tibble(
+      name  = c("Region", "Region", "Region"),
+      level = c("A", "B", "C"),
+      n     = c(1, 2, 3)
+    )
+
+    expect_warning(
+      result <- index_rows(df, dictionary = dd),
+      regexp = "used by multiple variables"
+    )
+
+    # rows are untouched: original order preserved, not resorted using
+    # either region_v1's or region_v2's category rank
+    expect_equal(result$level, c("A", "B", "C"))
+    expect_equal(result$n, c(1, 2, 3))
+
+  }
+)
+
+test_that(
+  desc = "index_rows resolves unambiguous labels normally even when other labels collide",
+  code = {
+
+    dd <- data_dictionary(
+      numeric_variable("age_baseline", label = "Age"),
+      numeric_variable("age_followup", label = "Age"),
+      numeric_variable("height", label = "Height")
+    )
+
+    df <- tibble::tibble(name = c("height", "Age", "Age"), n = c(1, 2, 3))
+
+    expect_warning(
+      result <- index_rows(df, dictionary = dd),
+      regexp = "used by multiple variables"
+    )
+
+    # "height" (canonical name) resolves and moves in front of the
+    # ambiguous "Age" rows, which stay in their original relative order
+    expect_equal(result$name, c("height", "Age", "Age"))
+    expect_equal(result$n, c(1, 2, 3))
+
+  }
+)
+
+test_that(
   desc = "index_rows gives precedence to a variable name over a colliding label",
   code = {
 

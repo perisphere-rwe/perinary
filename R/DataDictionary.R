@@ -724,10 +724,38 @@ DataDictionary <- R6Class(
     # by either representation. Names take priority over labels on
     # collision, mirroring the level/label precedence used for
     # categories (see `NominalVariable$get_category_rank()`).
+    #
+    # If two or more variables share the same label, that label cannot
+    # reliably identify a single variable, so it is dropped from the key
+    # entirely (values matching it fall back to being treated as
+    # unmatched) and a warning is issued.
     get_variable_key = function(){
 
       nms  <- self$get_names()
       labs <- map_chr(self$variables, ~ .x$get_label() %||% NA_character_)
+
+      present <- labs[!is.na(labs)]
+      dupes   <- unique(present[duplicated(present)])
+
+      if(length(dupes) > 0){
+
+        for(lab in dupes){
+
+          cli_warn(
+            c(
+              "!" = "Label {.val {lab}} is used by multiple variables: {.val {nms[labs == lab]}}.",
+              "i" = paste(
+                "index_rows() cannot use an ambiguous label to identify a variable;",
+                "values matching {.val {lab}} in the names column will be left unmatched."
+              )
+            )
+          )
+
+        }
+
+        labs[labs %in% dupes] <- NA_character_
+
+      }
 
       key <- c(set_names(nms, nms), set_names(nms, labs))
       key[!is.na(names(key))]

@@ -68,8 +68,6 @@ starter dictionary from a given dataset.
 
 library(perinary)
 library(tidyverse)
-#> Warning: package 'ggplot2' was built under R version 4.5.3
-#> Warning: package 'dplyr' was built under R version 4.5.2
 library(palmerpenguins)
 
 data_peng <- penguins %>% 
@@ -80,14 +78,13 @@ dd_peng <- as_data_dictionary(data_peng)
 dd_peng
 #> Data Dictionary:
 #> # A tibble: 5 × 8
-#>   name           type    label description units divby_modeling category_levels 
-#>   <chr>          <chr>   <chr> <chr>       <chr> <chr>          <chr>           
-#> 1 species        Nominal none  none        none  none           Adelie, Chinstr…
-#> 2 sex            Nominal none  none        none  none           female and male 
-#> 3 body_mass_g    Numeric none  none        none  none           none            
-#> 4 bill_length_mm Numeric none  none        none  none           none            
-#> 5 bill_depth_mm  Numeric none  none        none  none           none            
-#> # ℹ 1 more variable: category_labels <chr>
+#>   name           type    label description units divby_modeling category_levels               category_labels              
+#>   <chr>          <chr>   <chr> <chr>       <chr> <chr>          <chr>                         <chr>                        
+#> 1 species        Nominal none  none        none  none           Adelie, Chinstrap, and Gentoo Adelie, Chinstrap, and Gentoo
+#> 2 sex            Nominal none  none        none  none           female and male               female and male              
+#> 3 body_mass_g    Numeric none  none        none  none           none                          none                         
+#> 4 bill_length_mm Numeric none  none        none  none           none                          none                         
+#> 5 bill_depth_mm  Numeric none  none        none  none           none                          none
 ```
 
 ## Retrieve meta data with `get`
@@ -167,13 +164,13 @@ Other `get` functions include
   ``` r
   get_dictionary(dd_peng)
   #> # A tibble: 5 × 7
-  #>   name    label description units divby_modeling category_levels category_labels
-  #>   <chr>   <chr> <chr>       <chr>          <dbl> <named list>    <named list>   
-  #> 1 species <NA>  <NA>        <NA>              NA <chr [3]>       <chr [3]>      
-  #> 2 sex     <NA>  <NA>        <NA>              NA <chr [2]>       <chr [2]>      
-  #> 3 body_m… <NA>  <NA>        <NA>              NA <NULL>          <NULL>         
-  #> 4 bill_l… <NA>  <NA>        <NA>              NA <NULL>          <NULL>         
-  #> 5 bill_d… <NA>  <NA>        <NA>              NA <NULL>          <NULL>
+  #>   name           label description units divby_modeling category_levels category_labels
+  #>   <chr>          <chr> <chr>       <chr>          <dbl> <named list>    <named list>   
+  #> 1 species        <NA>  <NA>        <NA>              NA <chr [3]>       <chr [3]>      
+  #> 2 sex            <NA>  <NA>        <NA>              NA <chr [2]>       <chr [2]>      
+  #> 3 body_mass_g    <NA>  <NA>        <NA>              NA <NULL>          <NULL>         
+  #> 4 bill_length_mm <NA>  <NA>        <NA>              NA <NULL>          <NULL>         
+  #> 5 bill_depth_mm  <NA>  <NA>        <NA>              NA <NULL>          <NULL>
   ```
 
 - general `get` functions that are exported from the `DataDictionary`
@@ -285,14 +282,13 @@ dd_peng <- dd_peng %>%
 dd_peng
 #> Data Dictionary:
 #> # A tibble: 5 × 8
-#>   name           type    label  description units divby_modeling category_levels
-#>   <chr>          <chr>   <chr>  <chr>       <chr> <chr>          <chr>          
-#> 1 species        Nominal Speci… none        none  none           Adelie, Chinst…
-#> 2 sex            Nominal Sex    none        none  none           female and male
-#> 3 body_mass_g    Numeric Body … none        grams none           none           
-#> 4 bill_length_mm Numeric Bill … none        mm    5              none           
-#> 5 bill_depth_mm  Numeric Bill … none        mm    5              none           
-#> # ℹ 1 more variable: category_labels <chr>
+#>   name           type    label       description units divby_modeling category_levels               category_labels                  
+#>   <chr>          <chr>   <chr>       <chr>       <chr> <chr>          <chr>                         <chr>                            
+#> 1 species        Nominal Species     none        none  none           Adelie, Chinstrap, and Gentoo Adelie, Chinstrap, and Gentoo    
+#> 2 sex            Nominal Sex         none        none  none           female and male               Female penguins and Male penguins
+#> 3 body_mass_g    Numeric Body mass   none        grams none           none                          none                             
+#> 4 bill_length_mm Numeric Bill length none        mm    5              none                          none                             
+#> 5 bill_depth_mm  Numeric Bill depth  none        mm    5              none                          none
 ```
 
 Modify category order for nominal variables with `set_category_order()`:
@@ -309,14 +305,13 @@ dd_peng <- dd_peng %>%
 dd_peng
 #> Data Dictionary:
 #> # A tibble: 5 × 8
-#>   name           type    label  description units divby_modeling category_levels
-#>   <chr>          <chr>   <chr>  <chr>       <chr> <chr>          <chr>          
-#> 1 species        Nominal Speci… none        none  none           Chinstrap, Ade…
-#> 2 sex            Nominal Sex    none        none  none           male and female
-#> 3 body_mass_g    Numeric Body … none        grams none           none           
-#> 4 bill_length_mm Numeric Bill … none        mm    5              none           
-#> 5 bill_depth_mm  Numeric Bill … none        mm    5              none           
-#> # ℹ 1 more variable: category_labels <chr>
+#>   name           type    label       description units divby_modeling category_levels               category_labels                  
+#>   <chr>          <chr>   <chr>       <chr>       <chr> <chr>          <chr>                         <chr>                            
+#> 1 species        Nominal Species     none        none  none           Chinstrap, Adelie, and Gentoo Chinstrap, Adelie, and Gentoo    
+#> 2 sex            Nominal Sex         none        none  none           male and female               Male penguins and Female penguins
+#> 3 body_mass_g    Numeric Body mass   none        grams none           none                          none                             
+#> 4 bill_length_mm Numeric Bill length none        mm    5              none                          none                             
+#> 5 bill_depth_mm  Numeric Bill depth  none        mm    5              none                          none
 ```
 
 Modify variable order for any variable with `set_variable_order()`. This
@@ -334,15 +329,42 @@ dd_peng <- dd_peng %>%
 dd_peng
 #> Data Dictionary:
 #> # A tibble: 5 × 8
-#>   name           type    label  description units divby_modeling category_levels
-#>   <chr>          <chr>   <chr>  <chr>       <chr> <chr>          <chr>          
-#> 1 species        Nominal Speci… none        none  none           Chinstrap, Ade…
-#> 2 sex            Nominal Sex    none        none  none           male and female
-#> 3 body_mass_g    Numeric Body … none        grams none           none           
-#> 4 bill_length_mm Numeric Bill … none        mm    5              none           
-#> 5 bill_depth_mm  Numeric Bill … none        mm    5              none           
-#> # ℹ 1 more variable: category_labels <chr>
+#>   name           type    label       description units divby_modeling category_levels               category_labels                  
+#>   <chr>          <chr>   <chr>       <chr>       <chr> <chr>          <chr>                         <chr>                            
+#> 1 species        Nominal Species     none        none  none           Chinstrap, Adelie, and Gentoo Chinstrap, Adelie, and Gentoo    
+#> 2 sex            Nominal Sex         none        none  none           male and female               Male penguins and Female penguins
+#> 3 body_mass_g    Numeric Body mass   none        grams none           none                          none                             
+#> 4 bill_length_mm Numeric Bill length none        mm    5              none                          none                             
+#> 5 bill_depth_mm  Numeric Bill depth  none        mm    5              none                          none
 ```
+
+### Keep, drop, or reorder variables
+
+Sometimes a dictionary built with `as_data_dictionary()` includes more
+variables than you need for a particular dataset or output.
+`select_variables()` lets you keep, drop, or reorder variables using the
+same [tidyselect](https://tidyselect.r-lib.org/) syntax as
+`dplyr::select()`:
+
+``` r
+
+dd_peng %>% 
+  select_variables(species, sex, body_mass_g)
+#> Data Dictionary:
+#> # A tibble: 3 × 8
+#>   name        type    label     description units divby_modeling category_levels               category_labels                  
+#>   <chr>       <chr>   <chr>     <chr>       <chr> <chr>          <chr>                         <chr>                            
+#> 1 species     Nominal Species   none        none  none           Chinstrap, Adelie, and Gentoo Chinstrap, Adelie, and Gentoo    
+#> 2 sex         Nominal Sex       none        none  none           male and female               Male penguins and Female penguins
+#> 3 body_mass_g Numeric Body mass none        grams none           none                          none
+```
+
+This is also a convenient way to resolve two variables that happen to
+share the same label. Because `index_rows()` (described below) can match
+on either a variable’s name or its label, two variables with the same
+label are ambiguous — `index_rows()` will warn you and leave any row
+matching that label untouched. Dropping one of the colliding variables
+with `select_variables()` removes the ambiguity.
 
 ## Modify objects using dictionaries
 
@@ -484,6 +506,7 @@ Let’s start with tidied model output from `broom`:
 ``` r
 
 library(broom)
+#> Warning: package 'broom' was built under R version 4.5.3
 
 fit <- data_peng %>% 
   translate_data(units = 'model', dictionary = dd_peng) %>% 
@@ -568,3 +591,42 @@ data_ft %>%
 ```
 
 <img src="man/figures/README-regression-table-1.png" alt="A formatted regression table showing estimated body mass differences (grams, 95% CI, and p-value) for penguin characteristics including species, sex, and bill dimensions." width="100%" />
+
+## Ordering rows directly with `index_rows()`
+
+`index_terms()` is a convenience wrapper around `index_rows()` for model
+output specifically. You can use `index_rows()` directly on any table
+that has columns identifying a variable name and (for nominal variables)
+a category value — for instance, a summary table you built by hand. The
+name/category columns can hold the dictionary’s raw names and levels,
+their labels, or a mix of both, so this works even on tables that have
+already been translated for a report:
+
+``` r
+
+peng_summary <- tibble(
+  name  = c("species", "species", "species", "sex", "sex"),
+  level = c("Gentoo", "Chinstrap", "Adelie", "Male penguins", "Female penguins"),
+  n     = c(124, 68, 152, 168, 165)
+)
+
+peng_summary %>% 
+  index_rows(dictionary = dd_peng)
+#> # A tibble: 5 × 3
+#>   name    level               n
+#>   <chr>   <chr>           <dbl>
+#> 1 species Chinstrap          68
+#> 2 species Adelie            152
+#> 3 species Gentoo            124
+#> 4 sex     Male penguins     168
+#> 5 sex     Female penguins   165
+```
+
+Notice that `species` sorts before `sex` (matching
+`set_variable_order()`), `"Chinstrap"` sorts first within `species`
+(matching `set_category_order()`), and the `sex` rows are correctly
+ordered even though they’re identified by label
+(`"Male penguins"`/`"Female penguins"`) rather than the raw level
+(`"male"`/`"female"`). Any row whose name or level doesn’t match the
+dictionary is left untouched at its original position rather than being
+reordered.
