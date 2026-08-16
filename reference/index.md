@@ -14,6 +14,8 @@ Functions for creating and combining `DataDictionary` objects.
   : Bind Dictionaries Together
 - [`bind_variables()`](https://perisphere-rwe.github.io/perinary/reference/bind_variables.md)
   : Bind Variables to a Dictionary
+- [`select_variables()`](https://perisphere-rwe.github.io/perinary/reference/select_variables.md)
+  : Select Variables in a Dictionary
 
 ## Variable types
 

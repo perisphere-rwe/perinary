@@ -101,8 +101,6 @@
 <code class="sourceCode R"><span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://perisphere-rwe.github.io/perinary">perinary</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://tidyverse.tidyverse.org" class="external-link">tidyverse</a></span><span class="op">)</span></span>
-<span><span class="co">#&gt; Warning: package 'ggplot2' was built under R version 4.5.3</span></span>
-<span><span class="co">#&gt; Warning: package 'dplyr' was built under R version 4.5.2</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://allisonhorst.github.io/palmerpenguins/" class="external-link">palmerpenguins</a></span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">data_peng</span> <span class="op">&lt;-</span> <span class="va">penguins</span> <span class="op">%&gt;%</span> </span>
@@ -113,14 +111,13 @@
 <span><span class="va">dd_peng</span></span>
 <span><span class="co">#&gt; Data Dictionary:</span></span>
 <span><span class="co">#&gt; # A tibble: 5 × 8</span></span>
-<span><span class="co">#&gt;   name           type    label description units divby_modeling category_levels </span></span>
-<span><span class="co">#&gt;   &lt;chr&gt;          &lt;chr&gt;   &lt;chr&gt; &lt;chr&gt;       &lt;chr&gt; &lt;chr&gt;          &lt;chr&gt;           </span></span>
-<span><span class="co">#&gt; 1 species        Nominal none  none        none  none           Adelie, Chinstr…</span></span>
-<span><span class="co">#&gt; 2 sex            Nominal none  none        none  none           female and male </span></span>
-<span><span class="co">#&gt; 3 body_mass_g    Numeric none  none        none  none           none            </span></span>
-<span><span class="co">#&gt; 4 bill_length_mm Numeric none  none        none  none           none            </span></span>
-<span><span class="co">#&gt; 5 bill_depth_mm  Numeric none  none        none  none           none            </span></span>
-<span><span class="co">#&gt; # ℹ 1 more variable: category_labels &lt;chr&gt;</span></span></code></pre></div>
+<span><span class="co">#&gt;   name           type    label description units divby_modeling category_levels               category_labels              </span></span>
+<span><span class="co">#&gt;   &lt;chr&gt;          &lt;chr&gt;   &lt;chr&gt; &lt;chr&gt;       &lt;chr&gt; &lt;chr&gt;          &lt;chr&gt;                         &lt;chr&gt;                        </span></span>
+<span><span class="co">#&gt; 1 species        Nominal none  none        none  none           Adelie, Chinstrap, and Gentoo Adelie, Chinstrap, and Gentoo</span></span>
+<span><span class="co">#&gt; 2 sex            Nominal none  none        none  none           female and male               female and male              </span></span>
+<span><span class="co">#&gt; 3 body_mass_g    Numeric none  none        none  none           none                          none                         </span></span>
+<span><span class="co">#&gt; 4 bill_length_mm Numeric none  none        none  none           none                          none                         </span></span>
+<span><span class="co">#&gt; 5 bill_depth_mm  Numeric none  none        none  none           none                          none</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="retrieve-meta-data-with-get">Retrieve meta data with <code>get</code>
@@ -183,13 +180,13 @@
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="reference/get_dictionary.html">get_dictionary</a></span><span class="op">(</span><span class="va">dd_peng</span><span class="op">)</span></span>
 <span><span class="co">#&gt; # A tibble: 5 × 7</span></span>
-<span><span class="co">#&gt;   name    label description units divby_modeling category_levels category_labels</span></span>
-<span><span class="co">#&gt;   &lt;chr&gt;   &lt;chr&gt; &lt;chr&gt;       &lt;chr&gt;          &lt;dbl&gt; &lt;named list&gt;    &lt;named list&gt;   </span></span>
-<span><span class="co">#&gt; 1 species &lt;NA&gt;  &lt;NA&gt;        &lt;NA&gt;              NA &lt;chr [3]&gt;       &lt;chr [3]&gt;      </span></span>
-<span><span class="co">#&gt; 2 sex     &lt;NA&gt;  &lt;NA&gt;        &lt;NA&gt;              NA &lt;chr [2]&gt;       &lt;chr [2]&gt;      </span></span>
-<span><span class="co">#&gt; 3 body_m… &lt;NA&gt;  &lt;NA&gt;        &lt;NA&gt;              NA &lt;NULL&gt;          &lt;NULL&gt;         </span></span>
-<span><span class="co">#&gt; 4 bill_l… &lt;NA&gt;  &lt;NA&gt;        &lt;NA&gt;              NA &lt;NULL&gt;          &lt;NULL&gt;         </span></span>
-<span><span class="co">#&gt; 5 bill_d… &lt;NA&gt;  &lt;NA&gt;        &lt;NA&gt;              NA &lt;NULL&gt;          &lt;NULL&gt;</span></span></code></pre></div>
+<span><span class="co">#&gt;   name           label description units divby_modeling category_levels category_labels</span></span>
+<span><span class="co">#&gt;   &lt;chr&gt;          &lt;chr&gt; &lt;chr&gt;       &lt;chr&gt;          &lt;dbl&gt; &lt;named list&gt;    &lt;named list&gt;   </span></span>
+<span><span class="co">#&gt; 1 species        &lt;NA&gt;  &lt;NA&gt;        &lt;NA&gt;              NA &lt;chr [3]&gt;       &lt;chr [3]&gt;      </span></span>
+<span><span class="co">#&gt; 2 sex            &lt;NA&gt;  &lt;NA&gt;        &lt;NA&gt;              NA &lt;chr [2]&gt;       &lt;chr [2]&gt;      </span></span>
+<span><span class="co">#&gt; 3 body_mass_g    &lt;NA&gt;  &lt;NA&gt;        &lt;NA&gt;              NA &lt;NULL&gt;          &lt;NULL&gt;         </span></span>
+<span><span class="co">#&gt; 4 bill_length_mm &lt;NA&gt;  &lt;NA&gt;        &lt;NA&gt;              NA &lt;NULL&gt;          &lt;NULL&gt;         </span></span>
+<span><span class="co">#&gt; 5 bill_depth_mm  &lt;NA&gt;  &lt;NA&gt;        &lt;NA&gt;              NA &lt;NULL&gt;          &lt;NULL&gt;</span></span></code></pre></div>
 </li>
 <li><p>general <code>get</code> functions that are exported from the <code>DataDictionary</code> class</p></li>
 </ul>
@@ -283,14 +280,13 @@
 <span><span class="va">dd_peng</span></span>
 <span><span class="co">#&gt; Data Dictionary:</span></span>
 <span><span class="co">#&gt; # A tibble: 5 × 8</span></span>
-<span><span class="co">#&gt;   name           type    label  description units divby_modeling category_levels</span></span>
-<span><span class="co">#&gt;   &lt;chr&gt;          &lt;chr&gt;   &lt;chr&gt;  &lt;chr&gt;       &lt;chr&gt; &lt;chr&gt;          &lt;chr&gt;          </span></span>
-<span><span class="co">#&gt; 1 species        Nominal Speci… none        none  none           Adelie, Chinst…</span></span>
-<span><span class="co">#&gt; 2 sex            Nominal Sex    none        none  none           female and male</span></span>
-<span><span class="co">#&gt; 3 body_mass_g    Numeric Body … none        grams none           none           </span></span>
-<span><span class="co">#&gt; 4 bill_length_mm Numeric Bill … none        mm    5              none           </span></span>
-<span><span class="co">#&gt; 5 bill_depth_mm  Numeric Bill … none        mm    5              none           </span></span>
-<span><span class="co">#&gt; # ℹ 1 more variable: category_labels &lt;chr&gt;</span></span></code></pre></div>
+<span><span class="co">#&gt;   name           type    label       description units divby_modeling category_levels               category_labels                  </span></span>
+<span><span class="co">#&gt;   &lt;chr&gt;          &lt;chr&gt;   &lt;chr&gt;       &lt;chr&gt;       &lt;chr&gt; &lt;chr&gt;          &lt;chr&gt;                         &lt;chr&gt;                            </span></span>
+<span><span class="co">#&gt; 1 species        Nominal Species     none        none  none           Adelie, Chinstrap, and Gentoo Adelie, Chinstrap, and Gentoo    </span></span>
+<span><span class="co">#&gt; 2 sex            Nominal Sex         none        none  none           female and male               Female penguins and Male penguins</span></span>
+<span><span class="co">#&gt; 3 body_mass_g    Numeric Body mass   none        grams none           none                          none                             </span></span>
+<span><span class="co">#&gt; 4 bill_length_mm Numeric Bill length none        mm    5              none                          none                             </span></span>
+<span><span class="co">#&gt; 5 bill_depth_mm  Numeric Bill depth  none        mm    5              none                          none</span></span></code></pre></div>
 <p>Modify category order for nominal variables with <code><a href="reference/set_labels.html">set_category_order()</a></code>:</p>
 <div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span></span>
@@ -304,14 +300,13 @@
 <span><span class="va">dd_peng</span></span>
 <span><span class="co">#&gt; Data Dictionary:</span></span>
 <span><span class="co">#&gt; # A tibble: 5 × 8</span></span>
-<span><span class="co">#&gt;   name           type    label  description units divby_modeling category_levels</span></span>
-<span><span class="co">#&gt;   &lt;chr&gt;          &lt;chr&gt;   &lt;chr&gt;  &lt;chr&gt;       &lt;chr&gt; &lt;chr&gt;          &lt;chr&gt;          </span></span>
-<span><span class="co">#&gt; 1 species        Nominal Speci… none        none  none           Chinstrap, Ade…</span></span>
-<span><span class="co">#&gt; 2 sex            Nominal Sex    none        none  none           male and female</span></span>
-<span><span class="co">#&gt; 3 body_mass_g    Numeric Body … none        grams none           none           </span></span>
-<span><span class="co">#&gt; 4 bill_length_mm Numeric Bill … none        mm    5              none           </span></span>
-<span><span class="co">#&gt; 5 bill_depth_mm  Numeric Bill … none        mm    5              none           </span></span>
-<span><span class="co">#&gt; # ℹ 1 more variable: category_labels &lt;chr&gt;</span></span></code></pre></div>
+<span><span class="co">#&gt;   name           type    label       description units divby_modeling category_levels               category_labels                  </span></span>
+<span><span class="co">#&gt;   &lt;chr&gt;          &lt;chr&gt;   &lt;chr&gt;       &lt;chr&gt;       &lt;chr&gt; &lt;chr&gt;          &lt;chr&gt;                         &lt;chr&gt;                            </span></span>
+<span><span class="co">#&gt; 1 species        Nominal Species     none        none  none           Chinstrap, Adelie, and Gentoo Chinstrap, Adelie, and Gentoo    </span></span>
+<span><span class="co">#&gt; 2 sex            Nominal Sex         none        none  none           male and female               Male penguins and Female penguins</span></span>
+<span><span class="co">#&gt; 3 body_mass_g    Numeric Body mass   none        grams none           none                          none                             </span></span>
+<span><span class="co">#&gt; 4 bill_length_mm Numeric Bill length none        mm    5              none                          none                             </span></span>
+<span><span class="co">#&gt; 5 bill_depth_mm  Numeric Bill depth  none        mm    5              none                          none</span></span></code></pre></div>
 <p>Modify variable order for any variable with <code><a href="reference/set_variable_order.html">set_variable_order()</a></code>. This impacts the order in which variables will appear after calling <code><a href="reference/index_terms.html">index_terms()</a></code> (more on this in the next section)</p>
 <div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span></span>
@@ -324,14 +319,30 @@
 <span><span class="va">dd_peng</span></span>
 <span><span class="co">#&gt; Data Dictionary:</span></span>
 <span><span class="co">#&gt; # A tibble: 5 × 8</span></span>
-<span><span class="co">#&gt;   name           type    label  description units divby_modeling category_levels</span></span>
-<span><span class="co">#&gt;   &lt;chr&gt;          &lt;chr&gt;   &lt;chr&gt;  &lt;chr&gt;       &lt;chr&gt; &lt;chr&gt;          &lt;chr&gt;          </span></span>
-<span><span class="co">#&gt; 1 species        Nominal Speci… none        none  none           Chinstrap, Ade…</span></span>
-<span><span class="co">#&gt; 2 sex            Nominal Sex    none        none  none           male and female</span></span>
-<span><span class="co">#&gt; 3 body_mass_g    Numeric Body … none        grams none           none           </span></span>
-<span><span class="co">#&gt; 4 bill_length_mm Numeric Bill … none        mm    5              none           </span></span>
-<span><span class="co">#&gt; 5 bill_depth_mm  Numeric Bill … none        mm    5              none           </span></span>
-<span><span class="co">#&gt; # ℹ 1 more variable: category_labels &lt;chr&gt;</span></span></code></pre></div>
+<span><span class="co">#&gt;   name           type    label       description units divby_modeling category_levels               category_labels                  </span></span>
+<span><span class="co">#&gt;   &lt;chr&gt;          &lt;chr&gt;   &lt;chr&gt;       &lt;chr&gt;       &lt;chr&gt; &lt;chr&gt;          &lt;chr&gt;                         &lt;chr&gt;                            </span></span>
+<span><span class="co">#&gt; 1 species        Nominal Species     none        none  none           Chinstrap, Adelie, and Gentoo Chinstrap, Adelie, and Gentoo    </span></span>
+<span><span class="co">#&gt; 2 sex            Nominal Sex         none        none  none           male and female               Male penguins and Female penguins</span></span>
+<span><span class="co">#&gt; 3 body_mass_g    Numeric Body mass   none        grams none           none                          none                             </span></span>
+<span><span class="co">#&gt; 4 bill_length_mm Numeric Bill length none        mm    5              none                          none                             </span></span>
+<span><span class="co">#&gt; 5 bill_depth_mm  Numeric Bill depth  none        mm    5              none                          none</span></span></code></pre></div>
+</div>
+<div class="section level3">
+<h3 id="keep-drop-or-reorder-variables">Keep, drop, or reorder variables<a class="anchor" aria-label="anchor" href="#keep-drop-or-reorder-variables"></a>
+</h3>
+<p>Sometimes a dictionary built with <code><a href="reference/as_data_dictionary.html">as_data_dictionary()</a></code> includes more variables than you need for a particular dataset or output. <code><a href="reference/select_variables.html">select_variables()</a></code> lets you keep, drop, or reorder variables using the same <a href="https://tidyselect.r-lib.org/" class="external-link">tidyselect</a> syntax as <code><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">dplyr::select()</a></code>:</p>
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span></span>
+<span><span class="va">dd_peng</span> <span class="op">%&gt;%</span> </span>
+<span>  <span class="fu"><a href="reference/select_variables.html">select_variables</a></span><span class="op">(</span><span class="va">species</span>, <span class="va">sex</span>, <span class="va">body_mass_g</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Data Dictionary:</span></span>
+<span><span class="co">#&gt; # A tibble: 3 × 8</span></span>
+<span><span class="co">#&gt;   name        type    label     description units divby_modeling category_levels               category_labels                  </span></span>
+<span><span class="co">#&gt;   &lt;chr&gt;       &lt;chr&gt;   &lt;chr&gt;     &lt;chr&gt;       &lt;chr&gt; &lt;chr&gt;          &lt;chr&gt;                         &lt;chr&gt;                            </span></span>
+<span><span class="co">#&gt; 1 species     Nominal Species   none        none  none           Chinstrap, Adelie, and Gentoo Chinstrap, Adelie, and Gentoo    </span></span>
+<span><span class="co">#&gt; 2 sex         Nominal Sex       none        none  none           male and female               Male penguins and Female penguins</span></span>
+<span><span class="co">#&gt; 3 body_mass_g Numeric Body mass none        grams none           none                          none</span></span></code></pre></div>
+<p>This is also a convenient way to resolve two variables that happen to share the same label. Because <code><a href="reference/index_rows.html">index_rows()</a></code> (described below) can match on either a variable’s name or its label, two variables with the same label are ambiguous — <code><a href="reference/index_rows.html">index_rows()</a></code> will warn you and leave any row matching that label untouched. Dropping one of the colliding variables with <code><a href="reference/select_variables.html">select_variables()</a></code> removes the ambiguity.</p>
 </div>
 </div>
 <div class="section level2">
@@ -341,7 +352,7 @@
 <ul>
 <li>
 <p>Instead of requiring name-value pairs in the function call, <code>translate</code> functions look up the relevant name value pairs in <code>dictionary</code>:</p>
-<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">data_peng</span> <span class="op">%&gt;%</span> </span>
 <span>  <span class="fu">mutate</span><span class="op">(</span>sex <span class="op">=</span> <span class="fu"><a href="reference/translate_data.html">translate_categories</a></span><span class="op">(</span><span class="va">sex</span>, dictionary <span class="op">=</span> <span class="va">dd_peng</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt; # A tibble: 344 × 5</span></span>
@@ -361,7 +372,7 @@
 </li>
 <li>
 <p>While <code><a href="reference/translate_data.html">translate_categories()</a></code> replaces category levels with labels, <code><a href="reference/translate_data.html">translate_names()</a></code> replaces variable names with labels. This is useful when variable names become column values, e.g., after using <code>pivot_longer</code> or <code>melt</code>:</p>
-<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span></span>
 <span><span class="va">data_peng</span> <span class="op">%&gt;%</span> </span>
 <span>  <span class="fu">pivot_longer</span><span class="op">(</span><span class="fu">starts_with</span><span class="op">(</span><span class="st">"bill_"</span><span class="op">)</span><span class="op">)</span> <span class="op">%&gt;%</span> </span>
@@ -389,7 +400,7 @@
 <li><p>converts characters to factors (factors are required to apply the category order specified in the dictionary)</p></li>
 <li><p>divide continuous variables by their corresponding modeling divisor if `units = ‘model’, and update labels accordingly</p></li>
 </ul>
-<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">data_peng</span> <span class="op">%&gt;%</span> </span>
 <span>  <span class="fu"><a href="reference/translate_data.html">translate_data</a></span><span class="op">(</span>dictionary <span class="op">=</span> <span class="va">dd_peng</span><span class="op">)</span></span>
 <span><span class="co">#&gt; # A tibble: 344 × 5</span></span>
@@ -413,7 +424,7 @@
 <h2 id="set-your-default">Set your default<a class="anchor" aria-label="anchor" href="#set-your-default"></a>
 </h2>
 <p>Writing meta data in a <code>dictionary</code> <em>should</em> make it easier to put that information in outputs. However, supplying the <code>dictionary</code> as an input to every single <code>perinary</code> function gets unnecessarily tedious. For convenience, you can save any <code>dictionary</code> you make as the “default” dictionary for <code>perinary</code> functions during your current R session. The default dictionary will be used whenever a <code>perinary</code> function is called and a <code>dictionary</code> is not explicitly supplied by the user.</p>
-<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span></span>
 <span><span class="fu"><a href="reference/set_default_dictionary.html">set_default_dictionary</a></span><span class="op">(</span><span class="va">dd_peng</span><span class="op">)</span></span>
 <span></span>
@@ -442,9 +453,10 @@
 </h2>
 <p>If you are using a package like <code>gtsummary</code>, which incorporates variable labels automatically, <code>translate()</code> is probably all you need from <code>perinary</code>. In rare cases, <code>gtsummary</code> may not provide tools to tabulate our modeling results, and in those circumstances we recommend using <code><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">broom::tidy</a></code> followed by <code>index_terms</code> to set up your data for tabulating.</p>
 <p>Let’s start with tidied model output from <code>broom</code>:</p>
-<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://broom.tidymodels.org/" class="external-link">broom</a></span><span class="op">)</span></span>
+<span><span class="co">#&gt; Warning: package 'broom' was built under R version 4.5.3</span></span>
 <span></span>
 <span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="va">data_peng</span> <span class="op">%&gt;%</span> </span>
 <span>  <span class="fu"><a href="reference/translate_data.html">translate_data</a></span><span class="op">(</span>units <span class="op">=</span> <span class="st">'model'</span>, dictionary <span class="op">=</span> <span class="va">dd_peng</span><span class="op">)</span> <span class="op">%&gt;%</span> </span>
@@ -463,11 +475,11 @@
 <span><span class="co">#&gt; 5 bill_length_mm         133.      36.2      3.66 2.90e- 4     61.4      204.</span></span>
 <span><span class="co">#&gt; 6 bill_depth_mm          440.     101.       4.35 1.83e- 5    241.       639.</span></span></code></pre></div>
 <p>We use <code><a href="reference/index_terms.html">index_terms()</a></code> to attach variable and category metadata from the dictionary and re-order the rows to match dictionary order. This is helpful when you want variables to be listed in a consistent order throughout your report. This is also where our earlier use of <code><a href="reference/set_variable_order.html">set_variable_order()</a></code> has relevance — note how the variable ordering we set there is reflected in this table (i.e., species is first).</p>
-<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span></span>
 <span><span class="va">fit_sorted</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/index_terms.html">index_terms</a></span><span class="op">(</span><span class="va">fit</span>, dictionary <span class="op">=</span> <span class="va">dd_peng</span><span class="op">)</span></span></code></pre></div>
 <p>Third, we tabulate the results</p>
-<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ardata-fr.github.io/flextable-book/" class="external-link">flextable</a></span><span class="op">)</span></span>
 <span><span class="co">#&gt; </span></span>
@@ -516,6 +528,31 @@
 <span>  <span class="fu">padding</span><span class="op">(</span>i <span class="op">=</span> <span class="op">~</span> <span class="fu"><a href="https://rdrr.io/r/base/NA.html" class="external-link">is.na</a></span><span class="op">(</span><span class="va">name</span><span class="op">)</span>, j <span class="op">=</span> <span class="fl">1</span>, padding.left <span class="op">=</span> <span class="fl">15</span><span class="op">)</span> <span class="op">%&gt;%</span> </span>
 <span>  <span class="fu">align</span><span class="op">(</span>j <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2</span>, <span class="fl">3</span><span class="op">)</span>, align <span class="op">=</span> <span class="st">'center'</span>, part <span class="op">=</span> <span class="st">'all'</span><span class="op">)</span></span></code></pre></div>
 <p><img src="reference/figures/README-regression-table-1.png" alt="A formatted regression table showing estimated body mass differences (grams, 95% CI, and p-value) for penguin characteristics including species, sex, and bill dimensions." width="100%"></p>
+</div>
+<div class="section level2">
+<h2 id="ordering-rows-directly-with-index_rows">Ordering rows directly with <code>index_rows()</code>
+<a class="anchor" aria-label="anchor" href="#ordering-rows-directly-with-index_rows"></a>
+</h2>
+<p><code><a href="reference/index_terms.html">index_terms()</a></code> is a convenience wrapper around <code><a href="reference/index_rows.html">index_rows()</a></code> for model output specifically. You can use <code><a href="reference/index_rows.html">index_rows()</a></code> directly on any table that has columns identifying a variable name and (for nominal variables) a category value — for instance, a summary table you built by hand. The name/category columns can hold the dictionary’s raw names and levels, their labels, or a mix of both, so this works even on tables that have already been translated for a report:</p>
+<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span></span>
+<span><span class="va">peng_summary</span> <span class="op">&lt;-</span> <span class="fu">tibble</span><span class="op">(</span></span>
+<span>  name  <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"species"</span>, <span class="st">"species"</span>, <span class="st">"species"</span>, <span class="st">"sex"</span>, <span class="st">"sex"</span><span class="op">)</span>,</span>
+<span>  level <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Gentoo"</span>, <span class="st">"Chinstrap"</span>, <span class="st">"Adelie"</span>, <span class="st">"Male penguins"</span>, <span class="st">"Female penguins"</span><span class="op">)</span>,</span>
+<span>  n     <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">124</span>, <span class="fl">68</span>, <span class="fl">152</span>, <span class="fl">168</span>, <span class="fl">165</span><span class="op">)</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">peng_summary</span> <span class="op">%&gt;%</span> </span>
+<span>  <span class="fu"><a href="reference/index_rows.html">index_rows</a></span><span class="op">(</span>dictionary <span class="op">=</span> <span class="va">dd_peng</span><span class="op">)</span></span>
+<span><span class="co">#&gt; # A tibble: 5 × 3</span></span>
+<span><span class="co">#&gt;   name    level               n</span></span>
+<span><span class="co">#&gt;   &lt;chr&gt;   &lt;chr&gt;           &lt;dbl&gt;</span></span>
+<span><span class="co">#&gt; 1 species Chinstrap          68</span></span>
+<span><span class="co">#&gt; 2 species Adelie            152</span></span>
+<span><span class="co">#&gt; 3 species Gentoo            124</span></span>
+<span><span class="co">#&gt; 4 sex     Male penguins     168</span></span>
+<span><span class="co">#&gt; 5 sex     Female penguins   165</span></span></code></pre></div>
+<p>Notice that <code>species</code> sorts before <code>sex</code> (matching <code><a href="reference/set_variable_order.html">set_variable_order()</a></code>), <code>"Chinstrap"</code> sorts first within <code>species</code> (matching <code><a href="reference/set_labels.html">set_category_order()</a></code>), and the <code>sex</code> rows are correctly ordered even though they’re identified by label (<code>"Male penguins"</code>/<code>"Female penguins"</code>) rather than the raw level (<code>"male"</code>/<code>"female"</code>). Any row whose name or level doesn’t match the dictionary is left untouched at its original position rather than being reordered.</p>
 </div>
 </div>
   </main><aside class="col-md-3"><div class="links">

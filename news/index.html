@@ -40,12 +40,13 @@
 </ul></div>
 <div class="section level3">
 <h3 id="new-features-0-1-0">New features<a class="anchor" aria-label="anchor" href="#new-features-0-1-0"></a></h3>
-<ul><li>
-<code><a href="../reference/index_rows.html">index_rows()</a></code> can now order rows using category labels and variable labels, not just category levels and variable names. Values in the <code>names</code> and <code>levels</code> columns may be a mix of both representations. If a name/level and a label happen to collide (the same string is used for both), the name/level match takes priority.</li>
+<ul><li><p><code><a href="../reference/index_rows.html">index_rows()</a></code> can now order rows using category labels and variable labels, not just category levels and variable names. Values in the <code>names</code> and <code>levels</code> columns may be a mix of both representations. If a name/level and a label happen to collide (the same string is used for both), the name/level match takes priority.</p></li>
+<li><p>New <code><a href="../reference/select_variables.html">select_variables()</a></code> keeps, drops, or reorders variables in a <code>DataDictionary</code> using tidyselect semantics, similar to <code><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">dplyr::select()</a></code> for data frames. This is useful for narrowing a dictionary to the variables relevant to a dataset, or for resolving a label collision (e.g. dropping one of two variables that share a label) before calling [index_rows()].</p></li>
 </ul></div>
 <div class="section level3">
 <h3 id="bug-fixes-0-1-0">Bug fixes<a class="anchor" aria-label="anchor" href="#bug-fixes-0-1-0"></a></h3>
-<ul><li>Fixed an issue where factor columns passed to <code><a href="../reference/index_rows.html">index_rows()</a></code> via the <code>names</code> or <code>levels</code> arguments could produce silently incorrect row ordering. Indexing a named lookup vector with a factor uses the factor’s underlying integer codes rather than matching by label, which could scramble the sort order; affected columns are now coerced to character before use.</li>
+<ul><li><p>Fixed an issue where factor columns passed to <code><a href="../reference/index_rows.html">index_rows()</a></code> via the <code>names</code> or <code>levels</code> arguments could produce silently incorrect row ordering. Indexing a named lookup vector with a factor uses the factor’s underlying integer codes rather than matching by label, which could scramble the sort order; affected columns are now coerced to character before use.</p></li>
+<li><p>Fixed a silent misattribution issue in <code><a href="../reference/index_rows.html">index_rows()</a></code>: if two or more variables shared the same label, rows referring to that label by name could be attributed to whichever variable was declared first in the dictionary, potentially applying the wrong variable’s category order. A label shared by multiple variables is no longer used to identify a variable; a warning is issued and matching values are treated as unmatched (left in place) instead.</p></li>
 </ul></div>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
