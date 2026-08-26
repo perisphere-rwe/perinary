@@ -635,6 +635,9 @@ DataDictionary <- R6Class(
     # Named vector of acronyms (NULL by default)
     acronyms = NULL,
 
+    # Version of perinary used to create this dictionary (set in initialize)
+    perinary_version = NULL,
+
     # Constructor
     initialize = function(vars, copy_on_modify = TRUE) {
 
@@ -655,6 +658,7 @@ DataDictionary <- R6Class(
       self$dictionary <- private$create_dictionary(self$variables)
       self$category_key <- private$create_category_key(self$variables)
       self$copy_on_modify <- copy_on_modify
+      self$perinary_version <- as.character(utils::packageVersion("perinary"))
 
     },
 

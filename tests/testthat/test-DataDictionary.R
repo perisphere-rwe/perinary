@@ -100,3 +100,92 @@ test_that(
 
 )
 
+
+test_that(
+  "perinary_version is stamped on new dictionaries",
+  code = {
+
+    dd <- data_dictionary(
+      numeric_variable("x", label = "X")
+    )
+
+    expect_identical(
+      dd$perinary_version,
+      as.character(utils::packageVersion("perinary"))
+    )
+
+  }
+)
+
+test_that(
+  "no version warning when dictionary version matches current perinary",
+  code = {
+
+    dd <- data_dictionary(numeric_variable("x", label = "X"))
+
+    # reset session tracker so this test is self-contained
+    old_warned <- .perinary_internal$version_warned
+    on.exit(.perinary_internal$version_warned <- old_warned)
+    .perinary_internal$version_warned <- character(0)
+
+    expect_no_warning(
+      translate_names("x", dictionary = dd)
+    )
+
+  }
+)
+
+test_that(
+  "version warning fires once for dictionary with NULL version (pre-versioning)",
+  code = {
+
+    dd <- data_dictionary(numeric_variable("x", label = "X"))
+    dd_old <- dd$clone(deep = TRUE)
+    dd_old$perinary_version <- NULL
+
+    old_warned <- .perinary_internal$version_warned
+    on.exit(.perinary_internal$version_warned <- old_warned)
+    .perinary_internal$version_warned <- character(0)
+
+    # first call: should warn
+    expect_warning(
+      translate_names("x", dictionary = dd_old),
+      regexp = "unknown"
+    )
+
+    # second call: should be silent (already warned this session)
+    expect_no_warning(
+      translate_names("x", dictionary = dd_old)
+    )
+
+  }
+)
+
+
+test_that(
+  "version warning fires once per (old_version, current_version) pair",
+  code = {
+
+    dd <- data_dictionary(numeric_variable("x", label = "X"))
+
+    old_warned <- .perinary_internal$version_warned
+    on.exit(.perinary_internal$version_warned <- old_warned)
+    .perinary_internal$version_warned <- character(0)
+
+    dd_v1 <- dd$clone(deep = TRUE)
+    dd_v1$perinary_version <- "0.0.1"
+
+    dd_v2 <- dd$clone(deep = TRUE)
+    dd_v2$perinary_version <- "0.0.2"
+
+    # each new version pair triggers exactly one warning
+    expect_warning(translate_names("x", dictionary = dd_v1), regexp = "0[.]0[.]1")
+    expect_no_warning(translate_names("x", dictionary = dd_v1))  # same pair: silent
+
+    expect_warning(translate_names("x", dictionary = dd_v2), regexp = "0[.]0[.]2")
+    expect_no_warning(translate_names("x", dictionary = dd_v2))  # same pair: silent
+
+    expect_length(.perinary_internal$version_warned, 2)
+
+  }
+)
