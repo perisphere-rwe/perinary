@@ -1068,6 +1068,8 @@ DataDictionary <- R6Class(
                                drop_unused_levels = FALSE,
                                use_acronyms = FALSE){
 
+      x <- as.character(x)
+
       x_uni <- unique(na.omit(x))
 
       .list <- .list %||% list(...)
@@ -1136,7 +1138,11 @@ DataDictionary <- R6Class(
 
       .list <- .list %||% list(...)
 
+      x <- as.character(x)
+
       if(!is.null(names)){
+
+        names <- as.character(names)
 
         if(length(names) == 1) names <- rep(names, length(x))
 
@@ -1170,7 +1176,7 @@ DataDictionary <- R6Class(
                 .y = name,
                 .f = ~ {
 
-                  if(.y %in% self$get_names()){
+                  if(.y %in% self$get_names_nominal()){
 
                     translater <- self$get_category_translater(
                       name = .y,
@@ -1182,6 +1188,11 @@ DataDictionary <- R6Class(
                         # if you add leftovers, it can disrupt the order
                         # of levels when there is more than one name.
                       )
+
+                  } else if (.y %in% self$get_names()) {
+                    # non-nominal variable in dictionary (e.g., numeric, date):
+                    # pass through the original values silently
+                    return(.x$x)
 
                   } else {
                     # if the name doesn't match, there should be a mapping
