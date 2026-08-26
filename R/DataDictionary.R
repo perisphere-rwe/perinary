@@ -635,6 +635,9 @@ DataDictionary <- R6Class(
     # Named vector of acronyms (NULL by default)
     acronyms = NULL,
 
+    # Version of perinary used to create this dictionary (set in initialize)
+    perinary_version = NULL,
+
     # Constructor
     initialize = function(vars, copy_on_modify = TRUE) {
 
@@ -655,6 +658,7 @@ DataDictionary <- R6Class(
       self$dictionary <- private$create_dictionary(self$variables)
       self$category_key <- private$create_category_key(self$variables)
       self$copy_on_modify <- copy_on_modify
+      self$perinary_version <- as.character(utils::packageVersion("perinary"))
 
     },
 
@@ -1068,6 +1072,8 @@ DataDictionary <- R6Class(
                                drop_unused_levels = FALSE,
                                use_acronyms = FALSE){
 
+      x <- as.character(x)
+
       x_uni <- unique(na.omit(x))
 
       .list <- .list %||% list(...)
@@ -1136,7 +1142,11 @@ DataDictionary <- R6Class(
 
       .list <- .list %||% list(...)
 
+      x <- as.character(x)
+
       if(!is.null(names)){
+
+        names <- as.character(names)
 
         if(length(names) == 1) names <- rep(names, length(x))
 
@@ -1170,7 +1180,7 @@ DataDictionary <- R6Class(
                 .y = name,
                 .f = ~ {
 
-                  if(.y %in% self$get_names()){
+                  if(.y %in% self$get_names_nominal()){
 
                     translater <- self$get_category_translater(
                       name = .y,
@@ -1182,6 +1192,11 @@ DataDictionary <- R6Class(
                         # if you add leftovers, it can disrupt the order
                         # of levels when there is more than one name.
                       )
+
+                  } else if (.y %in% self$get_names()) {
+                    # non-nominal variable in dictionary (e.g., numeric, date):
+                    # pass through the original values silently
+                    return(.x$x)
 
                   } else {
                     # if the name doesn't match, there should be a mapping

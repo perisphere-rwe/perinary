@@ -173,6 +173,7 @@ infer_curlies <- function(x){
 #' @seealso [data_dictionary()], [as_data_dictionary()], [set_default_dictionary()]
 #'
 #' @importFrom checkmate assert_class
+#' @importFrom utils packageVersion
 #' @importFrom cli cli_abort cli_warn
 
 
@@ -191,6 +192,27 @@ infer_meta <- function(dictionary){
   }
 
   assert_class(.dictionary, "DataDictionary")
+
+  current_version <- as.character(utils::packageVersion("perinary"))
+  dict_version    <- .dictionary$perinary_version %||% "unknown"
+
+  if (!identical(dict_version, current_version)) {
+    warn_key <- paste0(dict_version, "->", current_version)
+    if (!warn_key %in% .perinary_internal$version_warned) {
+      cli_warn(
+        c(
+          "This {.pkg perinary} dictionary was built with version {dict_version}.",
+          "The currently loaded version is {current_version}.",
+          "!" = "Dictionary methods may be out of date.",
+          "i" = "Rebuild the dictionary with the current version of {.pkg perinary} to silence this warning."
+        )
+      )
+      .perinary_internal$version_warned <- c(
+        .perinary_internal$version_warned,
+        warn_key
+      )
+    }
+  }
 
   .dictionary
 

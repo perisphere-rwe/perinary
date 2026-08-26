@@ -391,3 +391,104 @@ test_that(
 
   }
 )
+
+test_that(
+  "translate_categories passes through non-nominal variables silently (issue #41)",
+  code = {
+
+    dd <- data_dictionary(
+      numeric_variable("age", label = "Age", units = "years"),
+      nominal_variable(
+        "group",
+        label = "Group",
+        category_levels = c("A", "B"),
+        category_labels = c("Control", "Treatment")
+      )
+    )
+
+    # numeric variable name: values pass through unchanged, no error or warning
+    expect_no_warning(
+      result <- translate_categories(
+        c("25.3", "30.1"),
+        names = "age",
+        dictionary = dd
+      )
+    )
+    expect_equal(result, c("25.3", "30.1"))
+
+    # mixed names (numeric + nominal): nominal levels get translated,
+    # numeric values pass through as-is
+    result_mixed <- translate_categories(
+      x     = c("A", "B", "25.3", "30.1"),
+      names = c("group", "group", "age", "age"),
+      dictionary = dd
+    )
+    expect_equal(result_mixed, c("Control", "Treatment", "25.3", "30.1"))
+
+    # unknown name (not in dictionary at all) with no .list returns NA
+    result_unknown <- translate_categories(
+      x     = c("A", "x_val"),
+      names = c("group", "not_a_variable"),
+      dictionary = dd
+    )
+    expect_equal(result_unknown[1], "Control")
+    expect_equal(result_unknown[2], NA_character_)
+
+  }
+)
+
+test_that(
+  "translate_categories handles factor x and factor names (issue #38)",
+  code = {
+
+    # factor names (scalar): same output as character names
+    char_result <- translate_categories(
+      x          = letters[1:5],
+      names      = "character",
+      dictionary = dd_test_filled
+    )
+    factor_names_result <- translate_categories(
+      x          = letters[1:5],
+      names      = factor("character"),
+      dictionary = dd_test_filled
+    )
+    expect_equal(char_result, factor_names_result)
+
+    # factor names (vector, multi-variable): same output as character names
+    x          <- c("a", "b", "f", "g")
+    names_char <- c("character", "character", "factor", "factor")
+    names_fct  <- factor(names_char)
+
+    char_multi <- translate_categories(x, names = names_char, dictionary = dd_test_filled)
+    fct_multi  <- translate_categories(x, names = names_fct,  dictionary = dd_test_filled)
+    expect_equal(char_multi, fct_multi)
+
+    # factor x: same output as character x
+    factor_x_result <- translate_categories(
+      x          = factor(letters[1:5]),
+      names      = "character",
+      dictionary = dd_test_filled
+    )
+    expect_equal(char_result, factor_x_result)
+
+  }
+)
+
+test_that(
+  "translate_names handles factor x (issue #38)",
+  code = {
+
+    char_result <- translate_names(
+      x          = c("number", "integer"),
+      dictionary = dd_test_filled
+    )
+
+    factor_result <- translate_names(
+      x          = factor(c("number", "integer")),
+      dictionary = dd_test_filled
+    )
+
+    expect_equal(char_result, factor_result)
+
+  }
+)
