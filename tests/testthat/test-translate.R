@@ -312,7 +312,7 @@ test_that(
     ) %>%
       as_data_dictionary() %>%
       set_labels(
-        ckd = "CKD"
+        ckd = "chronic kidney disease"
       ) %>%
       set_acronyms(
         CKD = "chronic kidney disease"
@@ -324,7 +324,7 @@ test_that(
         dictionary = dd,
         use_acronyms = FALSE # default
       ),
-      "CKD"
+      "chronic kidney disease"
     )
 
     expect_identical(
@@ -333,7 +333,7 @@ test_that(
         dictionary = dd,
         use_acronyms = TRUE
       ),
-      "chronic kidney disease"
+      "CKD"
     )
   }
 )
@@ -347,7 +347,7 @@ test_that(
     ) %>%
       as_data_dictionary() %>%
       set_labels(
-        ckd = "CKD"
+        ckd = "chronic kidney disease"
       ) %>%
       set_acronyms(
         CKD = "chronic kidney disease"
@@ -361,14 +361,16 @@ test_that(
       use_acronyms = TRUE
     )
     expect_s3_class(result_factor, "factor")
-    expect_identical(levels(result_factor), "chronic kidney disease")
+    expect_identical(levels(result_factor), "CKD")
 
-    # Ordering guarantee: "BP" is a substring of "SBP". Without longest-first
-    # sorting, replacing "BP" first would corrupt "SBP" into "SBlood Pressure".
-    # The label here is "SBP" and should expand to "Systolic Blood Pressure".
+    # Ordering guarantee: "Blood Pressure" is a substring of "Systolic Blood
+    # Pressure". Without longest-first sorting of full forms, replacing
+    # "Blood Pressure" first in a label like "Systolic Blood Pressure" would
+    # give "Systolic BP" rather than "SBP". Longest-first ensures "Systolic
+    # Blood Pressure" is matched and replaced before "Blood Pressure".
     dd2 <- data.frame(sbp = 1) |>
       as_data_dictionary() |>
-      set_labels(sbp = "SBP") |>
+      set_labels(sbp = "Systolic Blood Pressure") |>
       set_acronyms(
         SBP = "Systolic Blood Pressure",
         BP  = "Blood Pressure"
@@ -376,7 +378,7 @@ test_that(
 
     expect_identical(
       translate_names("sbp", dictionary = dd2, use_acronyms = TRUE),
-      "Systolic Blood Pressure"
+      "SBP"
     )
 
     # Graceful no-op when the dictionary has no acronyms defined
@@ -387,6 +389,29 @@ test_that(
     expect_identical(
       translate_names("x", dictionary = dd3, use_acronyms = TRUE),
       "Some Label"
+    )
+
+  }
+)
+
+test_that(
+  "translate_names replaces long form with acronym in label",
+  code = {
+
+    dd <- data_dictionary(
+      numeric_variable("delta_bmi", label = "change in body mass index")
+    ) |>
+      set_acronyms(BMI = "body mass index")
+
+    expect_identical(
+      translate_names("delta_bmi", dictionary = dd, use_acronyms = TRUE),
+      "change in BMI"
+    )
+
+    # Confirm that use_acronyms = FALSE (default) leaves the full label intact
+    expect_identical(
+      translate_names("delta_bmi", dictionary = dd, use_acronyms = FALSE),
+      "change in body mass index"
     )
 
   }

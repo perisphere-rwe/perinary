@@ -1445,17 +1445,19 @@ DataDictionary <- R6Class(
       if (use_acronyms) {
         acronyms <- self$get_acronyms()
 
-        # Sort acronyms in descending order by length to avoid problems when one
-        # acronym is a subset of another.
-        o <- order(nchar(names(acronyms)), decreasing = TRUE)
+        # Sort by descending full-form length so that longer full forms are
+        # replaced before shorter ones that may be substrings of them
+        # (e.g. "Systolic Blood Pressure" before "Blood Pressure").
+        o <- order(nchar(acronyms), decreasing = TRUE)
 
         acronyms <- acronyms[o]
 
         for (i in seq_along(acronyms)) {
-          # Do not ignore case
+          # Replace the full form (value) with the acronym (name).
+          # Do not ignore case.
           levels(x) <- gsub(
-            names(acronyms[i]),
             acronyms[i],
+            names(acronyms[i]),
             x = levels(x),
             fixed = TRUE
           )
@@ -1473,15 +1475,17 @@ DataDictionary <- R6Class(
       if (use_acronyms) {
         acronyms <- self$get_acronyms()
 
-        # Sort acronyms in descending order by length to avoid problems when one
-        # acronym is a subset of another.
-        o <- order(nchar(names(acronyms)), decreasing = TRUE)
+        # Sort by descending full-form length so that longer full forms are
+        # replaced before shorter ones that may be substrings of them
+        # (e.g. "Systolic Blood Pressure" before "Blood Pressure").
+        o <- order(nchar(acronyms), decreasing = TRUE)
 
         acronyms <- acronyms[o]
 
         for (i in seq_along(acronyms)) {
-          # Do not ignore case
-          x <- gsub(names(acronyms[i]), acronyms[i], x = x, fixed = TRUE)
+          # Replace the full form (value) with the acronym (name).
+          # Do not ignore case.
+          x <- gsub(acronyms[i], names(acronyms[i]), x = x, fixed = TRUE)
         }
       }
 
